@@ -1,0 +1,43 @@
+name: YamtrackiOS
+options:
+  bundleIdPrefix: com.maltepaulbuttner
+targets:
+  YamtrackiOS:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - YamtrackiOS
+    info:
+      path: YamtrackiOS/Info.plist
+      properties:
+        UILaunchScreen: {}
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.maltepaulbuttner.yamtrackios
+        SWIFT_VERSION: 6.0
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGNING_REQUIRED: NO
+    dependencies: []
+  YamtrackiOSTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - YamtrackiOSTests
+    settings:
+      base:
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGNING_REQUIRED: NO
+    dependencies:
+      - target: YamtrackiOS
+  YamtrackiOSUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - YamtrackiOSUITests
+    settings:
+      base:
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGNING_REQUIRED: NO
+    dependencies:
+      - target: YamtrackiOS
