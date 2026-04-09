@@ -1,6 +1,19 @@
 import XCTest
 
 final class SetupFlowUITests: XCTestCase {
+    func test_signedInLaunchShowsTabShell() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing-persisted-session"]
+        app.launch()
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 2))
+        XCTAssertTrue(tabBar.buttons["Library"].exists)
+        XCTAssertTrue(tabBar.buttons["Search"].exists)
+        XCTAssertTrue(tabBar.buttons["Settings"].exists)
+        XCTAssertFalse(app.navigationBars["Connect"].exists)
+    }
+
     func test_invalidCredentialsShowError() {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing-reset-session", "-ui-testing-invalid-auth"]
