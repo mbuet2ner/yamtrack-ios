@@ -1,0 +1,571 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0BA1967A3FC3A1D5C872009B /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA907AB023024A4E3CD71201 /* KeychainStore.swift */; };
+		1CD6B08B69E3BBC27806543D /* SessionCredentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = B35118195EFDF25373259293 /* SessionCredentials.swift */; };
+		3262706D5498A85CAE193113 /* SessionControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23C23ED32477BC7F204AE1E /* SessionControllerTests.swift */; };
+		56EAFB4FBB5606E629157F03 /* SetupFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89E9D0241CD53308786225E7 /* SetupFlowUITests.swift */; };
+		608DBD2AD72D9A68560C0AD6 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55BBCAEADD0050E6C630A5D8 /* RootView.swift */; };
+		7436EDBADFE89475A4CFBB6F /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4E46C8506D1DA3446F37F4 /* SetupView.swift */; };
+		7D177611A8D3E267C10EE014 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CBE08A3AD2A61BB4E780107 /* Theme.swift */; };
+		82F096FC2BB31DD3A9079CE0 /* GlassSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAD185B05CA6692A53CB5C1 /* GlassSurface.swift */; };
+		B4DD9909372AE9CDC9DCD18D /* AppLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9DDBFD983AC3EBECCBEAD67 /* AppLaunchTests.swift */; };
+		D776162225A8BA4A89FEB99E /* SetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF14EBE3DED97DA1824A67B5 /* SetupViewModel.swift */; };
+		D856405C0D24D0E867BA493A /* AppTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81AE329EEEAFED8DAEE2D274 /* AppTab.swift */; };
+		DB74A522611D2066A2B7E38E /* SessionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E02CFAD7961E41D7BA466E /* SessionController.swift */; };
+		FA4D3335E83E4159C89FF3AD /* YamtrackiOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98CE5E019B7FDE1479405C79 /* YamtrackiOSApp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		262812672DE864DA33C99185 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B5E1564489CEE94D115E3519 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FFCD41908F2794A12E29F3E2;
+			remoteInfo = YamtrackiOS;
+		};
+		9D185267FA325C6823A1A532 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B5E1564489CEE94D115E3519 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FFCD41908F2794A12E29F3E2;
+			remoteInfo = YamtrackiOS;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		1CBE08A3AD2A61BB4E780107 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		34E02CFAD7961E41D7BA466E /* SessionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionController.swift; sourceTree = "<group>"; };
+		55BBCAEADD0050E6C630A5D8 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		7391E36A5804763722700460 /* YamtrackiOSUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = YamtrackiOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7AAD185B05CA6692A53CB5C1 /* GlassSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassSurface.swift; sourceTree = "<group>"; };
+		81AE329EEEAFED8DAEE2D274 /* AppTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTab.swift; sourceTree = "<group>"; };
+		89E9D0241CD53308786225E7 /* SetupFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupFlowUITests.swift; sourceTree = "<group>"; };
+		98CE5E019B7FDE1479405C79 /* YamtrackiOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YamtrackiOSApp.swift; sourceTree = "<group>"; };
+		9F4E46C8506D1DA3446F37F4 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
+		A803E5CC21D425ADCE58F8C0 /* YamtrackiOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = YamtrackiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B35118195EFDF25373259293 /* SessionCredentials.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionCredentials.swift; sourceTree = "<group>"; };
+		C23C23ED32477BC7F204AE1E /* SessionControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionControllerTests.swift; sourceTree = "<group>"; };
+		DF14EBE3DED97DA1824A67B5 /* SetupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupViewModel.swift; sourceTree = "<group>"; };
+		E016053922905CE7D1468BBD /* YamtrackiOSTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = YamtrackiOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E3CE1C8EAB9FEB8660EF1BB8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		F9DDBFD983AC3EBECCBEAD67 /* AppLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLaunchTests.swift; sourceTree = "<group>"; };
+		FA907AB023024A4E3CD71201 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		04D94EAF909DCD0463423E3B /* YamtrackiOSUITests */ = {
+			isa = PBXGroup;
+			children = (
+				F9DDBFD983AC3EBECCBEAD67 /* AppLaunchTests.swift */,
+				89E9D0241CD53308786225E7 /* SetupFlowUITests.swift */,
+			);
+			path = YamtrackiOSUITests;
+			sourceTree = "<group>";
+		};
+		0EABF82D1EF19E9E0B6905E2 /* Session */ = {
+			isa = PBXGroup;
+			children = (
+				C23C23ED32477BC7F204AE1E /* SessionControllerTests.swift */,
+			);
+			path = Session;
+			sourceTree = "<group>";
+		};
+		5E89C06C28BBD2EBB185340A /* Setup */ = {
+			isa = PBXGroup;
+			children = (
+				9F4E46C8506D1DA3446F37F4 /* SetupView.swift */,
+				DF14EBE3DED97DA1824A67B5 /* SetupViewModel.swift */,
+			);
+			path = Setup;
+			sourceTree = "<group>";
+		};
+		6A8FD29BFE704953A3BB73D6 /* YamtrackiOSTests */ = {
+			isa = PBXGroup;
+			children = (
+				0EABF82D1EF19E9E0B6905E2 /* Session */,
+			);
+			path = YamtrackiOSTests;
+			sourceTree = "<group>";
+		};
+		91D8CD9CBBEF795072CCD5BF /* Session */ = {
+			isa = PBXGroup;
+			children = (
+				FA907AB023024A4E3CD71201 /* KeychainStore.swift */,
+				34E02CFAD7961E41D7BA466E /* SessionController.swift */,
+				B35118195EFDF25373259293 /* SessionCredentials.swift */,
+			);
+			path = Session;
+			sourceTree = "<group>";
+		};
+		A4E63B90F42F2EC0E7E56700 = {
+			isa = PBXGroup;
+			children = (
+				A4EB28AA013798C35DA4B2F1 /* YamtrackiOS */,
+				6A8FD29BFE704953A3BB73D6 /* YamtrackiOSTests */,
+				04D94EAF909DCD0463423E3B /* YamtrackiOSUITests */,
+				CBAC6662F9A06C4ACF421C22 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A4EB28AA013798C35DA4B2F1 /* YamtrackiOS */ = {
+			isa = PBXGroup;
+			children = (
+				E3CE1C8EAB9FEB8660EF1BB8 /* Info.plist */,
+				C1C25D851F1B169D31C526F9 /* App */,
+				C087A288FFDBDEB2B3611C52 /* DesignSystem */,
+				FDA31CC3D3823B626B8E026A /* Features */,
+				91D8CD9CBBEF795072CCD5BF /* Session */,
+			);
+			path = YamtrackiOS;
+			sourceTree = "<group>";
+		};
+		C087A288FFDBDEB2B3611C52 /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				7AAD185B05CA6692A53CB5C1 /* GlassSurface.swift */,
+				1CBE08A3AD2A61BB4E780107 /* Theme.swift */,
+			);
+			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		C1C25D851F1B169D31C526F9 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				81AE329EEEAFED8DAEE2D274 /* AppTab.swift */,
+				55BBCAEADD0050E6C630A5D8 /* RootView.swift */,
+				98CE5E019B7FDE1479405C79 /* YamtrackiOSApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		CBAC6662F9A06C4ACF421C22 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A803E5CC21D425ADCE58F8C0 /* YamtrackiOS.app */,
+				E016053922905CE7D1468BBD /* YamtrackiOSTests.xctest */,
+				7391E36A5804763722700460 /* YamtrackiOSUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		FDA31CC3D3823B626B8E026A /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				5E89C06C28BBD2EBB185340A /* Setup */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4512148D21425FA6D6BDA7F0 /* YamtrackiOSTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D3C953F78B55E4D0768FC342 /* Build configuration list for PBXNativeTarget "YamtrackiOSTests" */;
+			buildPhases = (
+				7A0669184047F13217A73222 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				61D781A033C9BB660AD2885C /* PBXTargetDependency */,
+			);
+			name = YamtrackiOSTests;
+			packageProductDependencies = (
+			);
+			productName = YamtrackiOSTests;
+			productReference = E016053922905CE7D1468BBD /* YamtrackiOSTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		F4559747D3E5B810283FF4E8 /* YamtrackiOSUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 39280FABE74E6E7AAE25927B /* Build configuration list for PBXNativeTarget "YamtrackiOSUITests" */;
+			buildPhases = (
+				B3547C9B34EFB20763E10E79 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				85C6AADB430CCAFCCB6084EF /* PBXTargetDependency */,
+			);
+			name = YamtrackiOSUITests;
+			packageProductDependencies = (
+			);
+			productName = YamtrackiOSUITests;
+			productReference = 7391E36A5804763722700460 /* YamtrackiOSUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		FFCD41908F2794A12E29F3E2 /* YamtrackiOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 991B05F3C17B3D2A3D2CC53C /* Build configuration list for PBXNativeTarget "YamtrackiOS" */;
+			buildPhases = (
+				A3329C4FE1AF3CF737050D55 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = YamtrackiOS;
+			packageProductDependencies = (
+			);
+			productName = YamtrackiOS;
+			productReference = A803E5CC21D425ADCE58F8C0 /* YamtrackiOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B5E1564489CEE94D115E3519 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					F4559747D3E5B810283FF4E8 = {
+						TestTargetID = FFCD41908F2794A12E29F3E2;
+					};
+				};
+			};
+			buildConfigurationList = 5459F341663FC1A9759C4C98 /* Build configuration list for PBXProject "YamtrackiOS" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = A4E63B90F42F2EC0E7E56700;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = CBAC6662F9A06C4ACF421C22 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FFCD41908F2794A12E29F3E2 /* YamtrackiOS */,
+				4512148D21425FA6D6BDA7F0 /* YamtrackiOSTests */,
+				F4559747D3E5B810283FF4E8 /* YamtrackiOSUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		7A0669184047F13217A73222 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3262706D5498A85CAE193113 /* SessionControllerTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A3329C4FE1AF3CF737050D55 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D856405C0D24D0E867BA493A /* AppTab.swift in Sources */,
+				82F096FC2BB31DD3A9079CE0 /* GlassSurface.swift in Sources */,
+				0BA1967A3FC3A1D5C872009B /* KeychainStore.swift in Sources */,
+				608DBD2AD72D9A68560C0AD6 /* RootView.swift in Sources */,
+				DB74A522611D2066A2B7E38E /* SessionController.swift in Sources */,
+				1CD6B08B69E3BBC27806543D /* SessionCredentials.swift in Sources */,
+				7436EDBADFE89475A4CFBB6F /* SetupView.swift in Sources */,
+				D776162225A8BA4A89FEB99E /* SetupViewModel.swift in Sources */,
+				7D177611A8D3E267C10EE014 /* Theme.swift in Sources */,
+				FA4D3335E83E4159C89FF3AD /* YamtrackiOSApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B3547C9B34EFB20763E10E79 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4DD9909372AE9CDC9DCD18D /* AppLaunchTests.swift in Sources */,
+				56EAFB4FBB5606E629157F03 /* SetupFlowUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		61D781A033C9BB660AD2885C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FFCD41908F2794A12E29F3E2 /* YamtrackiOS */;
+			targetProxy = 9D185267FA325C6823A1A532 /* PBXContainerItemProxy */;
+		};
+		85C6AADB430CCAFCCB6084EF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FFCD41908F2794A12E29F3E2 /* YamtrackiOS */;
+			targetProxy = 262812672DE864DA33C99185 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		3A7014D41C574B857EF174BA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.maltepaulbuttner.YamtrackiOSTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/YamtrackiOS.app/YamtrackiOS";
+			};
+			name = Release;
+		};
+		7603CCEA3AA5999056E8D234 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.maltepaulbuttner.YamtrackiOSUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = YamtrackiOS;
+			};
+			name = Release;
+		};
+		873D69A8EFDC2D32BBA21F4D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		C297D886FFA16CBD775ED164 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.maltepaulbuttner.YamtrackiOSTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/YamtrackiOS.app/YamtrackiOS";
+			};
+			name = Debug;
+		};
+		D931EFE9244D755756A2A39C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = YamtrackiOS/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.maltepaulbuttner.yamtrackios;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		DE1827962ABB06E88655F99E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.maltepaulbuttner.YamtrackiOSUITests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = YamtrackiOS;
+			};
+			name = Debug;
+		};
+		EB3F303097C8D1E0286F4D2F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		F61930DA832C77D9D7437D7B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = YamtrackiOS/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.maltepaulbuttner.yamtrackios;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		39280FABE74E6E7AAE25927B /* Build configuration list for PBXNativeTarget "YamtrackiOSUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DE1827962ABB06E88655F99E /* Debug */,
+				7603CCEA3AA5999056E8D234 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		5459F341663FC1A9759C4C98 /* Build configuration list for PBXProject "YamtrackiOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				873D69A8EFDC2D32BBA21F4D /* Debug */,
+				EB3F303097C8D1E0286F4D2F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		991B05F3C17B3D2A3D2CC53C /* Build configuration list for PBXNativeTarget "YamtrackiOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F61930DA832C77D9D7437D7B /* Debug */,
+				D931EFE9244D755756A2A39C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		D3C953F78B55E4D0768FC342 /* Build configuration list for PBXNativeTarget "YamtrackiOSTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C297D886FFA16CBD775ED164 /* Debug */,
+				3A7014D41C574B857EF174BA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B5E1564489CEE94D115E3519 /* Project object */;
+}
