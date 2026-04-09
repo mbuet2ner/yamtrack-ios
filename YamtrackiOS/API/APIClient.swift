@@ -43,6 +43,14 @@ final class APIClient {
             throw APIError.invalidURL
         }
 
+        guard
+            let scheme = components.scheme,
+            ["http", "https"].contains(scheme),
+            components.host != nil
+        else {
+            throw APIError.invalidURL
+        }
+
         components.path = credentials.baseURL.path + request.path
         if !request.queryItems.isEmpty {
             components.queryItems = request.queryItems

@@ -37,6 +37,28 @@ final class SessionControllerTests: XCTestCase {
         XCTAssertFalse(sut.hasPersistedSession)
     }
 
+    func test_connectRejectsMalformedButParseableServerURLs() async throws {
+        let store = InMemorySessionStore()
+        let invalidURLs = [
+            "demo.local",
+            "ftp://demo.local",
+            "http://"
+        ]
+
+        for string in invalidURLs {
+            let sut = makeSUT(store: store)
+            sut.baseURLString = string
+            sut.token = "secret"
+
+            do {
+                try await sut.connect()
+                XCTFail("Expected invalidURL error for \(string)")
+            } catch let error as SessionError {
+                XCTAssertEqual(error, .invalidURL, "Expected invalidURL error for \(string)")
+            }
+        }
+    }
+
     func test_connectMapsTransportFailureToConnectionFailed() async throws {
         let store = InMemorySessionStore()
         let spy = HTTPClientSpy(result: .failure(URLError(.notConnectedToInternet)))

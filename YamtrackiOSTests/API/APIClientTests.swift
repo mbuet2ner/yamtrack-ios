@@ -85,6 +85,29 @@ final class APIClientTests: XCTestCase {
 
         XCTAssertEqual(spy.lastRequest?.url?.absoluteString, "https://demo.local/tenant/api/v1/info/")
     }
+
+    func test_fetchInfo_throwsInvalidURLForMalformedButParseableServerURLs() async throws {
+        let sut = makeSUT()
+        let invalidURLs = [
+            "demo.local",
+            "ftp://demo.local",
+            "http://"
+        ]
+
+        for string in invalidURLs {
+            guard let url = URL(string: string) else {
+                XCTFail("Expected \(string) to be parseable enough for this regression test")
+                continue
+            }
+
+            do {
+                _ = try await sut.fetchInfo(credentials: SessionCredentials(baseURL: url, token: "secret"))
+                XCTFail("Expected invalidURL for \(string)")
+            } catch let error as APIError {
+                XCTAssertEqual(error, .invalidURL, "Expected invalidURL for \(string)")
+            }
+        }
+    }
 }
 
 private func loadFixtureData(named name: String) throws -> Data {
