@@ -23,9 +23,6 @@ targets:
     platform: iOS
     sources:
       - YamtrackiOSTests
-    settings:
-      base:
-        GENERATE_INFOPLIST_FILE: YES
     dependencies:
       - target: YamtrackiOS
   YamtrackiOSUITests:
@@ -33,8 +30,5 @@ targets:
     platform: iOS
     sources:
       - YamtrackiOSUITests
-    settings:
-      base:
-        GENERATE_INFOPLIST_FILE: YES
     dependencies:
       - target: YamtrackiOS
