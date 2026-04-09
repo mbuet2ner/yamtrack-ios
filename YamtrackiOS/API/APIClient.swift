@@ -1,6 +1,8 @@
 import Foundation
 
 final class APIClient {
+    static let live = APIClient(httpClient: URLSessionHTTPClient())
+
     private let httpClient: HTTPClient
     private let decoder: JSONDecoder
 
@@ -22,6 +24,10 @@ final class APIClient {
         do {
             let (data, response) = try await httpClient.perform(urlRequest)
             return try decode(data: data, response: response)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let error as URLError where error.code == .cancelled {
+            throw CancellationError()
         } catch let error as APIError {
             throw error
         } catch {

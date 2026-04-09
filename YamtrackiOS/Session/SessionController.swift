@@ -1,9 +1,7 @@
 import Foundation
 import Observation
 
-protocol SessionInfoValidating: Sendable {
-    func validate(_ request: URLRequest) async throws
-}
+private let defaultSessionService = "com.maltepaulbuttner.yamtrackios.session"
 
 enum SessionError: LocalizedError, Equatable {
     case invalidURL
@@ -22,44 +20,21 @@ enum SessionError: LocalizedError, Equatable {
     }
 }
 
-struct URLSessionSessionInfoValidator: SessionInfoValidating {
-    func validate(_ request: URLRequest) async throws {
-        do {
-            let (_, response) = try await URLSession.shared.data(for: request)
-            guard let httpResponse = response as? HTTPURLResponse else {
-                throw SessionError.connectionFailed
-            }
-
-            guard 200..<300 ~= httpResponse.statusCode else {
-                if httpResponse.statusCode == 401 {
-                    throw SessionError.invalidToken
-                }
-                throw SessionError.connectionFailed
-            }
-        } catch let error as SessionError {
-            throw error
-        } catch {
-            throw SessionError.connectionFailed
-        }
-    }
-}
-
 @MainActor
 @Observable
 final class SessionController {
     static let storageKey = "session"
-    private static let defaultService = "com.maltepaulbuttner.yamtrackios.session"
 
     private let store: SessionStoring
-    private let validator: SessionInfoValidating
+    private let apiClient: APIClient
 
     var baseURLString = ""
     var token = ""
     var hasPersistedSession = false
 
-    init(store: SessionStoring, validator: SessionInfoValidating) {
+    init(store: SessionStoring, apiClient: APIClient) {
         self.store = store
-        self.validator = validator
+        self.apiClient = apiClient
     }
 
     func restoreCredentials() async {
@@ -76,29 +51,28 @@ final class SessionController {
     }
 
     func connect() async throws {
-        guard
-            let baseURL = URL(string: baseURLString),
-            let baseComponents = URLComponents(url: baseURL, resolvingAgainstBaseURL: false),
-            let scheme = baseComponents.scheme,
-            ["http", "https"].contains(scheme),
-            baseComponents.host != nil
-        else {
+        guard let baseURL = URL(string: baseURLString) else {
             throw SessionError.invalidURL
         }
-
-        var components = baseComponents
-        components.path = "/api/v1/info/"
-        guard let requestURL = components.url else {
-            throw SessionError.invalidURL
-        }
-
-        var request = URLRequest(url: requestURL)
-        request.httpMethod = "GET"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-
-        try await validator.validate(request)
 
         let credentials = SessionCredentials(baseURL: baseURL, token: token)
+        do {
+            _ = try await apiClient.fetchInfo(credentials: credentials)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let error as APIError {
+            switch error {
+            case .invalidURL:
+                throw SessionError.invalidURL
+            case .unauthorized:
+                throw SessionError.invalidToken
+            case .server, .decoding, .transport:
+                throw SessionError.connectionFailed
+            }
+        } catch {
+            throw SessionError.connectionFailed
+        }
+
         let data = try JSONEncoder().encode(credentials)
         try store.save(data, for: Self.storageKey)
         hasPersistedSession = true
@@ -114,12 +88,12 @@ final class SessionController {
 
 extension SessionController {
     static func live(
-        store: SessionStoring = KeychainStore(service: defaultService, accessGroup: nil),
-        validator: SessionInfoValidating = URLSessionSessionInfoValidator()
+        store: SessionStoring = KeychainStore(service: defaultSessionService, accessGroup: nil),
+        apiClient: APIClient = .live
     ) -> SessionController {
         SessionController(
             store: store,
-            validator: validator
+            apiClient: apiClient
         )
     }
 }

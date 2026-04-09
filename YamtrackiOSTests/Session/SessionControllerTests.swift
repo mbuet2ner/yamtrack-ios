@@ -11,7 +11,7 @@ final class SessionControllerTests: XCTestCase {
         )
         try store.save(try JSONEncoder().encode(credentials), for: SessionController.storageKey)
 
-        let sut = SessionController(store: store, validator: SessionInfoValidatorSpy())
+        let sut = makeSUT(store: store)
 
         await sut.restoreCredentials()
 
@@ -22,7 +22,7 @@ final class SessionControllerTests: XCTestCase {
 
     func test_connectRejectsInvalidURL() async throws {
         let store = InMemorySessionStore()
-        let sut = SessionController(store: store, validator: SessionInfoValidatorSpy())
+        let sut = makeSUT(store: store)
         sut.baseURLString = "not a url"
         sut.token = "secret"
 
@@ -37,10 +37,10 @@ final class SessionControllerTests: XCTestCase {
         XCTAssertFalse(sut.hasPersistedSession)
     }
 
-    func test_connectPropagatesValidatorFailure() async throws {
+    func test_connectMapsTransportFailureToConnectionFailed() async throws {
         let store = InMemorySessionStore()
-        let validator = SessionInfoValidatorSpy(error: SessionError.connectionFailed)
-        let sut = SessionController(store: store, validator: validator)
+        let spy = HTTPClientSpy(result: .failure(URLError(.notConnectedToInternet)))
+        let sut = makeSUT(store: store, httpClient: spy)
         sut.baseURLString = "https://demo.local"
         sut.token = "secret"
 
@@ -54,8 +54,14 @@ final class SessionControllerTests: XCTestCase {
 
     func test_failedConnectDoesNotPersistCredentials() async throws {
         let store = InMemorySessionStore()
-        let validator = SessionInfoValidatorSpy(error: SessionError.invalidToken)
-        let sut = SessionController(store: store, validator: validator)
+        let response = HTTPURLResponse(
+            url: URL(string: "https://demo.local/api/v1/info/")!,
+            statusCode: 401,
+            httpVersion: nil,
+            headerFields: nil
+        )!
+        let spy = HTTPClientSpy(result: .success((Data(), response)))
+        let sut = makeSUT(store: store, httpClient: spy)
         sut.baseURLString = "https://demo.local"
         sut.token = "secret"
 
@@ -70,17 +76,24 @@ final class SessionControllerTests: XCTestCase {
         XCTAssertFalse(sut.hasPersistedSession)
     }
 
-    func test_connectValidatesInfoEndpointAndPersistsCredentials() async throws {
+    func test_connectUsesSharedAPIClientAndPersistsCredentials() async throws {
         let store = InMemorySessionStore()
-        let validator = SessionInfoValidatorSpy()
-        let sut = SessionController(store: store, validator: validator)
+        let response = HTTPURLResponse(
+            url: URL(string: "https://demo.local/api/v1/info/")!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: nil
+        )!
+        let spy = HTTPClientSpy(result: .success((Data(#"{"name":"Yamtrack","version":"0.0.24"}"#.utf8), response)))
+        let sut = makeSUT(store: store, httpClient: spy)
         sut.baseURLString = "https://demo.local"
         sut.token = "secret"
 
         try await sut.connect()
 
-        XCTAssertEqual(validator.lastRequest?.url?.absoluteString, "https://demo.local/api/v1/info/")
-        XCTAssertEqual(validator.lastRequest?.value(forHTTPHeaderField: "Authorization"), "Bearer secret")
+        XCTAssertEqual(spy.lastRequest?.url?.absoluteString, "https://demo.local/api/v1/info/")
+        XCTAssertEqual(spy.lastRequest?.httpMethod, "GET")
+        XCTAssertEqual(spy.lastRequest?.value(forHTTPHeaderField: "Authorization"), "Bearer secret")
         XCTAssertTrue(sut.hasPersistedSession)
 
         let savedData = try XCTUnwrap(try store.loadValue(for: SessionController.storageKey))
@@ -91,7 +104,7 @@ final class SessionControllerTests: XCTestCase {
 
     func test_logoutClearsPersistedCredentialsAndState() async throws {
         let store = InMemorySessionStore()
-        let sut = SessionController(store: store, validator: SessionInfoValidatorSpy())
+        let sut = makeSUT(store: store)
         sut.baseURLString = "https://demo.local"
         sut.token = "secret"
 
@@ -103,20 +116,24 @@ final class SessionControllerTests: XCTestCase {
         XCTAssertFalse(sut.hasPersistedSession)
         XCTAssertNil(try store.loadValue(for: "session"))
     }
-}
 
-private final class SessionInfoValidatorSpy: SessionInfoValidating, @unchecked Sendable {
-    private(set) var lastRequest: URLRequest?
-    private let error: Error?
-
-    init(error: Error? = nil) {
-        self.error = error
-    }
-
-    func validate(_ request: URLRequest) async throws {
-        lastRequest = request
-        if let error {
-            throw error
-        }
+    private func makeSUT(
+        store: InMemorySessionStore,
+        httpClient: HTTPClient = HTTPClientSpy(
+            result: .success((
+                Data(#"{"name":"Yamtrack","version":"0.0.24"}"#.utf8),
+                HTTPURLResponse(
+                    url: URL(string: "https://demo.local/api/v1/info/")!,
+                    statusCode: 200,
+                    httpVersion: nil,
+                    headerFields: nil
+                )!
+            ))
+        )
+    ) -> SessionController {
+        SessionController(
+            store: store,
+            apiClient: APIClient(httpClient: httpClient)
+        )
     }
 }
