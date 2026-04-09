@@ -6,8 +6,9 @@ final class AppLaunchTests: XCTestCase {
         app.launch()
 
         XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 2))
-        XCTAssertTrue(app.buttons["Library"].exists)
-        XCTAssertTrue(app.buttons["Search"].exists)
-        XCTAssertTrue(app.buttons["Settings"].exists)
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.buttons["Library"].exists)
+        XCTAssertTrue(tabBar.buttons["Search"].exists)
+        XCTAssertTrue(tabBar.buttons["Settings"].exists)
     }
 }

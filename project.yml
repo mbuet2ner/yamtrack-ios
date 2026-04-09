@@ -16,6 +16,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.maltepaulbuttner.yamtrackios
         SWIFT_VERSION: 6.0
+        TARGETED_DEVICE_FAMILY: "1"
     dependencies: []
   YamtrackiOSTests:
     type: bundle.unit-test
