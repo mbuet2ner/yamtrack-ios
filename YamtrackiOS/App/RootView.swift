@@ -3,7 +3,7 @@ import SwiftUI
 struct RootView: View {
     @State private var selectedTab: AppTab = .library
     @State private var session: SessionController
-    @State private var didRestoreSession = false
+    @State private var isRestoringSession = true
 
     init(session: SessionController) {
         _session = State(initialValue: session)
@@ -11,7 +11,10 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if didRestoreSession && session.hasPersistedSession {
+            if isRestoringSession {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if session.hasPersistedSession {
                 TabView(selection: $selectedTab) {
                     NavigationStack {
                         Text("Library")
@@ -42,7 +45,7 @@ struct RootView: View {
         }
         .task {
             await session.restoreCredentials()
-            didRestoreSession = true
+            isRestoringSession = false
         }
     }
 }
