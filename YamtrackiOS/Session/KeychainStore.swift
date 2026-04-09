@@ -1,7 +1,7 @@
 import Foundation
 import Security
 
-struct KeychainStore {
+struct KeychainStore: SessionStoring {
     let service: String
     let accessGroup: String?
 

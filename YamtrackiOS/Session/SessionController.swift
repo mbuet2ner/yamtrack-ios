@@ -50,14 +50,14 @@ final class SessionController {
     static let storageKey = "session"
     private static let defaultService = "org.yamtrack.ios.session"
 
-    private let store: KeychainStore
+    private let store: SessionStoring
     private let validator: SessionInfoValidating
 
     var baseURLString = ""
     var token = ""
     var hasPersistedSession = false
 
-    init(store: KeychainStore, validator: SessionInfoValidating) {
+    init(store: SessionStoring, validator: SessionInfoValidating) {
         self.store = store
         self.validator = validator
     }
@@ -76,13 +76,17 @@ final class SessionController {
     }
 
     func connect() async throws {
-        guard let baseURL = URL(string: baseURLString) else {
+        guard
+            let baseURL = URL(string: baseURLString),
+            let baseComponents = URLComponents(url: baseURL, resolvingAgainstBaseURL: false),
+            let scheme = baseComponents.scheme,
+            ["http", "https"].contains(scheme),
+            baseComponents.host != nil
+        else {
             throw SessionError.invalidURL
         }
 
-        guard var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false) else {
-            throw SessionError.invalidURL
-        }
+        var components = baseComponents
         components.path = "/api/v1/info/"
         guard let requestURL = components.url else {
             throw SessionError.invalidURL
@@ -109,9 +113,12 @@ final class SessionController {
 }
 
 extension SessionController {
-    static func live(validator: SessionInfoValidating = URLSessionSessionInfoValidator()) -> SessionController {
+    static func live(
+        store: SessionStoring = KeychainStore(service: defaultService, accessGroup: nil),
+        validator: SessionInfoValidating = URLSessionSessionInfoValidator()
+    ) -> SessionController {
         SessionController(
-            store: KeychainStore(service: defaultService, accessGroup: nil),
+            store: store,
             validator: validator
         )
     }

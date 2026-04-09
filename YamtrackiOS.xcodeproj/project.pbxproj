@@ -19,6 +19,7 @@
 		D776162225A8BA4A89FEB99E /* SetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF14EBE3DED97DA1824A67B5 /* SetupViewModel.swift */; };
 		D856405C0D24D0E867BA493A /* AppTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81AE329EEEAFED8DAEE2D274 /* AppTab.swift */; };
 		DB74A522611D2066A2B7E38E /* SessionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E02CFAD7961E41D7BA466E /* SessionController.swift */; };
+		E9982841CC2C7DE05DFDFE41 /* SessionStoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F9DE72FC98EFB5AC4CBFC78 /* SessionStoring.swift */; };
 		FA4D3335E83E4159C89FF3AD /* YamtrackiOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98CE5E019B7FDE1479405C79 /* YamtrackiOSApp.swift */; };
 /* End PBXBuildFile section */
 
@@ -42,6 +43,7 @@
 /* Begin PBXFileReference section */
 		1CBE08A3AD2A61BB4E780107 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		34E02CFAD7961E41D7BA466E /* SessionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionController.swift; sourceTree = "<group>"; };
+		4F9DE72FC98EFB5AC4CBFC78 /* SessionStoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStoring.swift; sourceTree = "<group>"; };
 		55BBCAEADD0050E6C630A5D8 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		7391E36A5804763722700460 /* YamtrackiOSUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = YamtrackiOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7AAD185B05CA6692A53CB5C1 /* GlassSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassSurface.swift; sourceTree = "<group>"; };
@@ -100,6 +102,7 @@
 				FA907AB023024A4E3CD71201 /* KeychainStore.swift */,
 				34E02CFAD7961E41D7BA466E /* SessionController.swift */,
 				B35118195EFDF25373259293 /* SessionCredentials.swift */,
+				4F9DE72FC98EFB5AC4CBFC78 /* SessionStoring.swift */,
 			);
 			path = Session;
 			sourceTree = "<group>";
@@ -273,6 +276,7 @@
 				608DBD2AD72D9A68560C0AD6 /* RootView.swift in Sources */,
 				DB74A522611D2066A2B7E38E /* SessionController.swift in Sources */,
 				1CD6B08B69E3BBC27806543D /* SessionCredentials.swift in Sources */,
+				E9982841CC2C7DE05DFDFE41 /* SessionStoring.swift in Sources */,
 				7436EDBADFE89475A4CFBB6F /* SetupView.swift in Sources */,
 				D776162225A8BA4A89FEB99E /* SetupViewModel.swift in Sources */,
 				7D177611A8D3E267C10EE014 /* Theme.swift in Sources */,
