@@ -9,7 +9,7 @@ targets:
     sources:
       - YamtrackiOS
     info:
-      path: /tmp/yamtrack-ios-info.plist
+      path: YamtrackiOS/Info.plist
       properties:
         UILaunchScreen: {}
     settings:
