@@ -1,14 +1,12 @@
 import XCTest
 
 final class AppLaunchTests: XCTestCase {
-    func test_appLaunchesIntoRootShell() {
+    func test_appLaunchesIntoSetupFlowWhenNoSessionIsPersisted() {
         let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing-reset-session"]
         app.launch()
 
-        XCTAssertTrue(app.tabBars.firstMatch.waitForExistence(timeout: 2))
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.buttons["Library"].exists)
-        XCTAssertTrue(tabBar.buttons["Search"].exists)
-        XCTAssertTrue(tabBar.buttons["Settings"].exists)
+        XCTAssertTrue(app.navigationBars["Connect"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["Connect"].exists)
     }
 }
