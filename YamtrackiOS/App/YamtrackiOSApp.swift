@@ -20,9 +20,13 @@ struct YamtrackiOSApp: App {
             try? testStore.save(try! JSONEncoder().encode(credentials), for: SessionController.storageKey)
         }
 
+        let apiClient = invalidAuth
+            ? APIClient(httpClient: UIInvalidAuthHTTPClient())
+            : APIClient.live
+
         let session = SessionController.live(
             store: store,
-            validator: invalidAuth ? UIInvalidAuthSessionInfoValidator() : URLSessionSessionInfoValidator()
+            apiClient: apiClient
         )
 
         if arguments.contains("-ui-testing-reset-session") {
@@ -39,8 +43,14 @@ struct YamtrackiOSApp: App {
     }
 }
 
-private struct UIInvalidAuthSessionInfoValidator: SessionInfoValidating {
-    func validate(_ request: URLRequest) async throws {
-        throw SessionError.invalidToken
+private struct UIInvalidAuthHTTPClient: HTTPClient {
+    func perform(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        let response = HTTPURLResponse(
+            url: request.url ?? URL(string: "https://demo.local/api/v1/info/")!,
+            statusCode: 401,
+            httpVersion: nil,
+            headerFields: nil
+        )!
+        return (Data(), response)
     }
 }
