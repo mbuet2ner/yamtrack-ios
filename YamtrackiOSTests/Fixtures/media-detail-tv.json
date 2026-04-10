@@ -1,0 +1,111 @@
+{
+  "id": 102,
+  "media_id": 2,
+  "source": "tmdb",
+  "source_url": "https://www.themoviedb.org/tv/1920-twin-peaks",
+  "media_type": "tv",
+  "title": "Twin Peaks",
+  "image": "https://image.tmdb.org/t/p/w500/twin-peaks.jpg",
+  "synopsis": "An investigation into a small town uncovers strange secrets.",
+  "genres": ["Drama", "Mystery"],
+  "score": 8.7,
+  "score_count": 128,
+  "details": {
+    "format": "TV",
+    "first_air_date": "1990-04-08",
+    "last_air_date": "1991-06-10",
+    "status": "In progress",
+    "seasons": 2,
+    "episodes": 8,
+    "runtime": "47m",
+    "studios": ["ABC"],
+    "country": "United States",
+    "languages": ["English"],
+    "tvdb_id": 251789,
+    "last_episode_season": 1,
+    "next_episode_season": 2
+  },
+  "related": {
+    "seasons": [
+      {
+        "id": 201,
+        "consumption_id": null,
+        "item": {
+          "media_id": 2,
+          "source": "tmdb",
+          "media_type": "season",
+          "title": "Season 1",
+          "image": "https://image.tmdb.org/t/p/w500/season-1.jpg",
+          "season_number": 1,
+          "episode_number": null
+        },
+        "item_id": "tv/tmdb/2/1",
+        "parent_id": "tv/tmdb/2",
+        "tracked": true,
+        "created_at": "2026-04-10T08:00:00Z",
+        "score": 8.2,
+        "status": 1,
+        "progress": 6,
+        "progressed_at": "2026-04-10T09:15:00Z",
+        "start_date": null,
+        "end_date": null,
+        "notes": null,
+        "lists": []
+      },
+      {
+        "id": 202,
+        "consumption_id": null,
+        "item": {
+          "media_id": 2,
+          "source": "tmdb",
+          "media_type": "season",
+          "title": "Season 2",
+          "image": "https://image.tmdb.org/t/p/w500/season-2.jpg",
+          "season_number": 2,
+          "episode_number": null
+        },
+        "item_id": "tv/tmdb/2/2",
+        "parent_id": "tv/tmdb/2",
+        "tracked": true,
+        "created_at": "2026-04-10T08:00:00Z",
+        "score": 7.9,
+        "status": 0,
+        "progress": 2,
+        "progressed_at": "2026-04-10T08:45:00Z",
+        "start_date": null,
+        "end_date": null,
+        "notes": null,
+        "lists": []
+      }
+    ]
+  },
+  "item_id": "tv/tmdb/2",
+  "parent_id": null,
+  "tracked": true,
+  "consumptions_number": 2,
+  "consumptions": [
+    {
+      "consumption_id": 901,
+      "created": "2026-04-10T08:00:00Z",
+      "score": 8.2,
+      "progress": 1,
+      "progressed_at": "2026-04-10T08:20:00Z",
+      "status": 1,
+      "start_date": null,
+      "end_date": null,
+      "notes": null
+    },
+    {
+      "consumption_id": 902,
+      "created": "2026-04-10T09:10:00Z",
+      "score": 8.7,
+      "progress": 2,
+      "progressed_at": "2026-04-10T09:15:00Z",
+      "status": 1,
+      "start_date": null,
+      "end_date": null,
+      "notes": null
+    }
+  ],
+  "lists": []
+}

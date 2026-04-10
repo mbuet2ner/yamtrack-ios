@@ -17,6 +17,16 @@ final class LibraryViewModel {
         self.credentials = credentials
     }
 
+    func makeDetailViewModel(for item: MediaSummary) -> MediaDetailViewModel {
+        MediaDetailViewModel(
+            mediaID: item.mediaID,
+            source: item.source,
+            mediaType: item.mediaType,
+            apiClient: apiClient,
+            credentials: credentials
+        )
+    }
+
     var items: [MediaSummary] {
         guard selectedFilter != .all else {
             return allItems

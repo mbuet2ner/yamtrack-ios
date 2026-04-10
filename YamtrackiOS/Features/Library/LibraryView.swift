@@ -14,7 +14,7 @@ struct LibraryView: View {
 
             ForEach(viewModel.items) { item in
                 NavigationLink {
-                    MediaDetailPlaceholderView(item: item)
+                    MediaDetailView(viewModel: viewModel.makeDetailViewModel(for: item))
                 } label: {
                     MediaRowView(item: item)
                 }
@@ -59,25 +59,5 @@ struct LibraryView: View {
             await viewModel.load()
         }
         .navigationTitle("Library")
-    }
-}
-
-private struct MediaDetailPlaceholderView: View {
-    let item: MediaSummary
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(item.title)
-                .font(.title2.bold())
-
-            Text("Detail view coming in the next slice.")
-                .foregroundStyle(.secondary)
-
-            Text("This tap path proves navigation works.")
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .padding()
-        .navigationTitle(item.title)
     }
 }
