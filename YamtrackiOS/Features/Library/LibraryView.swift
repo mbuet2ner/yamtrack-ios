@@ -13,10 +13,15 @@ struct LibraryView: View {
             }
 
             ForEach(viewModel.items) { item in
-                MediaRowView(item: item)
-                    .listRowInsets(.init(top: 6, leading: 0, bottom: 6, trailing: 0))
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
+                NavigationLink {
+                    MediaDetailPlaceholderView(item: item)
+                } label: {
+                    MediaRowView(item: item)
+                }
+                .buttonStyle(.plain)
+                .listRowInsets(.init(top: 6, leading: 0, bottom: 6, trailing: 0))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
             }
         }
         .listStyle(.plain)
@@ -54,5 +59,25 @@ struct LibraryView: View {
             await viewModel.load()
         }
         .navigationTitle("Library")
+    }
+}
+
+private struct MediaDetailPlaceholderView: View {
+    let item: MediaSummary
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(item.title)
+                .font(.title2.bold())
+
+            Text("Detail view coming in the next slice.")
+                .foregroundStyle(.secondary)
+
+            Text("This tap path proves navigation works.")
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .padding()
+        .navigationTitle(item.title)
     }
 }
