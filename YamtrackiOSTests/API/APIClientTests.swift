@@ -3,7 +3,7 @@ import XCTest
 
 final class APIClientTests: XCTestCase {
     func test_fetchInfo_sendsBearerTokenAndDecodesPayload() async throws {
-        let spy = HTTPClientSpy(result: .success((loadFixtureData(named: "info"), makeResponse(statusCode: 200))))
+        let spy = HTTPClientSpy(result: .success((try loadFixtureData(named: "info"), makeResponse(statusCode: 200))))
         let sut = makeSUT(httpClient: spy)
         let credentials = makeCredentials()
 
@@ -77,7 +77,7 @@ final class APIClientTests: XCTestCase {
     }
 
     func test_fetchInfo_buildsRequestUsingBaseURLPath() async throws {
-        let spy = HTTPClientSpy(result: .success((loadFixtureData(named: "info"), makeResponse(statusCode: 200, url: URL(string: "https://demo.local/tenant/api/v1/info/")!))))
+        let spy = HTTPClientSpy(result: .success((try loadFixtureData(named: "info"), makeResponse(statusCode: 200, url: URL(string: "https://demo.local/tenant/api/v1/info/")!))))
         let sut = makeSUT(httpClient: spy)
         let credentials = SessionCredentials(baseURL: URL(string: "https://demo.local/tenant")!, token: "secret")
 
