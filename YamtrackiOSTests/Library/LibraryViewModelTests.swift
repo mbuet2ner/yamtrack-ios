@@ -33,7 +33,7 @@ final class LibraryViewModelTests: XCTestCase {
 
     func test_loadKeepsStateEmptyWhenServerReturnsNoResults() async throws {
         let spy = HTTPClientSpy(result: .success((
-            Data(#"{"results":[]}"#.utf8),
+            Data(#"{"pagination":{"total":0,"limit":20,"offset":0,"next":null,"previous":null},"results":[]}"#.utf8),
             HTTPURLResponse(
                 url: URL(string: "https://demo.local/api/v1/media/")!,
                 statusCode: 200,
