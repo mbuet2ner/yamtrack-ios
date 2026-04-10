@@ -65,6 +65,39 @@ final class MediaDetailViewModelTests: XCTestCase {
         XCTAssertNil(sut.errorMessage)
         XCTAssertEqual(sut.title, "Twin Peaks")
     }
+
+    func test_load_clearsStaleDetailAfterSubsequentFailure() async throws {
+        let spy = SequencedHTTPClientSpy(
+            responses: [
+                .success((
+                    try loadFixtureData(named: "media-detail-tv"),
+                    HTTPURLResponse(
+                        url: URL(string: "https://demo.local/api/v1/media/tv/tmdb/2/")!,
+                        statusCode: 200,
+                        httpVersion: nil,
+                        headerFields: nil
+                    )!
+                )),
+                .failure(URLError(.notConnectedToInternet))
+            ]
+        )
+        let sut = MediaDetailViewModel(
+            mediaID: 2,
+            source: "tmdb",
+            mediaType: "tv",
+            apiClient: APIClient(httpClient: spy),
+            credentials: SessionCredentials(baseURL: URL(string: "https://demo.local")!, token: "secret")
+        )
+
+        await sut.load()
+        XCTAssertEqual(sut.title, "Twin Peaks")
+
+        await sut.load()
+
+        XCTAssertEqual(sut.errorMessage, "Server unreachable")
+        XCTAssertNil(sut.detail)
+        XCTAssertEqual(sut.title, "")
+    }
 }
 
 private func loadFixtureData(named name: String) throws -> Data {
