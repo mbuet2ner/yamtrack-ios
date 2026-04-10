@@ -19,9 +19,9 @@ final class LibraryViewModel {
 
     func makeDetailViewModel(for item: MediaSummary) -> MediaDetailViewModel {
         MediaDetailViewModel(
-            mediaID: item.mediaID,
-            source: item.source,
-            mediaType: item.mediaType,
+            mediaID: item.item?.mediaID ?? item.id,
+            source: item.item?.source ?? "",
+            mediaType: item.item?.mediaType ?? "",
             apiClient: apiClient,
             credentials: credentials
         )
