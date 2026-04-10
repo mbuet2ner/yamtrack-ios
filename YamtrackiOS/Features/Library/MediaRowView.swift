@@ -14,7 +14,7 @@ struct MediaRowView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                    if let status = item.status {
+                    if let status = item.statusLabel {
                         Text(status.capitalized)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)

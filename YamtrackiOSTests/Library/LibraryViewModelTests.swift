@@ -19,6 +19,12 @@ final class LibraryViewModelTests: XCTestCase {
         let sut = LibraryViewModel(apiClient: client, credentials: credentials)
 
         await sut.load()
+
+        XCTAssertEqual(sut.items.count, 2)
+        XCTAssertEqual(sut.items.first?.title, "Dune")
+        XCTAssertEqual(sut.items.first?.statusLabel, "Planning")
+        XCTAssertEqual(sut.items.first?.progressLabel, "0")
+
         sut.selectedFilter = .movie
 
         XCTAssertEqual(sut.items.count, 1)
