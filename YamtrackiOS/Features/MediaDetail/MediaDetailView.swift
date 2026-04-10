@@ -11,8 +11,14 @@ struct MediaDetailView: View {
                 if let detail = viewModel.detail {
                     GlassSurface {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text(viewModel.primaryActionTitle)
-                                .font(.headline)
+                            Button {
+                                // Task 5 only needs the affordance, not the action plumbing yet.
+                            } label: {
+                                Label(viewModel.primaryActionTitle, systemImage: "play.fill")
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.large)
 
                             metadataRow(title: "Status", value: detail.status ?? "Unknown")
                             metadataRow(title: "Progress", value: viewModel.progressSummary ?? "Unknown")
