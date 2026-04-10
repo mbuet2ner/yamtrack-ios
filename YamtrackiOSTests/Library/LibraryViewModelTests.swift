@@ -4,9 +4,8 @@ import XCTest
 @MainActor
 final class LibraryViewModelTests: XCTestCase {
     func test_loadFetchesMediaAndAppliesFilter() async throws {
-        let fixture = try loadFixtureData(named: "media-list")
         let spy = HTTPClientSpy(result: .success((
-            fixture,
+            try loadFixtureData(named: "media-list"),
             HTTPURLResponse(
                 url: URL(string: "https://demo.local/api/v1/media/")!,
                 statusCode: 200,
@@ -29,6 +28,41 @@ final class LibraryViewModelTests: XCTestCase {
 
         XCTAssertEqual(sut.items.count, 1)
         XCTAssertEqual(sut.items.first?.title, "Dune")
+    }
+
+    func test_loadFollowsPaginationUntilAllPagesAreLoaded() async throws {
+        let firstPage = Data(#"{"pagination":{"total":2,"limit":1,"offset":0,"next":"https://demo.local/api/v1/media/?limit=1&offset=1","previous":null},"results":[{"id":101,"consumption_id":null,"item":{"media_id":1,"source":"manual","media_type":"movie","title":"Dune","image":"https://cdn.example.com/dune.jpg","season_number":null,"episode_number":null},"item_id":"movie/manual/1","parent_id":null,"tracked":true,"created_at":"2026-04-10T08:00:00Z","score":8.5,"status":0,"progress":0,"progressed_at":null,"start_date":null,"end_date":null,"notes":null,"lists":[]}]}"#.utf8)
+        let secondPage = Data(#"{"pagination":{"total":2,"limit":1,"offset":1,"next":null,"previous":"https://demo.local/api/v1/media/?limit=1&offset=0"},"results":[{"id":102,"consumption_id":null,"item":{"media_id":2,"source":"manual","media_type":"tv","title":"Twin Peaks","image":"https://cdn.example.com/twin-peaks.jpg","season_number":null,"episode_number":null},"item_id":"tv/manual/2","parent_id":null,"tracked":true,"created_at":"2026-04-10T08:05:00Z","score":7.5,"status":1,"progress":2,"progressed_at":"2026-04-10T08:30:00Z","start_date":null,"end_date":null,"notes":null,"lists":[]}]}"#.utf8)
+
+        let client = APIClient(httpClient: SequencedHTTPClientSpy(
+            responses: [
+                .success((
+                    firstPage,
+                    HTTPURLResponse(
+                        url: URL(string: "https://demo.local/api/v1/media/")!,
+                        statusCode: 200,
+                        httpVersion: nil,
+                        headerFields: nil
+                    )!
+                )),
+                .success((
+                    secondPage,
+                    HTTPURLResponse(
+                        url: URL(string: "https://demo.local/api/v1/media/?limit=1&offset=1")!,
+                        statusCode: 200,
+                        httpVersion: nil,
+                        headerFields: nil
+                    )!
+                ))
+            ]
+        ))
+        let credentials = SessionCredentials(baseURL: URL(string: "https://demo.local")!, token: "secret")
+        let sut = LibraryViewModel(apiClient: client, credentials: credentials)
+
+        await sut.load()
+
+        XCTAssertEqual(sut.items.count, 2)
+        XCTAssertEqual(sut.items.map(\.title), ["Dune", "Twin Peaks"])
     }
 
     func test_loadKeepsStateEmptyWhenServerReturnsNoResults() async throws {
@@ -70,4 +104,21 @@ private func loadFixtureData(named name: String) throws -> Data {
     let bundle = Bundle(for: LibraryViewModelTests.self)
     let url = try XCTUnwrap(bundle.url(forResource: name, withExtension: "json"))
     return try Data(contentsOf: url)
+}
+
+private final class SequencedHTTPClientSpy: HTTPClient {
+    private var responses: [Result<(Data, URLResponse), Error>]
+
+    init(responses: [Result<(Data, URLResponse), Error>]) {
+        self.responses = responses
+    }
+
+    func perform(_ request: URLRequest) async throws -> (Data, URLResponse) {
+        guard !responses.isEmpty else {
+            XCTFail("Unexpected request: \(request.url?.absoluteString ?? "nil")")
+            throw URLError(.badServerResponse)
+        }
+
+        return try responses.removeFirst().get()
+    }
 }
