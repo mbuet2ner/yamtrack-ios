@@ -22,6 +22,8 @@
 		ABCD2234EFAB5678ABCD2207 /* LibraryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2307 /* LibraryViewModel.swift */; };
 		ABCD2234EFAB5678ABCD2208 /* MediaRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2308 /* MediaRowView.swift */; };
 		ABCD2234EFAB5678ABCD2209 /* MediaSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2309 /* MediaSummary.swift */; };
+		ABCD2234EFAB5678ABCD2210 /* RootViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2310 /* RootViewModelTests.swift */; };
+		ABCD2234EFAB5678ABCD2211 /* RootViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2311 /* RootViewModel.swift */; };
 		1CD6B08B69E3BBC27806543D /* SessionCredentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = B35118195EFDF25373259293 /* SessionCredentials.swift */; };
 		ABCD2234EFAB5678ABCD2006 /* InfoResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2106 /* InfoResponse.swift */; };
 		3262706D5498A85CAE193113 /* SessionControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23C23ED32477BC7F204AE1E /* SessionControllerTests.swift */; };
@@ -73,6 +75,8 @@
 		ABCD2234EFAB5678ABCD2307 /* LibraryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewModel.swift; sourceTree = "<group>"; };
 		ABCD2234EFAB5678ABCD2308 /* MediaRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaRowView.swift; sourceTree = "<group>"; };
 		ABCD2234EFAB5678ABCD2309 /* MediaSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSummary.swift; sourceTree = "<group>"; };
+		ABCD2234EFAB5678ABCD2310 /* RootViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootViewModelTests.swift; sourceTree = "<group>"; };
+		ABCD2234EFAB5678ABCD2311 /* RootViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootViewModel.swift; sourceTree = "<group>"; };
 		4F9DE72FC98EFB5AC4CBFC78 /* SessionStoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStoring.swift; sourceTree = "<group>"; };
 		55BBCAEADD0050E6C630A5D8 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		7391E36A5804763722700460 /* YamtrackiOSUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = YamtrackiOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -125,6 +129,14 @@
 			path = Library;
 			sourceTree = "<group>";
 		};
+		A7E90E5C9C3B4F8D8A7B2402 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				ABCD2234EFAB5678ABCD2310 /* RootViewModelTests.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
 		ABCD2234EFAB5678ABCD2402 /* Fixtures */ = {
 			isa = PBXGroup;
 			children = (
@@ -166,6 +178,7 @@
 			children = (
 				ABCD2234EFAB5678ABCD2401 /* API */,
 				A7E90E5C9C3B4F8D8A7B2401 /* Library */,
+				A7E90E5C9C3B4F8D8A7B2402 /* App */,
 				ABCD2234EFAB5678ABCD2402 /* Fixtures */,
 				0EABF82D1EF19E9E0B6905E2 /* Session */,
 				ABCD2234EFAB5678ABCD2403 /* Support */,
@@ -243,6 +256,7 @@
 			children = (
 				81AE329EEEAFED8DAEE2D274 /* AppTab.swift */,
 				55BBCAEADD0050E6C630A5D8 /* RootView.swift */,
+				ABCD2234EFAB5678ABCD2311 /* RootViewModel.swift */,
 				98CE5E019B7FDE1479405C79 /* YamtrackiOSApp.swift */,
 			);
 			path = App;
@@ -378,6 +392,7 @@
 			files = (
 				ABCD2234EFAB5678ABCD2201 /* APIClientTests.swift in Sources */,
 				ABCD2234EFAB5678ABCD2204 /* LibraryViewModelTests.swift in Sources */,
+				ABCD2234EFAB5678ABCD2210 /* RootViewModelTests.swift in Sources */,
 				3262706D5498A85CAE193113 /* SessionControllerTests.swift in Sources */,
 				ABCD2234EFAB5678ABCD2202 /* HTTPClientSpy.swift in Sources */,
 			);
@@ -400,6 +415,7 @@
 				ABCD2234EFAB5678ABCD2208 /* MediaRowView.swift in Sources */,
 				ABCD2234EFAB5678ABCD2209 /* MediaSummary.swift in Sources */,
 				608DBD2AD72D9A68560C0AD6 /* RootView.swift in Sources */,
+				ABCD2234EFAB5678ABCD2211 /* RootViewModel.swift in Sources */,
 				ABCD2234EFAB5678ABCD2006 /* InfoResponse.swift in Sources */,
 				DB74A522611D2066A2B7E38E /* SessionController.swift in Sources */,
 				1CD6B08B69E3BBC27806543D /* SessionCredentials.swift in Sources */,
