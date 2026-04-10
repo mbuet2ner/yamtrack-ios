@@ -15,6 +15,15 @@ final class APIClient: @unchecked Sendable {
         try await send(Endpoint.info(), credentials: credentials)
     }
 
+    func fetchMediaDetail(
+        mediaType: String,
+        source: String,
+        mediaID: Int,
+        credentials: SessionCredentials
+    ) async throws -> MediaDetail {
+        try await send(Endpoint.mediaDetail(mediaType: mediaType, source: source, mediaID: mediaID), credentials: credentials)
+    }
+
     func send<Response: Decodable>(
         _ request: APIRequest<Response>,
         credentials: SessionCredentials

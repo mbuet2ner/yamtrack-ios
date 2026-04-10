@@ -128,6 +128,14 @@ struct MediaSummary: Decodable, Equatable, Identifiable {
         item?.title ?? ""
     }
 
+    var mediaID: Int {
+        item?.mediaID ?? id
+    }
+
+    var source: String {
+        item?.source ?? ""
+    }
+
     var mediaType: String {
         item?.mediaType ?? ""
     }

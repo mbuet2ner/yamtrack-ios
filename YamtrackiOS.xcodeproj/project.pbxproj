@@ -13,11 +13,16 @@
 		ABCD2234EFAB5678ABCD2003 /* APIRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2103 /* APIRequest.swift */; };
 		ABCD2234EFAB5678ABCD2004 /* Endpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2104 /* Endpoint.swift */; };
 		ABCD2234EFAB5678ABCD2005 /* URLSessionHTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2105 /* URLSessionHTTPClient.swift */; };
+		ABCD2234EFAB5678ABCD2212 /* MediaDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2312 /* MediaDetail.swift */; };
+		ABCD2234EFAB5678ABCD2213 /* MediaDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2313 /* MediaDetailViewModel.swift */; };
+		ABCD2234EFAB5678ABCD2214 /* MediaDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2314 /* MediaDetailView.swift */; };
 		ABCD2234EFAB5678ABCD2201 /* APIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2301 /* APIClientTests.swift */; };
 		ABCD2234EFAB5678ABCD2202 /* HTTPClientSpy.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2302 /* HTTPClientSpy.swift */; };
 		ABCD2234EFAB5678ABCD2203 /* info.json in Resources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2303 /* info.json */; };
 		ABCD2234EFAB5678ABCD2204 /* LibraryViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2304 /* LibraryViewModelTests.swift */; };
 		ABCD2234EFAB5678ABCD2205 /* media-list.json in Resources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2305 /* media-list.json */; };
+		ABCD2234EFAB5678ABCD2215 /* MediaDetailViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2315 /* MediaDetailViewModelTests.swift */; };
+		ABCD2234EFAB5678ABCD2216 /* media-detail-tv.json in Resources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2316 /* media-detail-tv.json */; };
 		ABCD2234EFAB5678ABCD2206 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2306 /* LibraryView.swift */; };
 		ABCD2234EFAB5678ABCD2207 /* LibraryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2307 /* LibraryViewModel.swift */; };
 		ABCD2234EFAB5678ABCD2208 /* MediaRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCD2234EFAB5678ABCD2308 /* MediaRowView.swift */; };
@@ -66,11 +71,16 @@
 		ABCD2234EFAB5678ABCD2104 /* Endpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoint.swift; sourceTree = "<group>"; };
 		ABCD2234EFAB5678ABCD2105 /* URLSessionHTTPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLSessionHTTPClient.swift; sourceTree = "<group>"; };
 		ABCD2234EFAB5678ABCD2106 /* InfoResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoResponse.swift; sourceTree = "<group>"; };
+		ABCD2234EFAB5678ABCD2312 /* MediaDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDetail.swift; sourceTree = "<group>"; };
+		ABCD2234EFAB5678ABCD2313 /* MediaDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDetailViewModel.swift; sourceTree = "<group>"; };
+		ABCD2234EFAB5678ABCD2314 /* MediaDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDetailView.swift; sourceTree = "<group>"; };
 		ABCD2234EFAB5678ABCD2301 /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClientTests.swift; sourceTree = "<group>"; };
 		ABCD2234EFAB5678ABCD2302 /* HTTPClientSpy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTTPClientSpy.swift; sourceTree = "<group>"; };
 		ABCD2234EFAB5678ABCD2303 /* info.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = info.json; sourceTree = "<group>"; };
 		ABCD2234EFAB5678ABCD2304 /* LibraryViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewModelTests.swift; sourceTree = "<group>"; };
 		ABCD2234EFAB5678ABCD2305 /* media-list.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = media-list.json; sourceTree = "<group>"; };
+		ABCD2234EFAB5678ABCD2315 /* MediaDetailViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDetailViewModelTests.swift; sourceTree = "<group>"; };
+		ABCD2234EFAB5678ABCD2316 /* media-detail-tv.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = media-detail-tv.json; sourceTree = "<group>"; };
 		ABCD2234EFAB5678ABCD2306 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		ABCD2234EFAB5678ABCD2307 /* LibraryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewModel.swift; sourceTree = "<group>"; };
 		ABCD2234EFAB5678ABCD2308 /* MediaRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaRowView.swift; sourceTree = "<group>"; };
@@ -141,9 +151,18 @@
 			isa = PBXGroup;
 			children = (
 				ABCD2234EFAB5678ABCD2303 /* info.json */,
+				ABCD2234EFAB5678ABCD2316 /* media-detail-tv.json */,
 				ABCD2234EFAB5678ABCD2305 /* media-list.json */,
 			);
 			path = Fixtures;
+			sourceTree = "<group>";
+		};
+		ABCD2234EFAB5678ABCD2409 /* MediaDetail */ = {
+			isa = PBXGroup;
+			children = (
+				ABCD2234EFAB5678ABCD2315 /* MediaDetailViewModelTests.swift */,
+			);
+			path = MediaDetail;
 			sourceTree = "<group>";
 		};
 		ABCD2234EFAB5678ABCD2403 /* Support */ = {
@@ -177,6 +196,7 @@
 			isa = PBXGroup;
 			children = (
 				ABCD2234EFAB5678ABCD2401 /* API */,
+				ABCD2234EFAB5678ABCD2409 /* MediaDetail */,
 				A7E90E5C9C3B4F8D8A7B2401 /* Library */,
 				A7E90E5C9C3B4F8D8A7B2402 /* App */,
 				ABCD2234EFAB5678ABCD2402 /* Fixtures */,
@@ -202,6 +222,7 @@
 			isa = PBXGroup;
 			children = (
 				ABCD2234EFAB5678ABCD2106 /* InfoResponse.swift */,
+				ABCD2234EFAB5678ABCD2312 /* MediaDetail.swift */,
 				ABCD2234EFAB5678ABCD2309 /* MediaSummary.swift */,
 			);
 			path = Models;
@@ -276,9 +297,19 @@
 			isa = PBXGroup;
 			children = (
 				A0C6D9FA0AAB4E939FB2401 /* Library */,
+				ABCD2234EFAB5678ABCD2408 /* MediaDetail */,
 				5E89C06C28BBD2EBB185340A /* Setup */,
 			);
 			path = Features;
+			sourceTree = "<group>";
+		};
+		ABCD2234EFAB5678ABCD2408 /* MediaDetail */ = {
+			isa = PBXGroup;
+			children = (
+				ABCD2234EFAB5678ABCD2313 /* MediaDetailViewModel.swift */,
+				ABCD2234EFAB5678ABCD2314 /* MediaDetailView.swift */,
+			);
+			path = MediaDetail;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -379,6 +410,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				ABCD2234EFAB5678ABCD2203 /* info.json in Resources */,
+				ABCD2234EFAB5678ABCD2216 /* media-detail-tv.json in Resources */,
 				ABCD2234EFAB5678ABCD2205 /* media-list.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -392,6 +424,7 @@
 			files = (
 				ABCD2234EFAB5678ABCD2201 /* APIClientTests.swift in Sources */,
 				ABCD2234EFAB5678ABCD2204 /* LibraryViewModelTests.swift in Sources */,
+				ABCD2234EFAB5678ABCD2215 /* MediaDetailViewModelTests.swift in Sources */,
 				ABCD2234EFAB5678ABCD2210 /* RootViewModelTests.swift in Sources */,
 				3262706D5498A85CAE193113 /* SessionControllerTests.swift in Sources */,
 				ABCD2234EFAB5678ABCD2202 /* HTTPClientSpy.swift in Sources */,
@@ -408,6 +441,9 @@
 				ABCD2234EFAB5678ABCD2003 /* APIRequest.swift in Sources */,
 				ABCD2234EFAB5678ABCD2004 /* Endpoint.swift in Sources */,
 				ABCD2234EFAB5678ABCD2005 /* URLSessionHTTPClient.swift in Sources */,
+				ABCD2234EFAB5678ABCD2212 /* MediaDetail.swift in Sources */,
+				ABCD2234EFAB5678ABCD2213 /* MediaDetailViewModel.swift in Sources */,
+				ABCD2234EFAB5678ABCD2214 /* MediaDetailView.swift in Sources */,
 				82F096FC2BB31DD3A9079CE0 /* GlassSurface.swift in Sources */,
 				0BA1967A3FC3A1D5C872009B /* KeychainStore.swift in Sources */,
 				ABCD2234EFAB5678ABCD2206 /* LibraryView.swift in Sources */,
