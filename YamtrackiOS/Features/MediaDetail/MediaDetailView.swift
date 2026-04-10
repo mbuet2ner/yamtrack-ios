@@ -55,11 +55,27 @@ struct MediaDetailView: View {
                         }
                     }
                 } else if let errorMessage = viewModel.errorMessage {
-                    ContentUnavailableView(
-                        "Media Detail Error",
-                        systemImage: "exclamationmark.triangle.fill",
-                        description: Text(errorMessage)
-                    )
+                    GlassSurface {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Label("Media Detail Error", systemImage: "exclamationmark.triangle.fill")
+                                .font(.headline)
+                                .foregroundStyle(.red)
+
+                            Text(errorMessage)
+                                .foregroundStyle(.secondary)
+
+                            Button {
+                                Task {
+                                    await viewModel.load()
+                                }
+                            } label: {
+                                Label("Retry", systemImage: "arrow.clockwise")
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .accessibilityIdentifier("media-detail-retry-button")
+                        }
+                    }
                 } else {
                     ProgressView()
                         .frame(maxWidth: .infinity, alignment: .center)
