@@ -1,6 +1,6 @@
 import Foundation
 
-final class APIClient {
+final class APIClient: @unchecked Sendable {
     static let live = APIClient(httpClient: URLSessionHTTPClient())
 
     private let httpClient: HTTPClient
@@ -15,7 +15,7 @@ final class APIClient {
         try await send(Endpoint.info(), credentials: credentials)
     }
 
-    private func send<Response: Decodable>(
+    func send<Response: Decodable>(
         _ request: APIRequest<Response>,
         credentials: SessionCredentials
     ) async throws -> Response {
