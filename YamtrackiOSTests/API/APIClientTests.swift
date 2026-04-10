@@ -65,6 +65,18 @@ final class APIClientTests: XCTestCase {
         }
     }
 
+    func test_mediaList_decodesRealPaginatedNestedPayload() throws {
+        let fixture = try loadFixtureData(named: "media-list")
+        let response = try JSONDecoder().decode(PaginatedResponse<MediaSummary>.self, from: fixture)
+
+        XCTAssertEqual(response.pagination.total, 2)
+        XCTAssertEqual(response.pagination.limit, 20)
+        XCTAssertEqual(response.results.count, 2)
+        XCTAssertEqual(response.results.first?.title, "Dune")
+        XCTAssertEqual(response.results.first?.item?.mediaType, "movie")
+        XCTAssertEqual(response.results.first?.statusLabel, "Planning")
+    }
+
     func test_fetchInfo_propagatesCancellation() async throws {
         let spy = HTTPClientSpy(result: .failure(CancellationError()))
         let sut = makeSUT(httpClient: spy)
