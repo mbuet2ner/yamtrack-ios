@@ -62,6 +62,7 @@ final class MediaDetailViewModel {
             errorMessage = nil
         } catch is CancellationError {
         } catch {
+            detail = nil
             errorMessage = (error as? LocalizedError)?.errorDescription ?? "Failed to load detail"
         }
     }
