@@ -32,12 +32,40 @@ final class LibraryViewModel {
         defer { isLoading = false }
 
         do {
-            let response: PaginatedResponse<MediaSummary> = try await apiClient.send(Endpoint.mediaList(), credentials: credentials)
-            allItems = response.results
+            allItems = try await loadAllPages()
             errorMessage = nil
         } catch is CancellationError {
         } catch {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? "Failed to load library"
         }
+    }
+
+    private func loadAllPages() async throws -> [MediaSummary] {
+        var items: [MediaSummary] = []
+        var request = Endpoint.mediaList()
+
+        while true {
+            let response: PaginatedResponse<MediaSummary> = try await apiClient.send(request, credentials: credentials)
+            items.append(contentsOf: response.results)
+
+            guard let next = response.pagination.next else {
+                return items
+            }
+
+            request = try Self.request(from: next)
+        }
+    }
+
+    private static func request(from nextURLString: String) throws -> APIRequest<PaginatedResponse<MediaSummary>> {
+        guard let components = URLComponents(string: nextURLString), !components.path.isEmpty else {
+            throw APIError.decoding
+        }
+
+        var request = APIRequest<PaginatedResponse<MediaSummary>>(
+            path: components.path,
+            method: "GET"
+        )
+        request.queryItems = components.queryItems ?? []
+        return request
     }
 }
