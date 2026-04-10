@@ -13,15 +13,19 @@ struct LibraryView: View {
             }
 
             ForEach(viewModel.items) { item in
-                NavigationLink {
-                    MediaDetailView(viewModel: viewModel.makeDetailViewModel(for: item))
-                } label: {
+                if let detailViewModel = viewModel.makeDetailViewModel(for: item) {
+                    NavigationLink {
+                        MediaDetailView(viewModel: detailViewModel)
+                    } label: {
+                        MediaRowView(item: item)
+                    }
+                    .buttonStyle(.plain)
+                    .listRowInsets(.init(top: 6, leading: 0, bottom: 6, trailing: 0))
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+                } else {
                     MediaRowView(item: item)
                 }
-                .buttonStyle(.plain)
-                .listRowInsets(.init(top: 6, leading: 0, bottom: 6, trailing: 0))
-                .listRowSeparator(.hidden)
-                .listRowBackground(Color.clear)
             }
         }
         .listStyle(.plain)

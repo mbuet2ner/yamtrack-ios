@@ -17,11 +17,19 @@ final class LibraryViewModel {
         self.credentials = credentials
     }
 
-    func makeDetailViewModel(for item: MediaSummary) -> MediaDetailViewModel {
-        MediaDetailViewModel(
-            mediaID: item.item?.mediaID ?? item.id,
-            source: item.item?.source ?? "",
-            mediaType: item.item?.mediaType ?? "",
+    func makeDetailViewModel(for item: MediaSummary) -> MediaDetailViewModel? {
+        guard
+            let nestedItem = item.item,
+            !nestedItem.source.isEmpty,
+            !nestedItem.mediaType.isEmpty
+        else {
+            return nil
+        }
+
+        return MediaDetailViewModel(
+            mediaID: nestedItem.mediaID,
+            source: nestedItem.source,
+            mediaType: nestedItem.mediaType,
             apiClient: apiClient,
             credentials: credentials
         )

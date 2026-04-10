@@ -98,6 +98,64 @@ final class LibraryViewModelTests: XCTestCase {
         XCTAssertEqual(sut.errorMessage, "Server unreachable")
         XCTAssertFalse(sut.isLoading)
     }
+
+    func test_makeDetailViewModel_returnsNilWhenNestedItemIsMissing() {
+        let client = APIClient(httpClient: HTTPClientSpy(result: .failure(URLError(.notConnectedToInternet))))
+        let credentials = SessionCredentials(baseURL: URL(string: "https://demo.local")!, token: "secret")
+        let sut = LibraryViewModel(apiClient: client, credentials: credentials)
+        let summary = MediaSummary(
+            databaseID: 42,
+            consumptionID: nil,
+            item: nil,
+            itemID: nil,
+            parentID: nil,
+            tracked: true,
+            createdAt: nil,
+            score: nil,
+            status: nil,
+            progress: nil,
+            progressedAt: nil,
+            startDate: nil,
+            endDate: nil,
+            notes: nil,
+            lists: []
+        )
+
+        XCTAssertNil(sut.makeDetailViewModel(for: summary))
+    }
+
+    func test_makeDetailViewModel_returnsViewModelWhenNestedItemExists() {
+        let client = APIClient(httpClient: HTTPClientSpy(result: .failure(URLError(.notConnectedToInternet))))
+        let credentials = SessionCredentials(baseURL: URL(string: "https://demo.local")!, token: "secret")
+        let sut = LibraryViewModel(apiClient: client, credentials: credentials)
+        let summary = MediaSummary(
+            databaseID: 42,
+            consumptionID: nil,
+            item: .init(
+                mediaID: 2,
+                source: "tmdb",
+                mediaType: "tv",
+                title: "Twin Peaks",
+                image: nil,
+                seasonNumber: nil,
+                episodeNumber: nil
+            ),
+            itemID: nil,
+            parentID: nil,
+            tracked: true,
+            createdAt: nil,
+            score: nil,
+            status: nil,
+            progress: nil,
+            progressedAt: nil,
+            startDate: nil,
+            endDate: nil,
+            notes: nil,
+            lists: []
+        )
+
+        XCTAssertNotNil(sut.makeDetailViewModel(for: summary))
+    }
 }
 
 private func loadFixtureData(named name: String) throws -> Data {
