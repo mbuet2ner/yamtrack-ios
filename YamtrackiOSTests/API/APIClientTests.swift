@@ -12,8 +12,7 @@ final class APIClientTests: XCTestCase {
         XCTAssertEqual(spy.lastRequest?.url?.absoluteString, "https://demo.local/api/v1/info/")
         XCTAssertEqual(spy.lastRequest?.httpMethod, "GET")
         XCTAssertEqual(spy.lastRequest?.value(forHTTPHeaderField: "Authorization"), "Bearer secret")
-        XCTAssertEqual(info.name, "Yamtrack")
-        XCTAssertEqual(info.version, "0.0.24")
+        XCTAssertEqual(info.version, "dev")
     }
 
     func test_fetchInfo_throwsUnauthorizedFor401() async throws {
@@ -23,6 +22,23 @@ final class APIClientTests: XCTestCase {
 
         do {
             _ = try await sut.fetchInfo(credentials: credentials)
+            XCTFail("Expected unauthorized error")
+        } catch let error as APIError {
+            XCTAssertEqual(error, .unauthorized)
+        }
+    }
+
+    func test_send_maps403InvalidTokenPayloadToUnauthorized() async throws {
+        let spy = HTTPClientSpy(
+            result: .success((
+                Data(#"{"detail":"Invalid token"}"#.utf8),
+                makeResponse(statusCode: 403, url: URL(string: "https://demo.local/api/v1/media/")!)
+            ))
+        )
+        let sut = makeSUT(httpClient: spy)
+
+        do {
+            let _: PaginatedResponse<MediaSummary> = try await sut.send(Endpoint.mediaList(), credentials: makeCredentials())
             XCTFail("Expected unauthorized error")
         } catch let error as APIError {
             XCTAssertEqual(error, .unauthorized)
@@ -98,6 +114,20 @@ final class APIClientTests: XCTestCase {
         XCTAssertEqual(spy.lastRequest?.url?.absoluteString, "https://demo.local/tenant/api/v1/info/")
     }
 
+    func test_fixtureHTTPClient_decodesSeededMediaList() async throws {
+        let sut = makeSUT(httpClient: UITestLibraryFixtureHTTPClient())
+
+        let response: PaginatedResponse<MediaSummary> = try await sut.send(
+            Endpoint.mediaList(),
+            credentials: makeCredentials()
+        )
+
+        XCTAssertEqual(response.pagination.total, 1)
+        XCTAssertEqual(response.results.count, 1)
+        XCTAssertEqual(response.results.first?.title, "Manual Movie")
+        XCTAssertEqual(response.results.first?.id, 1)
+    }
+
     func test_fetchInfo_throwsInvalidURLForMalformedButParseableServerURLs() async throws {
         let sut = makeSUT()
         let invalidURLs = [
@@ -128,7 +158,7 @@ private func loadFixtureData(named name: String) throws -> Data {
     return try Data(contentsOf: url)
 }
 
-private func makeSUT(httpClient: HTTPClient = HTTPClientSpy(result: .success((Data(#"{"name":"Yamtrack","version":"0.0.24"}"#.utf8), makeResponse(statusCode: 200))))) -> APIClient {
+private func makeSUT(httpClient: HTTPClient = HTTPClientSpy(result: .success((Data(#"{"version":"dev"}"#.utf8), makeResponse(statusCode: 200))))) -> APIClient {
     APIClient(httpClient: httpClient)
 }
 

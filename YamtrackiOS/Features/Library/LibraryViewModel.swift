@@ -11,6 +11,7 @@ final class LibraryViewModel {
     var selectedFilter: MediaType = .all
     var isLoading = false
     var errorMessage: String?
+    var isAuthenticationError = false
 
     init(apiClient: APIClient, credentials: SessionCredentials) {
         self.apiClient = apiClient
@@ -52,8 +53,10 @@ final class LibraryViewModel {
         do {
             allItems = try await loadAllPages()
             errorMessage = nil
+            isAuthenticationError = false
         } catch is CancellationError {
         } catch {
+            isAuthenticationError = (error as? APIError) == .unauthorized
             errorMessage = (error as? LocalizedError)?.errorDescription ?? "Failed to load library"
         }
     }

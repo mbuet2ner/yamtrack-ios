@@ -99,6 +99,27 @@ final class LibraryViewModelTests: XCTestCase {
         XCTAssertFalse(sut.isLoading)
     }
 
+    func test_loadMarksAuthenticationFailureWhenAPIRejectsToken() async throws {
+        let spy = HTTPClientSpy(result: .success((
+            Data(#"{"detail":"Invalid token"}"#.utf8),
+            HTTPURLResponse(
+                url: URL(string: "https://demo.local/api/v1/media/")!,
+                statusCode: 403,
+                httpVersion: nil,
+                headerFields: nil
+            )!
+        )))
+        let client = APIClient(httpClient: spy)
+        let credentials = SessionCredentials(baseURL: URL(string: "https://demo.local")!, token: "secret")
+        let sut = LibraryViewModel(apiClient: client, credentials: credentials)
+
+        await sut.load()
+
+        XCTAssertTrue(sut.items.isEmpty)
+        XCTAssertEqual(sut.errorMessage, "Invalid token")
+        XCTAssertTrue(sut.isAuthenticationError)
+    }
+
     func test_makeDetailViewModel_returnsNilWhenNestedItemIsMissing() {
         let client = APIClient(httpClient: HTTPClientSpy(result: .failure(URLError(.notConnectedToInternet))))
         let credentials = SessionCredentials(baseURL: URL(string: "https://demo.local")!, token: "secret")

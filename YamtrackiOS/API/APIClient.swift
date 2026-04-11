@@ -85,13 +85,17 @@ final class APIClient: @unchecked Sendable {
         }
 
         guard 200..<300 ~= httpResponse.statusCode else {
-            if httpResponse.statusCode == 401 {
+            let detail = parseErrorDetail(from: data)
+
+            if httpResponse.statusCode == 401 || (httpResponse.statusCode == 403 && detail?.localizedCaseInsensitiveContains("invalid token") == true) {
                 throw APIError.unauthorized
             }
 
             let body = String(data: data, encoding: .utf8)?
                 .trimmingCharacters(in: .whitespacesAndNewlines)
-            let message = body?.isEmpty == false
+            let message = detail?.isEmpty == false
+                ? detail ?? ""
+                : body?.isEmpty == false
                 ? body ?? ""
                 : HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode)
             throw APIError.server(message)
@@ -102,5 +106,16 @@ final class APIClient: @unchecked Sendable {
         } catch {
             throw APIError.decoding
         }
+    }
+
+    private func parseErrorDetail(from data: Data) -> String? {
+        guard
+            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let detail = object["detail"] as? String
+        else {
+            return nil
+        }
+
+        return detail.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

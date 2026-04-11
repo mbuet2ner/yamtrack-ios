@@ -4,8 +4,14 @@ import Observation
 @MainActor
 @Observable
 final class RootViewModel {
+    private let apiClient: APIClient
+
     var libraryViewModel: LibraryViewModel?
     var isRestoringSession = true
+
+    init(apiClient: APIClient = .live) {
+        self.apiClient = apiClient
+    }
 
     func restoreSession(using session: SessionController) async {
         await session.restoreCredentials()
@@ -27,7 +33,7 @@ final class RootViewModel {
         }
 
         libraryViewModel = LibraryViewModel(
-            apiClient: .live,
+            apiClient: apiClient,
             credentials: SessionCredentials(baseURL: baseURL, token: session.token)
         )
     }
