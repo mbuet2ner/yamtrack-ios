@@ -373,20 +373,31 @@ struct AddMediaView: View {
         RoundedRectangle(cornerRadius: 18, style: .continuous)
             .fill(Color.white.opacity(0.35))
             .overlay {
-                VStack(spacing: 10) {
-                    Image(systemName: viewModel.selectedType.systemImage)
-                        .font(.system(size: 26, weight: .semibold))
-                        .foregroundStyle(.secondary)
+                VStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.white.opacity(0.55))
 
-                    Text(viewModel.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Search for something to add." : "No matches yet")
-                        .font(.headline)
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(width: 56, height: 56)
 
-                    Text(viewModel.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Results with artwork and provider metadata will show up here." : "Try a broader title, a different spelling, or another provider.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
+                    VStack(spacing: 6) {
+                        Text(viewModel.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Search for something to add." : "No matches yet")
+                            .font(.headline)
+                            .multilineTextAlignment(.center)
+
+                        Text(viewModel.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Results with artwork and provider metadata will show up here." : "Try a broader title, a different spelling, or another provider.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
                 }
-                .padding(20)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 22)
             }
             .frame(maxWidth: .infinity)
     }
