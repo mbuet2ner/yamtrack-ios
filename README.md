@@ -2,6 +2,11 @@
 
 An iOS client for Yamtrack with a glassy, library-first interface for browsing, adding, and updating media.
 
+## API Note
+
+- This app currently relies on the new Yamtrack API from draft PR [FuzzyGrim/Yamtrack#924](https://github.com/FuzzyGrim/Yamtrack/pull/924).
+- To connect the app to a local or self-hosted Yamtrack instance, you also need a valid Yamtrack API token.
+
 ## Branding
 
 <p align="center">
