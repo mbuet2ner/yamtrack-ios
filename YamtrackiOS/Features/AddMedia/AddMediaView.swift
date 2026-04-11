@@ -428,9 +428,9 @@ struct AddMediaView: View {
         return "Search \(viewModel.selectedSource.title) for a \(viewModel.selectedType.singularTitle.lowercased()) and add it with one tap."
     }
 
-    private var resultsSubtitle: String {
+    private var resultsSubtitle: String? {
         if viewModel.results.isEmpty {
-            return "Artwork, provider, and selection state appear here."
+            return nil
         }
 
         return "\(viewModel.results.count) result\(viewModel.results.count == 1 ? "" : "s") from \(viewModel.selectedSource.title)."
@@ -474,7 +474,7 @@ struct AddMediaView: View {
 
     private func sectionContainer<Content: View>(
         title: String,
-        subtitle: String,
+        subtitle: String? = nil,
         @ViewBuilder content: () -> Content
     ) -> some View {
         GlassSurface {
@@ -484,9 +484,11 @@ struct AddMediaView: View {
                         .font(.headline.weight(.semibold))
                         .foregroundStyle(.primary)
 
-                    Text(subtitle)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    if let subtitle, !subtitle.isEmpty {
+                        Text(subtitle)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 content()
