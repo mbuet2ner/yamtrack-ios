@@ -1,0 +1,40 @@
+name: YamtrackiOS
+options:
+  bundleIdPrefix: org.yamtrack
+targets:
+  YamtrackiOS:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - YamtrackiOS
+    info:
+      path: YamtrackiOS/Info.plist
+      properties:
+        UILaunchScreen: {}
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.yamtrack.ios
+        SWIFT_VERSION: 6.0
+        TARGETED_DEVICE_FAMILY: "1"
+    dependencies: []
+  YamtrackiOSTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - YamtrackiOSTests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: YamtrackiOS
+  YamtrackiOSUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - YamtrackiOSUITests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+    dependencies:
+      - target: YamtrackiOS
