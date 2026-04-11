@@ -2,6 +2,6 @@ import SwiftUI
 
 enum AppTab: Hashable {
     case library
-    case search
+    case addMedia
     case settings
 }

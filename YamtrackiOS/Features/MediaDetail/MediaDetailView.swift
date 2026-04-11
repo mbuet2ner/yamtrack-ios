@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MediaDetailView: View {
     @Bindable var viewModel: MediaDetailViewModel
+    @State private var isShowingEditor = false
 
     var body: some View {
         ScrollView {
@@ -12,9 +13,9 @@ struct MediaDetailView: View {
                     GlassSurface {
                         VStack(alignment: .leading, spacing: 12) {
                             Button {
-                                // Task 5 only needs the affordance, not the action plumbing yet.
+                                isShowingEditor = true
                             } label: {
-                                Label(viewModel.primaryActionTitle, systemImage: "play.fill")
+                                Label(viewModel.primaryActionTitle, systemImage: "slider.horizontal.3")
                                     .frame(maxWidth: .infinity)
                             }
                             .buttonStyle(.borderedProminent)
@@ -88,6 +89,9 @@ struct MediaDetailView: View {
         .task {
             await viewModel.load()
         }
+        .sheet(isPresented: $isShowingEditor) {
+            MediaDetailEditorSheet(viewModel: viewModel)
+        }
     }
 
     private var header: some View {
@@ -112,5 +116,85 @@ struct MediaDetailView: View {
             Text(value)
                 .multilineTextAlignment(.trailing)
         }
+    }
+}
+
+private struct MediaDetailEditorSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Bindable var viewModel: MediaDetailViewModel
+    @State private var selectedStatus: MediaSummary.Status
+    @State private var progressText: String
+    @State private var scoreText: String
+    @State private var notes: String
+
+    init(viewModel: MediaDetailViewModel) {
+        self.viewModel = viewModel
+        _selectedStatus = State(initialValue: viewModel.detail?.trackingStatus ?? .planning)
+        _progressText = State(initialValue: viewModel.detail?.progress.map(String.init) ?? "")
+        _scoreText = State(initialValue: viewModel.detail?.score.map { String($0) } ?? "")
+        _notes = State(initialValue: viewModel.detail?.notes ?? "")
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Picker("Status", selection: $selectedStatus) {
+                    ForEach(MediaSummary.Status.allCases, id: \.self) { status in
+                        Text(status.title).tag(status)
+                    }
+                }
+
+                TextField("Progress", text: $progressText)
+                    .keyboardType(.numberPad)
+
+                TextField("Score", text: $scoreText)
+                    .keyboardType(.decimalPad)
+
+                TextField("Notes", text: $notes, axis: .vertical)
+                    .lineLimit(3...6)
+
+                if let saveErrorMessage = viewModel.saveErrorMessage {
+                    Text(saveErrorMessage)
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                }
+            }
+            .navigationTitle("Edit Tracking")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        Task {
+                            do {
+                                try await viewModel.saveEdits(
+                                    MediaUpdateRequest(
+                                        status: selectedStatus,
+                                        progress: Int(progressText),
+                                        score: Double(scoreText),
+                                        notes: notes.nilIfBlank
+                                    )
+                                )
+                                dismiss()
+                            } catch {
+                            }
+                        }
+                    }
+                    .disabled(viewModel.isSaving)
+                }
+            }
+        }
+    }
+}
+
+private extension String {
+    var nilIfBlank: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }

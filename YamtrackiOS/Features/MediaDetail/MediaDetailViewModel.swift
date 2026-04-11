@@ -4,7 +4,7 @@ import Observation
 @MainActor
 @Observable
 final class MediaDetailViewModel {
-    let mediaID: Int
+    let mediaID: String
     let source: String
     let mediaType: String
 
@@ -13,9 +13,26 @@ final class MediaDetailViewModel {
 
     var detail: MediaDetail?
     var errorMessage: String?
+    var saveErrorMessage: String?
+    var isSaving = false
+    var onMediaSaved: (() -> Void)?
 
     init(
         mediaID: Int,
+        source: String,
+        mediaType: String,
+        apiClient: APIClient,
+        credentials: SessionCredentials
+    ) {
+        self.mediaID = String(mediaID)
+        self.source = source
+        self.mediaType = mediaType
+        self.apiClient = apiClient
+        self.credentials = credentials
+    }
+
+    init(
+        mediaID: String,
         source: String,
         mediaType: String,
         apiClient: APIClient,
@@ -60,10 +77,35 @@ final class MediaDetailViewModel {
                 credentials: credentials
             )
             errorMessage = nil
+            saveErrorMessage = nil
         } catch is CancellationError {
         } catch {
             detail = nil
             errorMessage = (error as? LocalizedError)?.errorDescription ?? "Failed to load detail"
+        }
+    }
+
+    func saveEdits(_ update: MediaUpdateRequest) async throws {
+        guard !isSaving else { return }
+
+        isSaving = true
+        defer { isSaving = false }
+
+        do {
+            detail = try await apiClient.updateMedia(
+                mediaType: mediaType,
+                source: source,
+                mediaID: mediaID,
+                update: update,
+                credentials: credentials
+            )
+            saveErrorMessage = nil
+            onMediaSaved?()
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            saveErrorMessage = (error as? LocalizedError)?.errorDescription ?? "Failed to save changes"
+            throw error
         }
     }
 }

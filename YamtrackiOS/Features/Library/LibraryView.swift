@@ -2,6 +2,7 @@ import SwiftUI
 
 struct LibraryView: View {
     @Bindable var viewModel: LibraryViewModel
+    let onOpenAdd: () -> Void
     let onOpenSettings: () -> Void
     let onLogout: () -> Void
 
@@ -67,8 +68,13 @@ struct LibraryView: View {
                 libraryStateCard(
                     title: "No Media Yet",
                     systemImage: "square.stack",
-                    description: "Track something from Search and it will show up here."
-                )
+                    description: "Add something to your library and it will show up here."
+                ) {
+                    Button("Add Media") {
+                        onOpenAdd()
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
             }
         }
         .task {
@@ -96,9 +102,24 @@ struct LibraryView: View {
 
                 Spacer(minLength: 0)
 
+                Button {
+                    onOpenAdd()
+                } label: {
+                    Label("Add", systemImage: "plus.circle.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(Color.accentColor.opacity(0.16))
+                        )
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("library-add-media-button")
+
                 Picker("Filter", selection: $viewModel.selectedFilter) {
                     ForEach(MediaType.allCases) { filter in
-                        Text(filter.title).tag(filter)
+                        Label(filter.title, systemImage: filter.systemImage).tag(filter)
                     }
                 }
                 .pickerStyle(.menu)

@@ -5,10 +5,16 @@ final class APIClient: @unchecked Sendable {
 
     private let httpClient: HTTPClient
     private let decoder: JSONDecoder
+    private let encoder: JSONEncoder
 
-    init(httpClient: HTTPClient = URLSessionHTTPClient(), decoder: JSONDecoder = JSONDecoder()) {
+    init(
+        httpClient: HTTPClient = URLSessionHTTPClient(),
+        decoder: JSONDecoder = JSONDecoder(),
+        encoder: JSONEncoder = JSONEncoder()
+    ) {
         self.httpClient = httpClient
         self.decoder = decoder
+        self.encoder = encoder
     }
 
     func fetchInfo(credentials: SessionCredentials) async throws -> InfoResponse {
@@ -18,10 +24,42 @@ final class APIClient: @unchecked Sendable {
     func fetchMediaDetail(
         mediaType: String,
         source: String,
-        mediaID: Int,
+        mediaID: String,
         credentials: SessionCredentials
     ) async throws -> MediaDetail {
         try await send(Endpoint.mediaDetail(mediaType: mediaType, source: source, mediaID: mediaID), credentials: credentials)
+    }
+
+    func searchMedia(
+        query: String,
+        mediaType: MediaType,
+        source: ProviderSource,
+        credentials: SessionCredentials
+    ) async throws -> [AddMediaSearchResult] {
+        let response: PaginatedResponse<AddMediaSearchResult> = try await send(
+            Endpoint.mediaSearch(mediaType: mediaType, query: query, source: source),
+            credentials: credentials
+        )
+        return response.results
+    }
+
+    func createMedia(_ request: CreateMediaRequest, credentials: SessionCredentials) async throws -> MediaSummary {
+        let body = try encoder.encode(request)
+        return try await send(Endpoint.createMedia(mediaType: request.mediaType, body: body), credentials: credentials)
+    }
+
+    func updateMedia(
+        mediaType: String,
+        source: String,
+        mediaID: String,
+        update: MediaUpdateRequest,
+        credentials: SessionCredentials
+    ) async throws -> MediaDetail {
+        let body = try encoder.encode(update)
+        return try await send(
+            Endpoint.updateMedia(mediaType: mediaType, source: source, mediaID: mediaID, body: body),
+            credentials: credentials
+        )
     }
 
     func send<Response: Decodable>(
@@ -55,7 +93,8 @@ final class APIClient: @unchecked Sendable {
         guard
             let scheme = components.scheme,
             ["http", "https"].contains(scheme),
-            components.host != nil
+            let host = components.host,
+            !host.isEmpty
         else {
             throw APIError.invalidURL
         }
@@ -74,6 +113,7 @@ final class APIClient: @unchecked Sendable {
         urlRequest.setValue("Bearer \(credentials.token)", forHTTPHeaderField: "Authorization")
         if let body = request.body {
             urlRequest.httpBody = body
+            urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         }
 
         return urlRequest
