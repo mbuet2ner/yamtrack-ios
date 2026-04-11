@@ -1,0 +1,41 @@
+<svg width="1600" height="520" viewBox="0 0 1600 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="panel" x1="68" y1="48" x2="1550" y2="472" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7E7D2"/>
+      <stop offset="0.52" stop-color="#EEF4F7"/>
+      <stop offset="1" stop-color="#DDEAF8"/>
+    </linearGradient>
+    <linearGradient id="miniGlass" x1="102" y1="102" x2="358" y2="414" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.26"/>
+    </linearGradient>
+    <linearGradient id="miniAccent" x1="138" y1="154" x2="352" y2="338" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4DB2FF"/>
+      <stop offset="1" stop-color="#127AF1"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1600" height="520" rx="84" fill="url(#panel)"/>
+
+  <g>
+    <rect x="86" y="74" width="288" height="372" rx="88" fill="url(#miniGlass)"/>
+    <rect x="86" y="74" width="288" height="372" rx="88" stroke="white" stroke-opacity="0.46" stroke-width="4"/>
+
+    <rect x="126" y="152" width="208" height="66" rx="33" fill="url(#miniAccent)"/>
+    <rect x="126" y="242" width="160" height="54" rx="27" fill="white" fill-opacity="0.96"/>
+    <rect x="126" y="316" width="182" height="54" rx="27" fill="white" fill-opacity="0.7"/>
+
+    <rect x="154" y="170" width="20" height="30" rx="8" fill="white"/>
+    <path d="M164 170V200" stroke="#1790F5" stroke-width="5" stroke-linecap="round"/>
+    <path d="M246 179H294" stroke="white" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="196" cy="269" r="18" fill="#1A1C20" fill-opacity="0.1"/>
+    <path d="M196 259V279" stroke="#131A22" stroke-width="7" stroke-linecap="round"/>
+    <path d="M186 269H206" stroke="#131A22" stroke-width="7" stroke-linecap="round"/>
+    <path d="M314 120L322 140L342 148L322 156L314 176L306 156L286 148L306 140L314 120Z" fill="white"/>
+  </g>
+
+  <g fill="#12171E">
+    <text x="436" y="236" font-family="SF Pro Display, Inter, Helvetica Neue, Arial, sans-serif" font-size="140" font-weight="700" letter-spacing="-0.05em">yamtrack</text>
+    <text x="444" y="314" font-family="SF Pro Display, Inter, Helvetica Neue, Arial, sans-serif" font-size="42" font-weight="500" fill-opacity="0.64" letter-spacing="0.03em">Track every kind of media with clarity.</text>
+  </g>
+</svg>

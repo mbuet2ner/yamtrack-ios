@@ -2,6 +2,16 @@
 
 An iOS client for Yamtrack with a glassy, library-first interface for browsing, adding, and updating media.
 
+## Branding
+
+<p align="center">
+  <img src="docs/branding/png/yamtrack-mark.png" alt="Yamtrack app icon mark" width="180" />
+</p>
+
+<p align="center">
+  <img src="docs/branding/png/yamtrack-logo.png" alt="Yamtrack logo" width="720" />
+</p>
+
 ## Screenshots
 
 <p align="center">
