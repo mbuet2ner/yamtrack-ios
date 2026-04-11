@@ -3,7 +3,7 @@ import Foundation
 struct MediaDetail: Decodable, Equatable, Identifiable {
     struct SeasonDetail: Decodable, Equatable, Identifiable {
         struct Item: Decodable, Equatable {
-            let mediaID: Int
+            let mediaID: String
             let source: String
             let mediaType: String
             let title: String
@@ -19,6 +19,21 @@ struct MediaDetail: Decodable, Equatable, Identifiable {
                 case image
                 case seasonNumber = "season_number"
                 case episodeNumber = "episode_number"
+            }
+
+            init(from decoder: Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                if let numericID = try? container.decode(Int.self, forKey: .mediaID) {
+                    mediaID = String(numericID)
+                } else {
+                    mediaID = try container.decode(String.self, forKey: .mediaID)
+                }
+                source = try container.decode(String.self, forKey: .source)
+                mediaType = try container.decode(String.self, forKey: .mediaType)
+                title = try container.decode(String.self, forKey: .title)
+                image = try container.decodeIfPresent(String.self, forKey: .image)
+                seasonNumber = try container.decodeIfPresent(Int.self, forKey: .seasonNumber)
+                episodeNumber = try container.decodeIfPresent(Int.self, forKey: .episodeNumber)
             }
         }
 
@@ -60,14 +75,17 @@ struct MediaDetail: Decodable, Equatable, Identifiable {
     }
 
     private struct ConsumptionDetail: Decodable, Equatable {
+        let score: Double?
         let progress: Int?
+        let status: MediaSummary.Status?
+        let notes: String?
     }
 
     private struct RelatedDetail: Decodable, Equatable {
         let seasons: [SeasonDetail]?
     }
 
-    let mediaID: Int
+    let mediaID: String
     let source: String
     let mediaType: String
     let title: String
@@ -79,8 +97,11 @@ struct MediaDetail: Decodable, Equatable, Identifiable {
     private let metadata: DetailMetadata?
     private let consumptions: [ConsumptionDetail]
 
-    var id: Int { mediaID }
+    var id: String { "\(source)-\(mediaType)-\(mediaID)" }
     var progress: Int? { consumptions.last?.progress }
+    var score: Double? { consumptions.last?.score }
+    var trackingStatus: MediaSummary.Status? { consumptions.last?.status }
+    var notes: String? { consumptions.last?.notes }
     var totalCount: Int? { metadata?.episodes ?? metadata?.seasons }
 
     enum CodingKeys: String, CodingKey {
@@ -97,7 +118,11 @@ struct MediaDetail: Decodable, Equatable, Identifiable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        mediaID = try container.decode(Int.self, forKey: .mediaID)
+        if let numericID = try? container.decode(Int.self, forKey: .mediaID) {
+            mediaID = String(numericID)
+        } else {
+            mediaID = try container.decode(String.self, forKey: .mediaID)
+        }
         source = try container.decode(String.self, forKey: .source)
         mediaType = try container.decode(String.self, forKey: .mediaType)
         title = try container.decode(String.self, forKey: .title)

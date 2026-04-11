@@ -7,6 +7,10 @@ struct MediaRowView: View {
         MediaType(rawValue: item.mediaType)?.title ?? item.mediaType.capitalized
     }
 
+    private var mediaTypeIcon: String {
+        MediaType(rawValue: item.mediaType)?.systemImage ?? "square.stack.fill"
+    }
+
     private var posterURL: URL? {
         guard let string = item.item?.image else { return nil }
         return URL(string: string)
@@ -38,11 +42,10 @@ struct MediaRowView: View {
                             .multilineTextAlignment(.leading)
                             .accessibilityIdentifier(titleIdentifier)
 
-                        Text(mediaTypeTitle)
+                        Label(mediaTypeTitle, systemImage: mediaTypeIcon)
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondary)
-                            .textCase(.uppercase)
-                            .tracking(0.6)
+                            .labelStyle(.titleAndIcon)
                     }
 
                     VStack(alignment: .leading, spacing: 6) {

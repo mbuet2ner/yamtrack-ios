@@ -9,8 +9,9 @@ final class SetupFlowUITests: XCTestCase {
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 2))
         XCTAssertTrue(tabBar.buttons["Library"].exists)
-        XCTAssertTrue(tabBar.buttons["Search"].exists)
+        XCTAssertFalse(tabBar.buttons["Search"].exists)
         XCTAssertTrue(tabBar.buttons["Settings"].exists)
+        XCTAssertTrue(app.navigationBars.buttons["Add Media"].waitForExistence(timeout: 2))
         XCTAssertFalse(app.navigationBars["Connect"].exists)
     }
 

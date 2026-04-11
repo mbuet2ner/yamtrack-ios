@@ -20,6 +20,7 @@ struct RootView: View {
                     NavigationStack {
                         LibraryView(
                             viewModel: libraryViewModel,
+                            onOpenAdd: { selectedTab = .addMedia },
                             onOpenSettings: { selectedTab = .settings },
                             onLogout: { session.logout() }
                         )
@@ -28,11 +29,17 @@ struct RootView: View {
                     .tag(AppTab.library)
 
                     NavigationStack {
-                        Text("Search")
-                            .navigationTitle("Search")
+                        AddMediaView(
+                            viewModel: libraryViewModel.makeAddMediaViewModel(),
+                            showsCloseButton: false,
+                            onMediaCreated: {
+                                libraryViewModel.makeAddMediaViewModel().reset()
+                                selectedTab = .library
+                            }
+                        )
                     }
-                    .tabItem { Label("Search", systemImage: "magnifyingglass") }
-                    .tag(AppTab.search)
+                    .tabItem { Label("Add", systemImage: "plus.square.fill") }
+                    .tag(AppTab.addMedia)
 
                     NavigationStack {
                         SettingsHomeView(session: session)
@@ -48,6 +55,10 @@ struct RootView: View {
         }
         .task {
             await viewModel.restoreSession(using: session)
+        }
+        .onChange(of: selectedTab) { _, newValue in
+            guard newValue == .addMedia, let libraryViewModel = viewModel.libraryViewModel else { return }
+            libraryViewModel.makeAddMediaViewModel().reset()
         }
         .onChange(of: session.hasPersistedSession) { _, _ in
             viewModel.sessionDidChange(using: session)

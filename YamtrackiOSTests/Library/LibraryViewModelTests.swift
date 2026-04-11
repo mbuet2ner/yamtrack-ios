@@ -153,7 +153,7 @@ final class LibraryViewModelTests: XCTestCase {
             databaseID: 42,
             consumptionID: nil,
             item: .init(
-                mediaID: 2,
+                mediaID: "2",
                 source: "tmdb",
                 mediaType: "tv",
                 title: "Twin Peaks",
@@ -176,6 +176,39 @@ final class LibraryViewModelTests: XCTestCase {
         )
 
         XCTAssertNotNil(sut.makeDetailViewModel(for: summary))
+    }
+
+    func test_makeDetailViewModel_returnsNilForNonNumericProviderMediaID() {
+        let client = APIClient(httpClient: HTTPClientSpy(result: .failure(URLError(.notConnectedToInternet))))
+        let credentials = SessionCredentials(baseURL: URL(string: "https://demo.local")!, token: "secret")
+        let sut = LibraryViewModel(apiClient: client, credentials: credentials)
+        let summary = MediaSummary(
+            databaseID: 43,
+            consumptionID: nil,
+            item: .init(
+                mediaID: "OL27448W",
+                source: "openlibrary",
+                mediaType: "book",
+                title: "Das Glasperlenspiel",
+                image: nil,
+                seasonNumber: nil,
+                episodeNumber: nil
+            ),
+            itemID: nil,
+            parentID: nil,
+            tracked: true,
+            createdAt: nil,
+            score: nil,
+            status: nil,
+            progress: nil,
+            progressedAt: nil,
+            startDate: nil,
+            endDate: nil,
+            notes: nil,
+            lists: []
+        )
+
+        XCTAssertNil(sut.makeDetailViewModel(for: summary))
     }
 }
 

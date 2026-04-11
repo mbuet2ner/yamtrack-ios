@@ -6,12 +6,14 @@ import Observation
 final class LibraryViewModel {
     private let apiClient: APIClient
     private let credentials: SessionCredentials
+    private var addMediaViewModel: AddMediaViewModel?
 
     var allItems: [MediaSummary] = []
     var selectedFilter: MediaType = .all
     var isLoading = false
     var errorMessage: String?
     var isAuthenticationError = false
+    var isShowingAddMedia = false
 
     init(apiClient: APIClient, credentials: SessionCredentials) {
         self.apiClient = apiClient
@@ -22,18 +24,24 @@ final class LibraryViewModel {
         guard
             let nestedItem = item.item,
             !nestedItem.source.isEmpty,
-            !nestedItem.mediaType.isEmpty
+            !nestedItem.mediaType.isEmpty,
+            Self.supportsDetailRoute(mediaID: nestedItem.mediaID)
         else {
             return nil
         }
 
-        return MediaDetailViewModel(
+        let viewModel = MediaDetailViewModel(
             mediaID: nestedItem.mediaID,
             source: nestedItem.source,
             mediaType: nestedItem.mediaType,
             apiClient: apiClient,
             credentials: credentials
         )
+        viewModel.onMediaSaved = { [weak self] in
+            guard let self else { return }
+            Task { await self.load() }
+        }
+        return viewModel
     }
 
     var items: [MediaSummary] {
@@ -59,6 +67,30 @@ final class LibraryViewModel {
             isAuthenticationError = (error as? APIError) == .unauthorized
             errorMessage = (error as? LocalizedError)?.errorDescription ?? "Failed to load library"
         }
+    }
+
+    func presentAddMedia() {
+        makeAddMediaViewModel().reset()
+        isShowingAddMedia = true
+    }
+
+    func dismissAddMedia() {
+        isShowingAddMedia = false
+    }
+
+    func makeAddMediaViewModel() -> AddMediaViewModel {
+        if let addMediaViewModel {
+            return addMediaViewModel
+        }
+
+        let viewModel = AddMediaViewModel(apiClient: apiClient, credentials: credentials)
+        viewModel.onMediaCreated = { [weak self] _ in
+            guard let self else { return }
+            self.dismissAddMedia()
+            Task { await self.load() }
+        }
+        addMediaViewModel = viewModel
+        return viewModel
     }
 
     private func loadAllPages() async throws -> [MediaSummary] {
@@ -88,5 +120,9 @@ final class LibraryViewModel {
         )
         request.queryItems = components.queryItems ?? []
         return request
+    }
+
+    private static func supportsDetailRoute(mediaID: String) -> Bool {
+        mediaID.allSatisfy(\.isNumber)
     }
 }
