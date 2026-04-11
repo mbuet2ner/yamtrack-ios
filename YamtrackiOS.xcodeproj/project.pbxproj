@@ -40,6 +40,7 @@
 		B4DD9909372AE9CDC9DCD18D /* AppLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9DDBFD983AC3EBECCBEAD67 /* AppLaunchTests.swift */; };
 		C329FA36656CB38A3DF1FE2C /* LibraryViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74EDABBF7C18658784DD79D3 /* LibraryViewModelTests.swift */; };
 		C68618878EED7C2F13E19EC8 /* HTTPClientSpy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B68F3EC01CED987C727290 /* HTTPClientSpy.swift */; };
+		CAD20B0164DAF4A7FA6A6D08 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BA977E0BF3A48A0F3DABF77B /* Assets.xcassets */; };
 		D5A892510613AF12C5FE28F0 /* Endpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 186986616C54C6D7FF35E7F9 /* Endpoint.swift */; };
 		D776162225A8BA4A89FEB99E /* SetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF14EBE3DED97DA1824A67B5 /* SetupViewModel.swift */; };
 		D856405C0D24D0E867BA493A /* AppTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81AE329EEEAFED8DAEE2D274 /* AppTab.swift */; };
@@ -82,7 +83,7 @@
 		4F9DE72FC98EFB5AC4CBFC78 /* SessionStoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStoring.swift; sourceTree = "<group>"; };
 		52F0FFF52A489E0325139C1D /* APIRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIRequest.swift; sourceTree = "<group>"; };
 		55BBCAEADD0050E6C630A5D8 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
-		7391E36A5804763722700460 /* YamtrackiOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = YamtrackiOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7391E36A5804763722700460 /* YamtrackiOSUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = YamtrackiOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		746029D16D820E08B6879A22 /* media-detail-tv.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "media-detail-tv.json"; sourceTree = "<group>"; };
 		74EDABBF7C18658784DD79D3 /* LibraryViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewModelTests.swift; sourceTree = "<group>"; };
 		7A429D582243CF783FCE4B57 /* MediaDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDetailView.swift; sourceTree = "<group>"; };
@@ -97,16 +98,17 @@
 		9F4E46C8506D1DA3446F37F4 /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
 		A0351EFC183F787AC672F59A /* MediaDetailViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDetailViewModelTests.swift; sourceTree = "<group>"; };
 		A325C2370237FAE77FB43DFF /* RootViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootViewModel.swift; sourceTree = "<group>"; };
-		A803E5CC21D425ADCE58F8C0 /* YamtrackiOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = YamtrackiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A803E5CC21D425ADCE58F8C0 /* YamtrackiOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = YamtrackiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AAD09168E92DEF8E4E79A4CB /* InfoResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoResponse.swift; sourceTree = "<group>"; };
 		B35118195EFDF25373259293 /* SessionCredentials.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionCredentials.swift; sourceTree = "<group>"; };
+		BA977E0BF3A48A0F3DABF77B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		BF9C6C89728A3043E19BC2E9 /* MediaRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaRowView.swift; sourceTree = "<group>"; };
 		C23C23ED32477BC7F204AE1E /* SessionControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionControllerTests.swift; sourceTree = "<group>"; };
 		C2BCEAFCDB5160807AA08A8C /* MediaDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDetailViewModel.swift; sourceTree = "<group>"; };
 		CA241EC0EBB68B6569950AE7 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		D1D51E5A9C1F393CB37AAF2F /* LibraryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewModel.swift; sourceTree = "<group>"; };
 		DF14EBE3DED97DA1824A67B5 /* SetupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupViewModel.swift; sourceTree = "<group>"; };
-		E016053922905CE7D1468BBD /* YamtrackiOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = YamtrackiOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E016053922905CE7D1468BBD /* YamtrackiOSTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = YamtrackiOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E3CE1C8EAB9FEB8660EF1BB8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		EF09CAFB623A5FDF6BA3CFB7 /* APIClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClientTests.swift; sourceTree = "<group>"; };
 		F9DDBFD983AC3EBECCBEAD67 /* AppLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLaunchTests.swift; sourceTree = "<group>"; };
@@ -256,6 +258,7 @@
 		A4EB28AA013798C35DA4B2F1 /* YamtrackiOS */ = {
 			isa = PBXGroup;
 			children = (
+				BA977E0BF3A48A0F3DABF77B /* Assets.xcassets */,
 				E3CE1C8EAB9FEB8660EF1BB8 /* Info.plist */,
 				06C4AB94F2DBCDA24D32854D /* API */,
 				C1C25D851F1B169D31C526F9 /* App */,
@@ -388,6 +391,7 @@
 			buildConfigurationList = 991B05F3C17B3D2A3D2CC53C /* Build configuration list for PBXNativeTarget "YamtrackiOS" */;
 			buildPhases = (
 				A3329C4FE1AF3CF737050D55 /* Sources */,
+				FF82D740D7F1827532C83FB5 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -407,7 +411,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2640;
+				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					F4559747D3E5B810283FF4E8 = {
 						TestTargetID = FFCD41908F2794A12E29F3E2;
@@ -443,6 +447,14 @@
 				829BBFEE2B019758235046EF /* info.json in Resources */,
 				1A05E1923EAC9CF192F8BEBC /* media-detail-tv.json in Resources */,
 				AA0270DD3918957BB0541A80 /* media-list.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FF82D740D7F1827532C83FB5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CAD20B0164DAF4A7FA6A6D08 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -595,7 +607,6 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -615,7 +626,6 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -644,7 +654,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = 8434Q76BUY;
 				INFOPLIST_FILE = YamtrackiOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -712,7 +721,6 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -725,7 +733,6 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -737,7 +744,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = 8434Q76BUY;
 				INFOPLIST_FILE = YamtrackiOS/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (

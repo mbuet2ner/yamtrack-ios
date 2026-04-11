@@ -1,41 +1,38 @@
 <svg width="1600" height="520" viewBox="0 0 1600 520" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="panel" x1="68" y1="48" x2="1550" y2="472" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#F7E7D2"/>
-      <stop offset="0.52" stop-color="#EEF4F7"/>
+    <linearGradient id="panel" x1="64" y1="44" x2="1544" y2="476" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6E6CF"/>
+      <stop offset="0.5" stop-color="#EFF4F7"/>
       <stop offset="1" stop-color="#DDEAF8"/>
     </linearGradient>
-    <linearGradient id="miniGlass" x1="102" y1="102" x2="358" y2="414" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFFFFF" stop-opacity="0.8"/>
+    <linearGradient id="miniGlass" x1="112" y1="88" x2="382" y2="422" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.82"/>
       <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.26"/>
     </linearGradient>
-    <linearGradient id="miniAccent" x1="138" y1="154" x2="352" y2="338" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#4DB2FF"/>
-      <stop offset="1" stop-color="#127AF1"/>
+    <linearGradient id="miniSlot" x1="160" y1="198" x2="326" y2="266" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#67B8FF"/>
+      <stop offset="1" stop-color="#1A84F3"/>
     </linearGradient>
   </defs>
 
   <rect width="1600" height="520" rx="84" fill="url(#panel)"/>
 
   <g>
-    <rect x="86" y="74" width="288" height="372" rx="88" fill="url(#miniGlass)"/>
-    <rect x="86" y="74" width="288" height="372" rx="88" stroke="white" stroke-opacity="0.46" stroke-width="4"/>
+    <rect x="92" y="76" width="300" height="368" rx="96" fill="url(#miniGlass)"/>
+    <rect x="92" y="76" width="300" height="368" rx="96" stroke="white" stroke-opacity="0.44" stroke-width="4"/>
 
-    <rect x="126" y="152" width="208" height="66" rx="33" fill="url(#miniAccent)"/>
-    <rect x="126" y="242" width="160" height="54" rx="27" fill="white" fill-opacity="0.96"/>
-    <rect x="126" y="316" width="182" height="54" rx="27" fill="white" fill-opacity="0.7"/>
+    <rect x="148" y="172" width="188" height="106" rx="53" fill="white" fill-opacity="0.28"/>
+    <rect x="148" y="172" width="188" height="106" rx="53" stroke="white" stroke-opacity="0.32" stroke-width="3"/>
 
-    <rect x="154" y="170" width="20" height="30" rx="8" fill="white"/>
-    <path d="M164 170V200" stroke="#1790F5" stroke-width="5" stroke-linecap="round"/>
-    <path d="M246 179H294" stroke="white" stroke-width="10" stroke-linecap="round"/>
-    <circle cx="196" cy="269" r="18" fill="#1A1C20" fill-opacity="0.1"/>
-    <path d="M196 259V279" stroke="#131A22" stroke-width="7" stroke-linecap="round"/>
-    <path d="M186 269H206" stroke="#131A22" stroke-width="7" stroke-linecap="round"/>
-    <path d="M314 120L322 140L342 148L322 156L314 176L306 156L286 148L306 140L314 120Z" fill="white"/>
+    <rect x="170" y="196" width="144" height="58" rx="29" fill="url(#miniSlot)"/>
+    <rect x="206" y="220" width="70" height="8" rx="4" fill="white" fill-opacity="0.96"/>
+    <rect x="188" y="212" width="10" height="26" rx="5" fill="white" fill-opacity="0.96"/>
+
+    <path d="M340 154C340 140.745 350.745 130 364 130C350.745 130 340 119.255 340 106C340 119.255 329.255 130 316 130C329.255 130 340 140.745 340 154Z" fill="white" fill-opacity="0.94"/>
   </g>
 
   <g fill="#12171E">
-    <text x="436" y="236" font-family="SF Pro Display, Inter, Helvetica Neue, Arial, sans-serif" font-size="140" font-weight="700" letter-spacing="-0.05em">yamtrack</text>
-    <text x="444" y="314" font-family="SF Pro Display, Inter, Helvetica Neue, Arial, sans-serif" font-size="42" font-weight="500" fill-opacity="0.64" letter-spacing="0.03em">Track every kind of media with clarity.</text>
+    <text x="456" y="238" font-family="SF Pro Display, Inter, Helvetica Neue, Arial, sans-serif" font-size="138" font-weight="650" letter-spacing="-0.055em">yamtrack</text>
+    <text x="464" y="314" font-family="SF Pro Display, Inter, Helvetica Neue, Arial, sans-serif" font-size="42" font-weight="500" fill-opacity="0.62" letter-spacing="0.015em">Track every kind of media with clarity.</text>
   </g>
 </svg>
