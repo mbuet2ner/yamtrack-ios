@@ -1,0 +1,161 @@
+import Foundation
+
+final class APIClient: @unchecked Sendable {
+    static let live = APIClient(httpClient: URLSessionHTTPClient())
+
+    private let httpClient: HTTPClient
+    private let decoder: JSONDecoder
+    private let encoder: JSONEncoder
+
+    init(
+        httpClient: HTTPClient = URLSessionHTTPClient(),
+        decoder: JSONDecoder = JSONDecoder(),
+        encoder: JSONEncoder = JSONEncoder()
+    ) {
+        self.httpClient = httpClient
+        self.decoder = decoder
+        self.encoder = encoder
+    }
+
+    func fetchInfo(credentials: SessionCredentials) async throws -> InfoResponse {
+        try await send(Endpoint.info(), credentials: credentials)
+    }
+
+    func fetchMediaDetail(
+        mediaType: String,
+        source: String,
+        mediaID: String,
+        credentials: SessionCredentials
+    ) async throws -> MediaDetail {
+        try await send(Endpoint.mediaDetail(mediaType: mediaType, source: source, mediaID: mediaID), credentials: credentials)
+    }
+
+    func searchMedia(
+        query: String,
+        mediaType: MediaType,
+        source: ProviderSource,
+        credentials: SessionCredentials
+    ) async throws -> [AddMediaSearchResult] {
+        let response: PaginatedResponse<AddMediaSearchResult> = try await send(
+            Endpoint.mediaSearch(mediaType: mediaType, query: query, source: source),
+            credentials: credentials
+        )
+        return response.results
+    }
+
+    func createMedia(_ request: CreateMediaRequest, credentials: SessionCredentials) async throws -> MediaSummary {
+        let body = try encoder.encode(request)
+        return try await send(Endpoint.createMedia(mediaType: request.mediaType, body: body), credentials: credentials)
+    }
+
+    func updateMedia(
+        mediaType: String,
+        source: String,
+        mediaID: String,
+        update: MediaUpdateRequest,
+        credentials: SessionCredentials
+    ) async throws -> MediaDetail {
+        let body = try encoder.encode(update)
+        return try await send(
+            Endpoint.updateMedia(mediaType: mediaType, source: source, mediaID: mediaID, body: body),
+            credentials: credentials
+        )
+    }
+
+    func send<Response: Decodable>(
+        _ request: APIRequest<Response>,
+        credentials: SessionCredentials
+    ) async throws -> Response {
+        let urlRequest = try makeURLRequest(request, credentials: credentials)
+
+        do {
+            let (data, response) = try await httpClient.perform(urlRequest)
+            return try decode(data: data, response: response)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let error as URLError where error.code == .cancelled {
+            throw CancellationError()
+        } catch let error as APIError {
+            throw error
+        } catch {
+            throw APIError.transport
+        }
+    }
+
+    private func makeURLRequest<Response: Decodable>(
+        _ request: APIRequest<Response>,
+        credentials: SessionCredentials
+    ) throws -> URLRequest {
+        guard var components = URLComponents(url: credentials.baseURL, resolvingAgainstBaseURL: false) else {
+            throw APIError.invalidURL
+        }
+
+        guard
+            let scheme = components.scheme,
+            ["http", "https"].contains(scheme),
+            let host = components.host,
+            !host.isEmpty
+        else {
+            throw APIError.invalidURL
+        }
+
+        components.path = credentials.baseURL.path + request.path
+        if !request.queryItems.isEmpty {
+            components.queryItems = request.queryItems
+        }
+
+        guard let url = components.url else {
+            throw APIError.invalidURL
+        }
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = request.method
+        urlRequest.setValue("Bearer \(credentials.token)", forHTTPHeaderField: "Authorization")
+        if let body = request.body {
+            urlRequest.httpBody = body
+            urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
+
+        return urlRequest
+    }
+
+    private func decode<Response: Decodable>(data: Data, response: URLResponse) throws -> Response {
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.transport
+        }
+
+        guard 200..<300 ~= httpResponse.statusCode else {
+            let detail = parseErrorDetail(from: data)
+
+            if httpResponse.statusCode == 401 || (httpResponse.statusCode == 403 && detail?.localizedCaseInsensitiveContains("invalid token") == true) {
+                throw APIError.unauthorized
+            }
+
+            let body = String(data: data, encoding: .utf8)?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let message = detail?.isEmpty == false
+                ? detail ?? ""
+                : body?.isEmpty == false
+                ? body ?? ""
+                : HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode)
+            throw APIError.server(message)
+        }
+
+        do {
+            return try decoder.decode(Response.self, from: data)
+        } catch {
+            throw APIError.decoding
+        }
+    }
+
+    private func parseErrorDetail(from data: Data) -> String? {
+        guard
+            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let detail = object["detail"] as? String
+        else {
+            return nil
+        }
+
+        return detail.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}

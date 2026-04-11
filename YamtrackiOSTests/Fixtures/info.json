@@ -1,0 +1,9 @@
+{
+  "version": "dev",
+  "debug": false,
+  "frontend_url": "http://localhost:8000",
+  "language": "en-us",
+  "timezone": "Europe/Berlin",
+  "admin_enabled": false,
+  "track_time": true
+}

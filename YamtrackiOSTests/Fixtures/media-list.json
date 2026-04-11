@@ -1,0 +1,61 @@
+{
+  "pagination": {
+    "total": 2,
+    "limit": 20,
+    "offset": 0,
+    "next": null,
+    "previous": null
+  },
+  "results": [
+    {
+      "id": 101,
+      "consumption_id": null,
+      "item": {
+        "media_id": 1,
+        "source": "manual",
+        "media_type": "movie",
+        "title": "Dune",
+        "image": "https://cdn.example.com/dune.jpg",
+        "season_number": null,
+        "episode_number": null
+      },
+      "item_id": "movie/manual/1",
+      "parent_id": null,
+      "tracked": true,
+      "created_at": "2026-04-10T08:00:00Z",
+      "score": 8.5,
+      "status": 0,
+      "progress": 0,
+      "progressed_at": null,
+      "start_date": null,
+      "end_date": null,
+      "notes": null,
+      "lists": []
+    },
+    {
+      "id": 102,
+      "consumption_id": null,
+      "item": {
+        "media_id": 2,
+        "source": "manual",
+        "media_type": "tv",
+        "title": "Twin Peaks",
+        "image": "https://cdn.example.com/twin-peaks.jpg",
+        "season_number": null,
+        "episode_number": null
+      },
+      "item_id": "tv/manual/2",
+      "parent_id": null,
+      "tracked": true,
+      "created_at": "2026-04-10T08:05:00Z",
+      "score": 7.5,
+      "status": 1,
+      "progress": 2,
+      "progressed_at": "2026-04-10T08:30:00Z",
+      "start_date": null,
+      "end_date": null,
+      "notes": null,
+      "lists": []
+    }
+  ]
+}
