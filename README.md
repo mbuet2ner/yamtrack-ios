@@ -5,11 +5,11 @@ An iOS client for Yamtrack with a glassy, library-first interface for browsing, 
 ## Branding
 
 <p align="center">
-  <img src="docs/branding/png/yamtrack-mark.png" alt="Yamtrack app icon mark" width="180" />
+  <img src="docs/branding/png/yamtrack-mark.png" alt="Yamtrack app icon mark" width="148" />
 </p>
 
 <p align="center">
-  <img src="docs/branding/png/yamtrack-logo.png" alt="Yamtrack logo" width="720" />
+  <img src="docs/branding/png/yamtrack-logo.png" alt="Yamtrack logo" width="420" />
 </p>
 
 ## Screenshots

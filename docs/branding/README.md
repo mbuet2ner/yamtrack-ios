@@ -1,10 +1,10 @@
 # Yamtrack Branding
 
-This folder contains the first-pass logo system for the iOS app and broader product branding.
+This folder contains the current logo system for the iOS app and broader product branding.
 
 ## Concept
 
-The mark uses a rounded glass tile to match the app's visual language. Inside it, three media cards suggest a library, while the small plus and sparkle imply tracking, curation, and discovery without locking the brand to a single media type.
+The mark uses a single rounded glass tile to match the app's visual language. Inside it, one quiet blue capsule acts as a subtle hint of both media and tracking state without becoming illustrative. The goal is a more iconic, Rams-influenced silhouette that still feels native to modern iOS.
 
 ## Files
 
