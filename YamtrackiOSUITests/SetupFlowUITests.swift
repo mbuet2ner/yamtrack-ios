@@ -32,4 +32,20 @@ final class SetupFlowUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["Invalid token"].waitForExistence(timeout: 2))
     }
+
+    func test_settingsAllowsLogoutBackToConnect() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing-persisted-session"]
+        app.launch()
+
+        app.tabBars.firstMatch.buttons["Settings"].tap()
+
+        XCTAssertTrue(app.otherElements["settings-connection-card"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.otherElements["settings-actions-card"].exists)
+        let logoutButton = app.buttons["Log Out"]
+        XCTAssertTrue(logoutButton.waitForExistence(timeout: 2))
+        logoutButton.tap()
+
+        XCTAssertTrue(app.navigationBars["Connect"].waitForExistence(timeout: 2))
+    }
 }

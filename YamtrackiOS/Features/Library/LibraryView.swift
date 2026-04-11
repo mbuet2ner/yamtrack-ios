@@ -2,58 +2,73 @@ import SwiftUI
 
 struct LibraryView: View {
     @Bindable var viewModel: LibraryViewModel
+    let onOpenSettings: () -> Void
+    let onLogout: () -> Void
 
     var body: some View {
-        List {
-            if let errorMessage = viewModel.errorMessage, !viewModel.items.isEmpty {
-                Section {
-                    Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.red)
-                }
-            }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                controlBar
 
-            ForEach(viewModel.items) { item in
-                if let detailViewModel = viewModel.makeDetailViewModel(for: item) {
-                    NavigationLink {
-                        MediaDetailView(viewModel: detailViewModel)
-                    } label: {
-                        MediaRowView(item: item)
+                if let errorMessage = viewModel.errorMessage, !viewModel.items.isEmpty {
+                    inlineErrorBanner(message: errorMessage)
+                }
+
+                LazyVStack(spacing: 14) {
+                    ForEach(viewModel.items) { item in
+                        if let detailViewModel = viewModel.makeDetailViewModel(for: item) {
+                            NavigationLink {
+                                MediaDetailView(viewModel: detailViewModel)
+                            } label: {
+                                MediaRowView(item: item)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("library-card-\(item.id)")
+                        } else {
+                            MediaRowView(item: item)
+                                .accessibilityIdentifier("library-card-\(item.id)")
+                        }
                     }
-                    .buttonStyle(.plain)
-                    .listRowInsets(.init(top: 6, leading: 0, bottom: 6, trailing: 0))
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
-                } else {
-                    MediaRowView(item: item)
                 }
             }
+            .padding(.horizontal, Theme.screenPadding)
+            .padding(.top, 12)
+            .padding(.bottom, 28)
         }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
+        .scrollIndicators(.hidden)
+        .background(libraryBackground)
         .overlay {
             if viewModel.isLoading && viewModel.items.isEmpty {
                 ProgressView()
-            } else if let errorMessage = viewModel.errorMessage, viewModel.items.isEmpty {
-                ContentUnavailableView(
-                    "Library Error",
-                    systemImage: "wifi.exclamationmark",
-                    description: Text(errorMessage)
-                )
-            } else if !viewModel.isLoading && viewModel.items.isEmpty {
-                ContentUnavailableView(
-                    "No Media",
-                    systemImage: "square.stack"
-                )
-            }
-        }
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Picker("Filter", selection: $viewModel.selectedFilter) {
-                    ForEach(MediaType.allCases) { filter in
-                        Text(filter.title).tag(filter)
+            } else if viewModel.items.isEmpty, let errorMessage = viewModel.errorMessage {
+                libraryStateCard(
+                    title: viewModel.isAuthenticationError ? "Session Expired" : "Library Error",
+                    systemImage: viewModel.isAuthenticationError ? "person.crop.circle.badge.exclamationmark" : "wifi.exclamationmark",
+                    description: viewModel.isAuthenticationError ? "Your Yamtrack session is no longer valid. Open Settings or log out to reconnect." : errorMessage
+                ) {
+                    if viewModel.isAuthenticationError {
+                        Button("Open Settings") {
+                            onOpenSettings()
+                        }
+                        .buttonStyle(.borderedProminent)
+
+                        Button("Log Out", role: .destructive) {
+                            onLogout()
+                        }
+                        .buttonStyle(.bordered)
+                    } else {
+                        Button("Try Again") {
+                            Task { await viewModel.load() }
+                        }
+                        .buttonStyle(.borderedProminent)
                     }
                 }
-                .pickerStyle(.menu)
+            } else if !viewModel.isLoading && viewModel.items.isEmpty {
+                libraryStateCard(
+                    title: "No Media Yet",
+                    systemImage: "square.stack",
+                    description: "Track something from Search and it will show up here."
+                )
             }
         }
         .task {
@@ -63,5 +78,90 @@ struct LibraryView: View {
             await viewModel.load()
         }
         .navigationTitle("Library")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var controlBar: some View {
+        GlassSurface {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Library")
+                        .font(.title2.weight(.semibold))
+                        .foregroundStyle(.primary)
+
+                    Text("\(viewModel.items.count) tracked")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Spacer(minLength: 0)
+
+                Picker("Filter", selection: $viewModel.selectedFilter) {
+                    ForEach(MediaType.allCases) { filter in
+                        Text(filter.title).tag(filter)
+                    }
+                }
+                .pickerStyle(.menu)
+                .tint(.primary)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("library-control-bar")
+    }
+
+    private var libraryBackground: some View {
+        LinearGradient(
+            colors: [
+                Color(.systemBackground),
+                Color(red: 0.96, green: 0.95, blue: 0.93),
+                Color(.secondarySystemBackground).opacity(0.55),
+                Color(.systemBackground)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .ignoresSafeArea()
+    }
+
+    private func inlineErrorBanner(message: String) -> some View {
+        GlassSurface {
+            Label(message, systemImage: "exclamationmark.triangle.fill")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.red)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private func libraryStateCard<Actions: View>(
+        title: String,
+        systemImage: String,
+        description: String,
+        @ViewBuilder actions: () -> Actions = { EmptyView() }
+    ) -> some View {
+        VStack {
+            GlassSurface {
+                VStack(spacing: 16) {
+                    Image(systemName: systemImage)
+                        .font(.system(size: 34, weight: .semibold))
+                        .foregroundStyle(.secondary)
+
+                    VStack(spacing: 6) {
+                        Text(title)
+                            .font(.title3.weight(.semibold))
+
+                        Text(description)
+                            .font(.body)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+
+                    actions()
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .frame(maxWidth: 360)
+            .padding(.horizontal, Theme.screenPadding)
+        }
     }
 }

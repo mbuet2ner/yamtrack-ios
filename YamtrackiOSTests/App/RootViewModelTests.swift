@@ -11,7 +11,8 @@ final class RootViewModelTests: XCTestCase {
         )
         try store.save(try JSONEncoder().encode(credentials), for: SessionController.storageKey)
         let session = SessionController(store: store, apiClient: makeInfoClient())
-        let sut = RootViewModel()
+        let injectedClient = APIClient(httpClient: HTTPClientSpy(result: .failure(URLError(.notConnectedToInternet))))
+        let sut = RootViewModel(apiClient: injectedClient)
 
         await sut.restoreSession(using: session)
 
@@ -25,7 +26,7 @@ final class RootViewModelTests: XCTestCase {
         let session = SessionController(store: store, apiClient: client)
         session.baseURLString = "https://demo.local"
         session.token = "secret"
-        let sut = RootViewModel()
+        let sut = RootViewModel(apiClient: client)
 
         try await session.connect()
         sut.sessionDidChange(using: session)
@@ -39,7 +40,7 @@ final class RootViewModelTests: XCTestCase {
         session.baseURLString = "https://demo.local"
         session.token = "secret"
         session.hasPersistedSession = true
-        let sut = RootViewModel()
+        let sut = RootViewModel(apiClient: makeInfoClient())
 
         sut.sessionDidChange(using: session)
         XCTAssertNotNil(sut.libraryViewModel)
@@ -59,7 +60,7 @@ final class RootViewModelTests: XCTestCase {
         )!
         return APIClient(
             httpClient: HTTPClientSpy(
-                result: .success((Data(#"{"name":"Yamtrack","version":"0.0.24"}"#.utf8), response))
+                result: .success((Data(#"{"version":"0.0.24"}"#.utf8), response))
             )
         )
     }
