@@ -49,4 +49,16 @@ final class SetupFlowUITests: XCTestCase {
 
         XCTAssertTrue(app.navigationBars["Connect"].waitForExistence(timeout: 2))
     }
+
+    func test_addTabEmptyResultsUsesSingleEmptyStateMessage() {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing-persisted-session", "-ui-testing-library-fixture"]
+        app.launch()
+
+        app.tabBars.firstMatch.buttons["Add"].tap()
+
+        XCTAssertTrue(app.navigationBars["Add Media"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["Search for something to add."].waitForExistence(timeout: 2))
+        XCTAssertFalse(app.staticTexts["Artwork, provider, and selection state appear here."].exists)
+    }
 }
