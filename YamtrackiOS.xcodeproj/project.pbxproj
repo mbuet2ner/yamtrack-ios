@@ -11,6 +11,7 @@
 		0BA1967A3FC3A1D5C872009B /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA907AB023024A4E3CD71201 /* KeychainStore.swift */; };
 		105041F9EECB0EB97B9A4839 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA241EC0EBB68B6569950AE7 /* APIClient.swift */; };
 		1A05E1923EAC9CF192F8BEBC /* media-detail-tv.json in Resources */ = {isa = PBXBuildFile; fileRef = 746029D16D820E08B6879A22 /* media-detail-tv.json */; };
+		1B9E3CE0DC9E544AFEB3A42B /* AppScreenshotUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FD2B7B876950C9EEC164A19 /* AppScreenshotUITests.swift */; };
 		1CD6B08B69E3BBC27806543D /* SessionCredentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = B35118195EFDF25373259293 /* SessionCredentials.swift */; };
 		3262706D5498A85CAE193113 /* SessionControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23C23ED32477BC7F204AE1E /* SessionControllerTests.swift */; };
 		36CC796BC4F38D28AC525211 /* AddMediaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4582A8D7ED6D84C78EA666F5 /* AddMediaView.swift */; };
@@ -73,6 +74,7 @@
 		186986616C54C6D7FF35E7F9 /* Endpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Endpoint.swift; sourceTree = "<group>"; };
 		1C89390F11807BCE550F3F8A /* AddMediaModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddMediaModels.swift; sourceTree = "<group>"; };
 		1CBE08A3AD2A61BB4E780107 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		1FD2B7B876950C9EEC164A19 /* AppScreenshotUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppScreenshotUITests.swift; sourceTree = "<group>"; };
 		34E02CFAD7961E41D7BA466E /* SessionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionController.swift; sourceTree = "<group>"; };
 		4582A8D7ED6D84C78EA666F5 /* AddMediaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddMediaView.swift; sourceTree = "<group>"; };
 		47AA35E40A30916702D45423 /* RootViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootViewModelTests.swift; sourceTree = "<group>"; };
@@ -118,6 +120,7 @@
 			isa = PBXGroup;
 			children = (
 				F9DDBFD983AC3EBECCBEAD67 /* AppLaunchTests.swift */,
+				1FD2B7B876950C9EEC164A19 /* AppScreenshotUITests.swift */,
 				89E9D0241CD53308786225E7 /* SetupFlowUITests.swift */,
 			);
 			path = YamtrackiOSUITests;
@@ -500,6 +503,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B4DD9909372AE9CDC9DCD18D /* AppLaunchTests.swift in Sources */,
+				1B9E3CE0DC9E544AFEB3A42B /* AppScreenshotUITests.swift in Sources */,
 				56EAFB4FBB5606E629157F03 /* SetupFlowUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
