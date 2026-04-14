@@ -20,6 +20,7 @@ struct MediaDetailView: View {
                             }
                             .buttonStyle(.borderedProminent)
                             .controlSize(.large)
+                            .accessibilityIdentifier("media-detail-primary-action-button")
 
                             metadataRow(title: "Status", value: detail.status ?? "Unknown")
                             metadataRow(title: "Progress", value: viewModel.progressSummary ?? "Unknown")
@@ -104,6 +105,7 @@ struct MediaDetailView: View {
                 Text(progressSummary)
                     .font(.headline)
                     .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("media-detail-progress-summary")
             }
         }
     }
@@ -146,6 +148,7 @@ private struct MediaDetailEditorSheet: View {
 
                 TextField("Progress", text: $progressText)
                     .keyboardType(.numberPad)
+                    .accessibilityIdentifier("media-detail-progress-field")
 
                 TextField("Score", text: $scoreText)
                     .keyboardType(.decimalPad)
@@ -186,6 +189,7 @@ private struct MediaDetailEditorSheet: View {
                         }
                     }
                     .disabled(viewModel.isSaving)
+                    .accessibilityIdentifier("media-detail-save-button")
                 }
             }
         }

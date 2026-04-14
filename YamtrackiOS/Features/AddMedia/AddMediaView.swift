@@ -94,7 +94,8 @@ struct AddMediaView: View {
                         selectionChip(
                             title: type.singularTitle,
                             systemImage: type.systemImage,
-                            isSelected: viewModel.selectedType == type
+                            isSelected: viewModel.selectedType == type,
+                            accessibilityIdentifier: "add-media-type-\(type.rawValue)"
                         ) {
                             viewModel.selectedType = type
                         }
@@ -113,7 +114,8 @@ struct AddMediaView: View {
                         selectionChip(
                             title: source.title,
                             systemImage: source.systemImage,
-                            isSelected: viewModel.selectedSource == source
+                            isSelected: viewModel.selectedSource == source,
+                            accessibilityIdentifier: "add-media-source-\(source.rawValue)"
                         ) {
                             viewModel.selectedSource = source
                         }
@@ -127,7 +129,12 @@ struct AddMediaView: View {
     private var manualSection: some View {
         sectionContainer(title: "Manual Entry", subtitle: "Create a custom \(viewModel.selectedType.singularTitle.lowercased()) with your own details.") {
             VStack(spacing: 12) {
-                textFieldRow(title: "Title", prompt: "Enter a title", text: $viewModel.manualTitle)
+                textFieldRow(
+                    title: "Title",
+                    prompt: "Enter a title",
+                    text: $viewModel.manualTitle,
+                    accessibilityIdentifier: "add-media-manual-title-field"
+                )
 
                 textFieldRow(title: "Image URL", prompt: "https://…", text: $viewModel.manualImageURL)
                     .keyboardType(.URL)
@@ -180,6 +187,7 @@ struct AddMediaView: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .submitLabel(.search)
+                        .accessibilityIdentifier("add-media-search-field")
                         .onSubmit {
                             guard canSearch else { return }
                             Task { await viewModel.search() }
@@ -207,6 +215,7 @@ struct AddMediaView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(!canSearch)
+                .accessibilityIdentifier("add-media-search-button")
             }
         }
     }
@@ -239,6 +248,7 @@ struct AddMediaView: View {
                             .foregroundStyle(.primary)
                             .multilineTextAlignment(.leading)
                             .lineLimit(3)
+                            .accessibilityIdentifier("add-media-result-title-\(result.id)")
 
                         HStack(spacing: 8) {
                             badge(
@@ -279,6 +289,7 @@ struct AddMediaView: View {
         }
         .buttonStyle(.plain)
         .disabled(result.tracked)
+        .accessibilityIdentifier("add-media-result-\(result.id)")
     }
 
     private func selectedResultCard(_ result: AddMediaSearchResult) -> some View {
@@ -361,6 +372,7 @@ struct AddMediaView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(createDisabled)
+                .accessibilityIdentifier("add-media-submit-button")
             }
             .padding(.horizontal, Theme.screenPadding)
             .padding(.top, 12)
@@ -500,6 +512,7 @@ struct AddMediaView: View {
         title: String,
         systemImage: String,
         isSelected: Bool,
+        accessibilityIdentifier: String,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -518,15 +531,22 @@ struct AddMediaView: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier(accessibilityIdentifier)
     }
 
-    private func textFieldRow(title: String, prompt: String, text: Binding<String>) -> some View {
+    private func textFieldRow(
+        title: String,
+        prompt: String,
+        text: Binding<String>,
+        accessibilityIdentifier: String? = nil
+    ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
 
             TextField(prompt, text: text)
+                .accessibilityIdentifier(accessibilityIdentifier ?? "")
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
                 .background(fieldBackground)
