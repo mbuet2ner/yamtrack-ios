@@ -17,8 +17,10 @@ final class AppScreenshotUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Add Media"].waitForExistence(timeout: 10))
         saveScreenshot(named: "add-media", to: outputDirectory)
 
-        app.tabBars.buttons["Settings"].tap()
-        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 10))
+        app.tabBars.buttons["Library"].tap()
+        XCTAssertTrue(app.navigationBars["Library"].waitForExistence(timeout: 10))
+        app.buttons["server-status-pill"].tap()
+        XCTAssertTrue(app.navigationBars["Connection"].waitForExistence(timeout: 10))
         saveScreenshot(named: "settings", to: outputDirectory)
     }
 

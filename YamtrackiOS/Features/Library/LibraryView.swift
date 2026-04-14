@@ -2,9 +2,9 @@ import SwiftUI
 
 struct LibraryView: View {
     @Bindable var viewModel: LibraryViewModel
+    let baseURLString: String
     let onOpenAdd: () -> Void
-    let onOpenSettings: () -> Void
-    let onLogout: () -> Void
+    let onOpenConnectionSettings: () -> Void
 
     var body: some View {
         ScrollView {
@@ -45,18 +45,13 @@ struct LibraryView: View {
                 libraryStateCard(
                     title: viewModel.isAuthenticationError ? "Session Expired" : "Library Error",
                     systemImage: viewModel.isAuthenticationError ? "person.crop.circle.badge.exclamationmark" : "wifi.exclamationmark",
-                    description: viewModel.isAuthenticationError ? "Your Yamtrack session is no longer valid. Open Settings or log out to reconnect." : errorMessage
+                    description: viewModel.isAuthenticationError ? "Your Yamtrack session is no longer valid. Open connection settings to reconnect." : errorMessage
                 ) {
                     if viewModel.isAuthenticationError {
-                        Button("Open Settings") {
-                            onOpenSettings()
+                        Button("Open Connection Settings") {
+                            onOpenConnectionSettings()
                         }
                         .buttonStyle(.borderedProminent)
-
-                        Button("Log Out", role: .destructive) {
-                            onLogout()
-                        }
-                        .buttonStyle(.bordered)
                     } else {
                         Button("Try Again") {
                             Task { await viewModel.load() }
@@ -89,8 +84,20 @@ struct LibraryView: View {
 
     private var controlBar: some View {
         GlassSurface {
-            HStack(spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
+                    Button {
+                        onOpenConnectionSettings()
+                    } label: {
+                        ServerStatusPill(
+                            connectionStatus: .connected,
+                            baseURLString: baseURLString
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("server-status-pill")
+                    .accessibilityLabel(ServerStatusPill.displayLabel(for: baseURLString))
+
                     Text("Library")
                         .font(.title2.weight(.semibold))
                         .foregroundStyle(.primary)
@@ -102,28 +109,30 @@ struct LibraryView: View {
 
                 Spacer(minLength: 0)
 
-                Button {
-                    onOpenAdd()
-                } label: {
-                    Label("Add", systemImage: "plus.circle.fill")
-                        .font(.subheadline.weight(.semibold))
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 10)
-                        .background(
-                            Capsule(style: .continuous)
-                                .fill(Color.accentColor.opacity(0.16))
-                        )
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("library-add-media-button")
-
-                Picker("Filter", selection: $viewModel.selectedFilter) {
-                    ForEach(MediaType.allCases) { filter in
-                        Label(filter.title, systemImage: filter.systemImage).tag(filter)
+                VStack(alignment: .trailing, spacing: 10) {
+                    Button {
+                        onOpenAdd()
+                    } label: {
+                        Label("Add", systemImage: "plus.circle.fill")
+                            .font(.subheadline.weight(.semibold))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 10)
+                            .background(
+                                Capsule(style: .continuous)
+                                    .fill(Color.accentColor.opacity(0.16))
+                            )
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("library-add-media-button")
+
+                    Picker("Filter", selection: $viewModel.selectedFilter) {
+                        ForEach(MediaType.allCases) { filter in
+                            Label(filter.title, systemImage: filter.systemImage).tag(filter)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .tint(.primary)
                 }
-                .pickerStyle(.menu)
-                .tint(.primary)
             }
         }
         .accessibilityElement(children: .contain)
@@ -184,5 +193,84 @@ struct LibraryView: View {
             .frame(maxWidth: 360)
             .padding(.horizontal, Theme.screenPadding)
         }
+    }
+}
+
+struct ServerStatusPill: View {
+    let connectionStatus: ConnectionStatus
+    let baseURLString: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(indicatorColor)
+                .frame(width: 10, height: 10)
+
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            Capsule(style: .continuous)
+                .fill(backgroundColor)
+        )
+        .overlay(
+            Capsule(style: .continuous)
+                .strokeBorder(borderColor, lineWidth: 1)
+        )
+    }
+
+    private var title: String {
+        switch connectionStatus {
+        case .connected:
+            let label = Self.displayLabel(for: baseURLString)
+            return label.isEmpty ? "Connected" : label
+        case .disconnected:
+            return "Disconnected"
+        }
+    }
+
+    private var indicatorColor: Color {
+        switch connectionStatus {
+        case .connected:
+            return Color(red: 0.20, green: 0.64, blue: 0.36)
+        case .disconnected:
+            return Color.red
+        }
+    }
+
+    private var backgroundColor: Color {
+        switch connectionStatus {
+        case .connected:
+            return Color(red: 0.86, green: 0.95, blue: 0.88)
+        case .disconnected:
+            return Color.red.opacity(0.10)
+        }
+    }
+
+    private var borderColor: Color {
+        switch connectionStatus {
+        case .connected:
+            return Color(red: 0.20, green: 0.64, blue: 0.36).opacity(0.18)
+        case .disconnected:
+            return Color.red.opacity(0.14)
+        }
+    }
+
+    static func displayLabel(for baseURLString: String) -> String {
+        let trimmed = baseURLString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+
+        if let host = URL(string: trimmed)?.host, !host.isEmpty {
+            return host
+        }
+
+        return trimmed
+            .replacingOccurrences(of: "https://", with: "")
+            .replacingOccurrences(of: "http://", with: "")
+            .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
     }
 }
