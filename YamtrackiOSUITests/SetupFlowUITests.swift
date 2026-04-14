@@ -106,6 +106,36 @@ final class SetupFlowUITests: XCTestCase {
         XCTAssertEqual(unchangedPill.label, "demo.local")
     }
 
+    func test_restoredSessionWithExpiredLibraryAuthShowsDisconnectedRecoveryPill() {
+        let app = makeExpiredAuthFixtureApp()
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
+        XCTAssertTrue(tabBar.buttons["Library"].exists)
+        XCTAssertTrue(tabBar.buttons["Add"].exists)
+        XCTAssertTrue(app.navigationBars["Library"].waitForExistence(timeout: 5))
+
+        let disconnectedPill = app.buttons["server-status-pill"]
+        XCTAssertTrue(disconnectedPill.waitForExistence(timeout: 5))
+        XCTAssertEqual(disconnectedPill.label, "demo.local")
+        XCTAssertTrue(app.otherElements["library-control-bar"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Manual Movie"].waitForExistence(timeout: 5))
+
+        refreshLibrary(in: app)
+
+        XCTAssertFalse(app.staticTexts["Manual Movie"].waitForExistence(timeout: 2))
+        XCTAssertTrue(disconnectedPill.waitForExistence(timeout: 5))
+        XCTAssertEqual(disconnectedPill.label, "Disconnected")
+
+        let reconnectButton = app.buttons["Open Connection Settings"]
+        XCTAssertTrue(reconnectButton.waitForExistence(timeout: 5))
+
+        reconnectButton.tap()
+
+        XCTAssertTrue(app.navigationBars["Connection"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["Connect"].exists)
+    }
+
     func test_connectedLaunchConnectionSheetAllowsDisconnectBackToConnectSheet() {
         let app = makeFixtureApp()
 
@@ -285,6 +315,13 @@ final class SetupFlowUITests: XCTestCase {
         app.launch()
         return app
     }
+
+    private func makeExpiredAuthFixtureApp() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing-persisted-session", "-ui-testing-library-auth-expired"]
+        app.launch()
+        return app
+    }
     private func replaceText(in element: XCUIElement, with text: String) {
         element.tap()
 
@@ -295,5 +332,13 @@ final class SetupFlowUITests: XCTestCase {
 
         let deleteString = String(repeating: XCUIKeyboardKey.delete.rawValue, count: currentValue.count)
         element.typeText(deleteString + text)
+    }
+
+    private func refreshLibrary(in app: XCUIApplication) {
+        let libraryScrollView = app.scrollViews.firstMatch
+        XCTAssertTrue(libraryScrollView.waitForExistence(timeout: 5))
+        let start = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.18))
+        let end = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.82))
+        start.press(forDuration: 0.1, thenDragTo: end)
     }
 }

@@ -8,9 +8,9 @@ struct YamtrackiOSApp: App {
     init() {
         let arguments = ProcessInfo.processInfo.arguments
         let invalidAuth = arguments.contains("-ui-testing-invalid-auth")
-        let useLibraryFixture = arguments.contains("-ui-testing-library-fixture")
+        let useLibraryFixture = arguments.contains("-ui-testing-library-fixture") || arguments.contains("-ui-testing-library-auth-expired")
         let fixtureConfiguration = UITestLibraryFixtureConfiguration(arguments: arguments)
-        let shouldUseTestStore = arguments.contains("-ui-testing-persisted-session") || arguments.contains("-ui-testing-invalid-auth") || arguments.contains("-ui-testing-reset-session")
+        let shouldUseTestStore = arguments.contains("-ui-testing-persisted-session") || arguments.contains("-ui-testing-invalid-auth") || arguments.contains("-ui-testing-reset-session") || arguments.contains("-ui-testing-library-auth-expired")
         let store: SessionStoring = shouldUseTestStore ? InMemorySessionStore() : KeychainStore(service: "org.yamtrack.ios.session", accessGroup: nil)
 
         if arguments.contains("-ui-testing-persisted-session"),
@@ -85,6 +85,8 @@ private actor UITestLibraryFixtureState {
     private var nextManualMediaID: Int
     private let searchErrorMessage: String?
     private var remainingLibraryFailures: Int
+    private let isLibraryAuthExpired: Bool
+    private var remainingAuthenticatedLibraryLoads: Int
 
     private let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
@@ -96,6 +98,8 @@ private actor UITestLibraryFixtureState {
         searchableItems = [.dune, .glasperlenspiel]
         searchErrorMessage = configuration.searchErrorMessage
         remainingLibraryFailures = configuration.libraryFailureCount
+        isLibraryAuthExpired = configuration.libraryAuthExpired
+        remainingAuthenticatedLibraryLoads = configuration.libraryAuthExpired ? 1 : 0
 
         var initialItems = [UITestTrackedMediaState.manualMovie]
         if configuration.includesTrackedDune {
@@ -118,6 +122,19 @@ private actor UITestLibraryFixtureState {
 
         let method = request.httpMethod ?? "GET"
         let path = normalizedPath(for: url)
+
+        if isLibraryAuthExpired {
+            if method == "GET", path == "/api/v1/info" {
+                return try response(for: UITestInfoResponse(version: "dev"), url: url)
+            }
+
+            if method == "GET", path == "/api/v1/media", remainingAuthenticatedLibraryLoads > 0 {
+                remainingAuthenticatedLibraryLoads -= 1
+                return try response(for: UITestPaginatedResponse(results: items.map(\.summaryResponse)), url: url)
+            }
+
+            return try unauthorizedResponse(url: url)
+        }
 
         switch (method, path) {
         case ("GET", "/api/v1/info"):
@@ -149,6 +166,119 @@ private actor UITestLibraryFixtureState {
         default:
             return notFoundResponse(url: url)
         }
+    }
+
+    private func mediaDetailResponse(for route: UITestDetailRoute, url: URL) throws -> (Data, URLResponse) {
+        guard route.mediaID.allSatisfy(\.isNumber) else {
+            return notFoundResponse(url: url)
+        }
+
+        guard let item = items.first(where: { $0.matches(route) }) else {
+            return notFoundResponse(url: url)
+        }
+
+        return try response(for: item.detailResponse, url: url)
+    }
+
+    private func mediaSearchResponse(for route: UITestSearchRoute, url: URL) throws -> (Data, URLResponse) {
+        if let searchErrorMessage {
+            return try errorResponse(message: searchErrorMessage, statusCode: 503, url: url)
+        }
+
+        let queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        let query = queryItems.first(where: { $0.name == "search" })?.value?.lowercased() ?? ""
+        let source = queryItems.first(where: { $0.name == "source" })?.value?.lowercased() ?? ""
+
+        let results = searchableItems
+            .filter {
+                $0.mediaType == route.mediaType &&
+                $0.source == source &&
+                (query.isEmpty || $0.title.lowercased().contains(query) || route.mediaType == MediaType.movie.rawValue)
+            }
+            .map { item in
+                UITestSearchResultResponse(
+                    mediaID: item.mediaID,
+                    source: item.source,
+                    mediaType: item.mediaType,
+                    title: item.title,
+                    image: item.image,
+                    tracked: items.contains(where: { $0.matches(item) }),
+                    itemID: items.first(where: { $0.matches(item) })?.itemID
+                )
+            }
+
+        return try response(for: UITestPaginatedResponse(results: results), url: url)
+    }
+
+    private func createMedia(_ request: URLRequest, mediaType: String, url: URL) throws -> (Data, URLResponse) {
+        let body = try requestBody(request)
+        let source = stringValue(body["source"])?.lowercased() ?? ProviderSource.manual.rawValue
+        let created: UITestTrackedMediaState
+
+        if source == ProviderSource.manual.rawValue {
+            let title = stringValue(body["title"])?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            created = UITestTrackedMediaState(
+                databaseID: nextDatabaseID,
+                mediaID: String(nextManualMediaID),
+                source: source,
+                mediaType: mediaType,
+                title: title.isEmpty ? "Untitled" : title,
+                image: stringValue(body["image"]),
+                status: intValue(body["status"]) ?? MediaSummary.Status.planning.rawValue,
+                progress: intValue(body["progress"]),
+                score: doubleValue(body["score"]),
+                notes: stringValue(body["notes"]),
+                synopsis: "Manual entry created during UI testing."
+            )
+            nextManualMediaID += 1
+        } else {
+            guard
+                let mediaID = stringValue(body["media_id"]),
+                let catalogItem = searchableItems.first(where: {
+                    $0.mediaID == mediaID &&
+                    $0.source == source &&
+                    $0.mediaType == mediaType
+                })
+            else {
+                return try errorResponse(message: "Fixture search result not found", statusCode: 404, url: url)
+            }
+
+            created = UITestTrackedMediaState(
+                databaseID: nextDatabaseID,
+                mediaID: catalogItem.mediaID,
+                source: catalogItem.source,
+                mediaType: catalogItem.mediaType,
+                title: catalogItem.title,
+                image: catalogItem.image,
+                status: intValue(body["status"]) ?? MediaSummary.Status.planning.rawValue,
+                progress: intValue(body["progress"]),
+                score: doubleValue(body["score"]),
+                notes: stringValue(body["notes"]),
+                synopsis: catalogItem.synopsis
+            )
+        }
+
+        nextDatabaseID += 1
+        items.insert(created, at: 0)
+        return try response(for: created.summaryResponse, statusCode: 201, url: url)
+    }
+
+    private func updateMedia(_ request: URLRequest, route: UITestDetailRoute, url: URL) throws -> (Data, URLResponse) {
+        guard route.mediaID.allSatisfy(\.isNumber) else {
+            return notFoundResponse(url: url)
+        }
+
+        guard let index = items.firstIndex(where: { $0.matches(route) }) else {
+            return notFoundResponse(url: url)
+        }
+
+        let body = try requestBody(request)
+        items[index].status = intValue(body["status"]) ?? items[index].status
+        items[index].progress = intValue(body["progress"]) ?? items[index].progress
+        items[index].score = doubleValue(body["score"]) ?? items[index].score
+        items[index].notes = stringValue(body["notes"]) ?? items[index].notes
+
+        return try response(for: items[index].detailResponse, url: url)
     }
 
     private func mediaDetailResponse(for route: UITestDetailRoute, url: URL) throws -> (Data, URLResponse) {
@@ -362,6 +492,9 @@ private actor UITestLibraryFixtureState {
         try response(for: UITestErrorResponse(detail: message), statusCode: statusCode, url: url)
     }
 
+    private func unauthorizedResponse(url: URL) throws -> (Data, URLResponse) {
+        try errorResponse(message: "Invalid token", statusCode: 401, url: url)
+    }
     private func notFoundResponse(url: URL) -> (Data, URLResponse) {
         let response = HTTPURLResponse(url: url, statusCode: 404, httpVersion: nil, headerFields: nil)!
         return (Data(#"{"detail":"Not found"}"#.utf8), response)
@@ -514,11 +647,13 @@ fileprivate struct UITestLibraryFixtureConfiguration {
     let includesTrackedDune: Bool
     let searchErrorMessage: String?
     let libraryFailureCount: Int
+    let libraryAuthExpired: Bool
 
     init(arguments: [String]) {
         includesTrackedDune = arguments.contains("-ui-testing-tracked-search-result")
         searchErrorMessage = arguments.contains("-ui-testing-search-error") ? "Search service offline" : nil
         libraryFailureCount = arguments.contains("-ui-testing-library-fails-once") ? 1 : 0
+        libraryAuthExpired = arguments.contains("-ui-testing-library-auth-expired")
     }
 }
 
