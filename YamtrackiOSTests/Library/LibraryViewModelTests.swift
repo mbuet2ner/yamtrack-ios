@@ -112,12 +112,17 @@ final class LibraryViewModelTests: XCTestCase {
         let client = APIClient(httpClient: spy)
         let credentials = SessionCredentials(baseURL: URL(string: "https://demo.local")!, token: "secret")
         let sut = LibraryViewModel(apiClient: client, credentials: credentials)
+        var didInvokeAuthenticationFailure = false
+        sut.onAuthenticationFailure = {
+            didInvokeAuthenticationFailure = true
+        }
 
         await sut.load()
 
         XCTAssertTrue(sut.items.isEmpty)
         XCTAssertEqual(sut.errorMessage, "Invalid token")
         XCTAssertTrue(sut.isAuthenticationError)
+        XCTAssertTrue(didInvokeAuthenticationFailure)
     }
 
     func test_makeDetailViewModel_returnsNilWhenNestedItemIsMissing() {

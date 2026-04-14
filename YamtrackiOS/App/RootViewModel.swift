@@ -15,6 +15,9 @@ final class RootViewModel {
 
     func restoreSession(using session: SessionController) async {
         await session.restoreCredentials()
+        if session.hasPersistedSession {
+            await session.validatePersistedSession()
+        }
         syncLibraryShell(using: session)
         isRestoringSession = false
     }
@@ -25,16 +28,20 @@ final class RootViewModel {
 
     private func syncLibraryShell(using session: SessionController) {
         guard
-            session.hasPersistedSession,
+            session.connectionStatus == .connected,
             let baseURL = URL(string: session.baseURLString)
         else {
             libraryViewModel = nil
             return
         }
 
-        libraryViewModel = LibraryViewModel(
+        let libraryViewModel = LibraryViewModel(
             apiClient: apiClient,
             credentials: SessionCredentials(baseURL: baseURL, token: session.token)
         )
+        libraryViewModel.onAuthenticationFailure = {
+            session.markDisconnected()
+        }
+        self.libraryViewModel = libraryViewModel
     }
 }
