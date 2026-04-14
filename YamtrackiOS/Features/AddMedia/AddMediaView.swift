@@ -5,6 +5,8 @@ struct AddMediaView: View {
     @Bindable var viewModel: AddMediaViewModel
     var showsCloseButton = true
     var onMediaCreated: (() -> Void)?
+    @State private var isShowingBookBarcodeScanner = false
+    @State private var didTriggerUITestBarcodeLookup = false
 
     var body: some View {
         ScrollView {
@@ -26,6 +28,10 @@ struct AddMediaView: View {
                 if let errorMessage = viewModel.errorMessage {
                     errorCard(errorMessage)
                 }
+
+                if viewModel.selectedType == .book && viewModel.barcodeLookupState == .noMatch {
+                    barcodeNoMatchSection
+                }
             }
             .padding(.horizontal, Theme.screenPadding)
             .padding(.top, 14)
@@ -37,6 +43,27 @@ struct AddMediaView: View {
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
             bottomActionBar
+        }
+        .sheet(isPresented: $isShowingBookBarcodeScanner) {
+            NavigationStack {
+                BookBarcodeScannerView { scannedValue in
+                    Task {
+                        await viewModel.lookupBookBarcode(scannedValue)
+                    }
+                }
+            }
+            .presentationDetents([.medium, .large])
+        }
+        .onChange(of: viewModel.selectedType) { _, newValue in
+            if newValue != .book {
+                isShowingBookBarcodeScanner = false
+                didTriggerUITestBarcodeLookup = false
+            } else {
+                triggerUITestBarcodeLookupIfNeeded()
+            }
+        }
+        .onAppear {
+            triggerUITestBarcodeLookupIfNeeded()
         }
         .toolbar {
             if showsCloseButton {
@@ -171,42 +198,62 @@ struct AddMediaView: View {
 
     private var searchSection: some View {
         sectionContainer(title: "Search", subtitle: "Look up a \(viewModel.selectedType.singularTitle.lowercased()) from \(viewModel.selectedSource.title).") {
-            HStack(spacing: 12) {
-                HStack(spacing: 10) {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 12) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(.secondary)
 
-                    TextField("Search title", text: $viewModel.query)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .submitLabel(.search)
-                        .onSubmit {
-                            guard canSearch else { return }
-                            Task { await viewModel.search() }
-                        }
-                }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 12)
-                .background(fieldBackground)
-
-                Button {
-                    Task { await viewModel.search() }
-                } label: {
-                    HStack(spacing: 8) {
-                        if viewModel.isSearching {
-                            ProgressView()
-                                .controlSize(.small)
-                        } else {
-                            Image(systemName: "arrow.forward.circle.fill")
-                        }
-                        Text(viewModel.isSearching ? "Searching" : "Search")
-                            .fontWeight(.semibold)
+                        TextField("Search title", text: $viewModel.query)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .submitLabel(.search)
+                            .accessibilityIdentifier("add-media-search-field")
+                            .onSubmit {
+                                guard canSearch else { return }
+                                Task { await viewModel.search() }
+                            }
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, 14)
                     .padding(.vertical, 12)
+                    .background(fieldBackground)
+
+                    Button {
+                        Task { await viewModel.search() }
+                    } label: {
+                        HStack(spacing: 8) {
+                            if viewModel.isSearching {
+                                ProgressView()
+                                    .controlSize(.small)
+                            } else {
+                                Image(systemName: "arrow.forward.circle.fill")
+                            }
+                            Text(viewModel.isSearching ? "Searching" : "Search")
+                                .fontWeight(.semibold)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!canSearch)
                 }
-                .buttonStyle(.borderedProminent)
-                .disabled(!canSearch)
+
+                if viewModel.selectedType == .book && !viewModel.isManualSource {
+                    Button {
+                        isShowingBookBarcodeScanner = true
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: "barcode.viewfinder")
+                            Text("Scan Book Barcode")
+                                .fontWeight(.semibold)
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier("add-media-scan-book-barcode-button")
+                }
             }
         }
     }
@@ -316,6 +363,27 @@ struct AddMediaView: View {
         }
     }
 
+    private var barcodeNoMatchSection: some View {
+        sectionContainer(title: "No Match Found", subtitle: "The barcode did not match a provider result.") {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("No barcode match found.")
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(.primary)
+
+                Text("Use the scanned ISBN in the search field to try a title search instead.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                Button("Use ISBN in Search") {
+                    viewModel.moveScannedISBNToSearchField()
+                }
+                .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier("add-media-barcode-fallback-button")
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
     private var bottomActionBar: some View {
         VStack(spacing: 0) {
             Divider()
@@ -360,12 +428,26 @@ struct AddMediaView: View {
                     .padding(.vertical, 12)
                 }
                 .buttonStyle(.borderedProminent)
+                .accessibilityIdentifier("add-media-confirm-button")
                 .disabled(createDisabled)
             }
             .padding(.horizontal, Theme.screenPadding)
             .padding(.top, 12)
             .padding(.bottom, 12)
             .background(.ultraThinMaterial)
+        }
+    }
+
+    private func triggerUITestBarcodeLookupIfNeeded() {
+        guard !didTriggerUITestBarcodeLookup else { return }
+        guard viewModel.selectedType == .book else { return }
+        guard let simulatedISBN = ProcessInfo.processInfo.value(after: "-ui-testing-simulated-book-isbn") else {
+            return
+        }
+
+        didTriggerUITestBarcodeLookup = true
+        Task {
+            await viewModel.lookupBookBarcode(simulatedISBN)
         }
     }
 
