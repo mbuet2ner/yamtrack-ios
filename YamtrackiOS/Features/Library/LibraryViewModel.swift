@@ -14,6 +14,7 @@ final class LibraryViewModel {
     var errorMessage: String?
     var isAuthenticationError = false
     var isShowingAddMedia = false
+    var onAuthenticationFailure: (() -> Void)?
 
     init(apiClient: APIClient, credentials: SessionCredentials) {
         self.apiClient = apiClient
@@ -64,7 +65,11 @@ final class LibraryViewModel {
             isAuthenticationError = false
         } catch is CancellationError {
         } catch {
-            isAuthenticationError = (error as? APIError) == .unauthorized
+            let isUnauthorized = (error as? APIError) == .unauthorized
+            if isUnauthorized {
+                onAuthenticationFailure?()
+            }
+            isAuthenticationError = isUnauthorized
             errorMessage = (error as? LocalizedError)?.errorDescription ?? "Failed to load library"
         }
     }
