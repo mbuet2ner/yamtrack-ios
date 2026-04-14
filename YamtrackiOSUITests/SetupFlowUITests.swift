@@ -8,7 +8,8 @@ final class SetupFlowUITests: XCTestCase {
         XCTAssertTrue(tabBar.waitForExistence(timeout: 2))
         XCTAssertTrue(tabBar.buttons["Library"].exists)
         XCTAssertTrue(tabBar.buttons["Add"].exists)
-        XCTAssertTrue(tabBar.buttons["Settings"].exists)
+        XCTAssertFalse(tabBar.buttons["Settings"].exists)
+        XCTAssertTrue(app.buttons["server-status-pill"].waitForExistence(timeout: 2))
         XCTAssertTrue(app.otherElements["library-control-bar"].waitForExistence(timeout: 2))
         XCTAssertFalse(app.navigationBars["Connect"].exists)
     }
@@ -32,18 +33,95 @@ final class SetupFlowUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Invalid token"].waitForExistence(timeout: 5))
     }
 
-    func test_settingsAllowsLogoutBackToConnect() {
+    func test_disconnectedLaunchShowsLibraryShellAndCanOpenConnectionSheet() {
+        let app = makeDisconnectedApp()
+
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
+        XCTAssertTrue(tabBar.buttons["Library"].exists)
+        XCTAssertTrue(tabBar.buttons["Add"].exists)
+        XCTAssertFalse(tabBar.buttons["Settings"].exists)
+        XCTAssertTrue(app.navigationBars["Library"].waitForExistence(timeout: 5))
+        let disconnectedPill = app.buttons["server-status-pill"]
+        XCTAssertTrue(disconnectedPill.waitForExistence(timeout: 5))
+        XCTAssertEqual(disconnectedPill.label, "Disconnected")
+
+        app.buttons["Open Connection Settings"].tap()
+
+        XCTAssertTrue(app.navigationBars["Connection"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["Connect"].exists)
+    }
+
+    func test_connectedLaunchConnectionSheetReconnectsAndUpdatesServerPill() {
         let app = makeFixtureApp()
 
-        app.tabBars.firstMatch.buttons["Settings"].tap()
+        let pillButton = app.buttons["server-status-pill"]
+        XCTAssertTrue(pillButton.waitForExistence(timeout: 2))
+        XCTAssertEqual(pillButton.label, "demo.local")
+        pillButton.tap()
 
-        XCTAssertTrue(app.otherElements["settings-connection-card"].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.otherElements["settings-actions-card"].exists)
-        let logoutButton = app.buttons["Log Out"]
-        XCTAssertTrue(logoutButton.waitForExistence(timeout: 2))
-        logoutButton.tap()
+        XCTAssertTrue(app.navigationBars["Connection"].waitForExistence(timeout: 2))
 
-        XCTAssertTrue(app.navigationBars["Connect"].waitForExistence(timeout: 2))
+        let serverField = app.textFields["Server URL"]
+        XCTAssertTrue(serverField.waitForExistence(timeout: 2))
+        replaceText(in: serverField, with: "https://second.local")
+
+        let connectButton = app.buttons["Connect"]
+        XCTAssertTrue(connectButton.isEnabled)
+        connectButton.tap()
+
+        XCTAssertTrue(app.navigationBars["Library"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.navigationBars["Connection"].exists)
+        let updatedPill = app.buttons["server-status-pill"]
+        XCTAssertTrue(updatedPill.waitForExistence(timeout: 5))
+        XCTAssertEqual(updatedPill.label, "second.local")
+    }
+
+    func test_connectedLaunchFailedReconnectKeepsOriginalServerPill() {
+        let app = makeFixtureApp()
+
+        let pillButton = app.buttons["server-status-pill"]
+        XCTAssertTrue(pillButton.waitForExistence(timeout: 2))
+        XCTAssertEqual(pillButton.label, "demo.local")
+        pillButton.tap()
+
+        XCTAssertTrue(app.navigationBars["Connection"].waitForExistence(timeout: 2))
+
+        let serverField = app.textFields["Server URL"]
+        XCTAssertTrue(serverField.waitForExistence(timeout: 2))
+        replaceText(in: serverField, with: "not a url")
+
+        let connectButton = app.buttons["Connect"]
+        XCTAssertTrue(connectButton.isEnabled)
+        connectButton.tap()
+
+        XCTAssertTrue(app.staticTexts["Invalid server URL"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.navigationBars["Connection"].exists)
+
+        app.buttons["Done"].tap()
+
+        XCTAssertTrue(app.navigationBars["Library"].waitForExistence(timeout: 5))
+        let unchangedPill = app.buttons["server-status-pill"]
+        XCTAssertTrue(unchangedPill.waitForExistence(timeout: 5))
+        XCTAssertEqual(unchangedPill.label, "demo.local")
+    }
+
+    func test_connectedLaunchConnectionSheetAllowsDisconnectBackToConnectSheet() {
+        let app = makeFixtureApp()
+
+        let pillButton = app.buttons["server-status-pill"]
+        XCTAssertTrue(pillButton.waitForExistence(timeout: 2))
+        pillButton.tap()
+
+        XCTAssertTrue(app.navigationBars["Connection"].waitForExistence(timeout: 2))
+        let disconnectButton = app.buttons["Disconnect"]
+        XCTAssertTrue(disconnectButton.waitForExistence(timeout: 2))
+
+        disconnectButton.tap()
+
+        XCTAssertTrue(app.navigationBars["Connect"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Connect"].exists)
+        XCTAssertFalse(app.buttons["Disconnect"].exists)
     }
 
     func test_addTabEmptyResultsUsesSingleEmptyStateMessage() {
@@ -201,6 +279,12 @@ final class SetupFlowUITests: XCTestCase {
         return app
     }
 
+    private func makeDisconnectedApp() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments = ["-ui-testing-persisted-session", "-ui-testing-invalid-auth"]
+        app.launch()
+        return app
+    }
     private func replaceText(in element: XCUIElement, with text: String) {
         element.tap()
 
