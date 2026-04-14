@@ -18,6 +18,93 @@ final class SessionControllerTests: XCTestCase {
         XCTAssertEqual(sut.baseURLString, "https://demo.local")
         XCTAssertEqual(sut.token, "abc")
         XCTAssertTrue(sut.hasPersistedSession)
+        XCTAssertEqual(sut.connectionStatus, .disconnected)
+    }
+
+    func test_restoreCredentialsClearsStaleValuesWhenNothingIsStored() async throws {
+        let store = InMemorySessionStore()
+        let sut = makeSUT(store: store)
+        sut.baseURLString = "https://stale.local"
+        sut.token = "stale-token"
+        sut.hasPersistedSession = true
+        sut.connectionStatus = .connected
+
+        await sut.restoreCredentials()
+
+        XCTAssertEqual(sut.baseURLString, "")
+        XCTAssertEqual(sut.token, "")
+        XCTAssertFalse(sut.hasPersistedSession)
+        XCTAssertEqual(sut.connectionStatus, .disconnected)
+    }
+
+    func test_validatePersistedSessionMarksStatusConnectedWhenCredentialsWork() async throws {
+        let store = InMemorySessionStore()
+        let credentials = SessionCredentials(
+            baseURL: URL(string: "https://demo.local")!,
+            token: "secret"
+        )
+        try store.save(try JSONEncoder().encode(credentials), for: SessionController.storageKey)
+        let sut = makeSUT(store: store)
+
+        await sut.restoreCredentials()
+        XCTAssertEqual(sut.connectionStatus, .disconnected)
+
+        await sut.validatePersistedSession()
+
+        XCTAssertEqual(sut.connectionStatus, .connected)
+        XCTAssertEqual(sut.baseURLString, "https://demo.local")
+        XCTAssertEqual(sut.token, "secret")
+        XCTAssertTrue(sut.hasPersistedSession)
+    }
+
+    func test_validatePersistedSessionMarksStatusDisconnectedWhenTokenIsRejected() async throws {
+        let store = InMemorySessionStore()
+        let credentials = SessionCredentials(
+            baseURL: URL(string: "https://demo.local")!,
+            token: "secret"
+        )
+        try store.save(try JSONEncoder().encode(credentials), for: SessionController.storageKey)
+        let response = HTTPURLResponse(
+            url: URL(string: "https://demo.local/api/v1/info/")!,
+            statusCode: 401,
+            httpVersion: nil,
+            headerFields: nil
+        )!
+        let sut = makeSUT(
+            store: store,
+            httpClient: HTTPClientSpy(result: .success((Data(), response)))
+        )
+
+        await sut.restoreCredentials()
+        XCTAssertEqual(sut.connectionStatus, .disconnected)
+
+        await sut.validatePersistedSession()
+
+        XCTAssertEqual(sut.connectionStatus, .disconnected)
+        XCTAssertEqual(sut.baseURLString, "https://demo.local")
+        XCTAssertEqual(sut.token, "secret")
+        XCTAssertTrue(sut.hasPersistedSession)
+    }
+
+    func test_markDisconnectedKeepsPersistedValuesForReconnectFlow() async throws {
+        let store = InMemorySessionStore()
+        let sut = makeSUT(store: store)
+        sut.baseURLString = "https://demo.local"
+        sut.token = "secret"
+
+        try await sut.connect()
+        XCTAssertEqual(sut.connectionStatus, .connected)
+
+        sut.markDisconnected()
+
+        XCTAssertEqual(sut.connectionStatus, .disconnected)
+        XCTAssertEqual(sut.baseURLString, "https://demo.local")
+        XCTAssertEqual(sut.token, "secret")
+        XCTAssertTrue(sut.hasPersistedSession)
+        let savedData = try XCTUnwrap(try store.loadValue(for: SessionController.storageKey))
+        let saved = try JSONDecoder().decode(SessionCredentials.self, from: savedData)
+        XCTAssertEqual(saved.baseURL.absoluteString, "https://demo.local")
+        XCTAssertEqual(saved.token, "secret")
     }
 
     func test_connectRejectsInvalidURL() async throws {
@@ -117,6 +204,7 @@ final class SessionControllerTests: XCTestCase {
         XCTAssertEqual(spy.lastRequest?.httpMethod, "GET")
         XCTAssertEqual(spy.lastRequest?.value(forHTTPHeaderField: "Authorization"), "Bearer secret")
         XCTAssertTrue(sut.hasPersistedSession)
+        XCTAssertEqual(sut.connectionStatus, .connected)
 
         let savedData = try XCTUnwrap(try store.loadValue(for: SessionController.storageKey))
         let saved = try JSONDecoder().decode(SessionCredentials.self, from: savedData)
@@ -136,6 +224,7 @@ final class SessionControllerTests: XCTestCase {
         XCTAssertEqual(sut.baseURLString, "")
         XCTAssertEqual(sut.token, "")
         XCTAssertFalse(sut.hasPersistedSession)
+        XCTAssertEqual(sut.connectionStatus, .disconnected)
         XCTAssertNil(try store.loadValue(for: "session"))
     }
 
