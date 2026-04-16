@@ -226,6 +226,30 @@ final class AddMediaViewModelTests: XCTestCase {
         XCTAssertNil(sut.errorMessage)
         XCTAssertFalse(sut.isCreating)
     }
+
+    func test_createProviderMediaMarksCreatedResultTrackedInCurrentResults() async throws {
+        let spy = HTTPClientSpy(result: .success((
+            Data(#"{"database_id":1,"consumption_id":null,"item":{"media_id":42,"source":"tmdb","media_type":"movie","title":"Dune","image":"https://cdn.example.com/dune.jpg","season_number":null,"episode_number":null},"item_id":"movie/tmdb/42","parent_id":null,"tracked":true,"created_at":"2026-04-11T08:00:00Z","score":null,"status":0,"progress":0,"progressed_at":null,"start_date":null,"end_date":null,"notes":null,"lists":[]}"#.utf8),
+            makeResponse(statusCode: 201, url: URL(string: "https://demo.local/api/v1/media/movie/")!)
+        )))
+        let sut = makeSUT(apiClient: APIClient(httpClient: spy))
+        let result = try makeSearchResult(
+            mediaID: "42",
+            source: "tmdb",
+            mediaType: "movie",
+            title: "Dune"
+        )
+        sut.selectType(.movie)
+        sut.results = [result]
+        sut.selectedResult = result
+
+        try await sut.createSelectedMedia()
+
+        XCTAssertEqual(sut.results.count, 1)
+        XCTAssertTrue(sut.results[0].tracked)
+        XCTAssertEqual(sut.results[0].itemID, "movie/tmdb/42")
+        XCTAssertNil(sut.selectedResult)
+    }
 }
 
 @MainActor

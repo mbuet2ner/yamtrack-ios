@@ -143,6 +143,7 @@ final class AddMediaViewModel {
 
         do {
             let isManualCreation = isManualSource
+            let createdResultID = selectedResult?.id
             let created = try await apiClient.createMedia(
                 makeCreateRequest(
                     mediaType: selectedType,
@@ -153,6 +154,21 @@ final class AddMediaViewModel {
             )
             errorMessage = nil
             if !isManualCreation {
+                if let createdResultID {
+                    results = results.map { result in
+                        guard result.id == createdResultID else { return result }
+
+                        return AddMediaSearchResult(
+                            mediaID: result.mediaID,
+                            source: result.source,
+                            mediaType: result.mediaType,
+                            title: result.title,
+                            image: result.image,
+                            tracked: true,
+                            itemID: created.itemID
+                        )
+                    }
+                }
                 selectedResult = nil
                 successMessage = "Added \(created.title)"
             }
