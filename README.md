@@ -1,10 +1,8 @@
-# yamtrack-ios
-
 <p align="center">
   <img src="docs/branding/png/yamtrack-mark.png" alt="Yamtrack app icon mark" width="132" />
 </p>
 
-An (unofficial) iOS client for Yamtrack with a glassy, library-first interface for browsing, adding, and updating media.
+An (unofficial) iOS client for [Yamtrack](https://github.com/FuzzyGrim/Yamtrack) with a library-first interface for browsing, adding, and updating media.
 
 ## 🔌 API Note
 
