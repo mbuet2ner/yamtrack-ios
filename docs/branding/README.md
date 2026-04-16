@@ -1,12 +1,25 @@
 # Yamtrack Branding
 
-This folder contains the current logo system for the iOS app and broader product branding.
+This folder contains the current shipped branding assets for the iOS app.
 
-## Concept
+## Current Source Of Truth
 
-The mark uses a single rounded glass tile to match the app's visual language. Inside it, one quiet blue capsule acts as a subtle hint of both media and tracking state without becoming illustrative. The goal is a more iconic, Rams-influenced silhouette that still feels native to modern iOS.
+The current Yamtrack mark for this pass is the square raster asset in `new_logo_cropped.png`.
 
-## Files
+It is the approved source for:
 
-- `yamtrack-mark.svg`: standalone square mark suited to an app icon or avatar
-- `yamtrack-logo.svg`: horizontal lockup for README, GitHub, and broader branding uses
+- the iOS app icon exports in `YamtrackiOS/Assets.xcassets/AppIcon.appiconset`
+- the current standalone branding preview in `png/yamtrack-mark.png`
+
+## Current Direction
+
+The mark uses a glossy rounded glass tile with an oversized vinyl record and colored progress grooves. This is the branding direction that should match the app icon outputs shipped from this repository.
+
+## File Notes
+
+- `new_logo_cropped.png`: current square source asset
+- `new_logo.png`: earlier wide composition reference
+- `png/yamtrack-mark.png`: current standalone branding preview generated from `new_logo_cropped.png`
+- `yamtrack-mark.svg`: legacy pre-raster branding source from the earlier capsule concept
+- `yamtrack-logo.svg`: legacy horizontal lockup from the earlier capsule concept
+- `png/yamtrack-logo.png`: legacy exported lockup preview until a future lockup refresh happens
