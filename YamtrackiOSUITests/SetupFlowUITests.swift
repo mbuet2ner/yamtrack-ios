@@ -47,9 +47,7 @@ final class SetupFlowUITests: XCTestCase {
     }
 
     func test_addTabEmptyResultsUsesSingleEmptyStateMessage() {
-        let app = XCUIApplication()
-        app.launchArguments = ["-ui-testing-persisted-session", "-ui-testing-library-fixture"]
-        app.launch()
+        let app = makeFixtureApp()
 
         app.tabBars.firstMatch.buttons["Add"].tap()
 
@@ -187,6 +185,40 @@ final class SetupFlowUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Manual Movie"].waitForExistence(timeout: 5))
     }
 
+    func test_bookBarcodeScanAddsFixtureBookToLibrary() {
+        let isbn = "9780306406157"
+        let app = makeFixtureApp(extraArguments: ["-ui-testing-simulated-book-isbn", isbn])
+
+        openBookAddMedia(in: app)
+        let scrollView = app.scrollViews.firstMatch
+        XCTAssertTrue(scrollView.waitForExistence(timeout: 2))
+
+        XCTAssertTrue(scrollUntilExists(app.staticTexts["Ready To Add"], in: scrollView))
+        XCTAssertTrue(app.staticTexts["Das Glasperlenspiel"].exists)
+        app.buttons["add-media-submit-button"].tap()
+
+        XCTAssertTrue(app.navigationBars["Library"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Das Glasperlenspiel"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.otherElements["library-card-2"].waitForExistence(timeout: 3))
+    }
+
+    func test_bookBarcodeNoMatchFallbackPrefillsISBNInSearchField() {
+        let isbn = "9780140449136"
+        let app = makeFixtureApp(extraArguments: ["-ui-testing-simulated-book-isbn", isbn])
+
+        openBookAddMedia(in: app)
+        let scrollView = app.scrollViews.firstMatch
+        XCTAssertTrue(scrollView.waitForExistence(timeout: 2))
+
+        XCTAssertTrue(scrollUntilExists(app.staticTexts["No barcode match found."], in: scrollView))
+        XCTAssertTrue(scrollUntilExists(app.buttons["add-media-barcode-fallback-button"], in: scrollView))
+        app.buttons["add-media-barcode-fallback-button"].tap()
+
+        let searchField = app.textFields["add-media-search-field"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 2))
+        XCTAssertEqual(searchField.value as? String, isbn)
+    }
+
     private func makeFixtureApp() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing-persisted-session", "-ui-testing-library-fixture"]
@@ -199,6 +231,23 @@ final class SetupFlowUITests: XCTestCase {
         app.launchArguments = ["-ui-testing-persisted-session", "-ui-testing-library-fixture"] + extraArguments
         app.launch()
         return app
+    }
+
+    private func openBookAddMedia(in app: XCUIApplication) {
+        app.tabBars.firstMatch.buttons["Add"].tap()
+        XCTAssertTrue(app.navigationBars["Add Media"].waitForExistence(timeout: 2))
+        app.buttons["add-media-type-book"].tap()
+    }
+
+    private func scrollUntilExists(_ element: XCUIElement, in scrollView: XCUIElement, maxSwipes: Int = 6) -> Bool {
+        for _ in 0..<maxSwipes {
+            if element.waitForExistence(timeout: 0.5) {
+                return true
+            }
+            scrollView.swipeUp()
+        }
+
+        return element.waitForExistence(timeout: 1)
     }
 
     private func replaceText(in element: XCUIElement, with text: String) {
