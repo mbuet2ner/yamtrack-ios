@@ -7,22 +7,8 @@ final class AddMediaViewModel {
     private let apiClient: APIClient
     private let credentials: SessionCredentials
 
-    var selectedType: MediaType = .movie {
-        didSet {
-            let sources = availableSources
-            if !sources.contains(selectedSource) {
-                selectedSource = sources.first ?? .manual
-            }
-            selectedResult = nil
-            results = []
-        }
-    }
-    var selectedSource: ProviderSource = .tmdb {
-        didSet {
-            selectedResult = nil
-            results = []
-        }
-    }
+    var selectedType: MediaType?
+    var selectedSource: ProviderSource?
     var query = ""
     var results: [AddMediaSearchResult] = []
     var selectedResult: AddMediaSearchResult?
@@ -34,8 +20,12 @@ final class AddMediaViewModel {
     var manualStatus: MediaSummary.Status = .planning
     var isSearching = false
     var isCreating = false
+    var hasSearched = false
+    var isShowingManualSheet = false
     var errorMessage: String?
+    var successMessage: String?
     var onMediaCreated: ((MediaSummary) -> Void)?
+    private var manualCreationRequested = false
 
     init(apiClient: APIClient, credentials: SessionCredentials) {
         self.apiClient = apiClient
@@ -47,16 +37,46 @@ final class AddMediaViewModel {
     }
 
     var availableSources: [ProviderSource] {
-        ProviderSource.supportedSources(for: selectedType)
+        guard let selectedType else { return [] }
+        return ProviderSource.supportedSources(for: selectedType)
     }
 
     var isManualSource: Bool {
-        selectedSource == .manual
+        manualCreationRequested || selectedSource == .manual
+    }
+
+    func selectType(_ type: MediaType) {
+        selectedType = type
+        selectedSource = ProviderSource.preferredSearchSource(for: type)
+        manualCreationRequested = false
+        selectedResult = nil
+        results = []
+        hasSearched = false
+        errorMessage = nil
+        successMessage = nil
+        isShowingManualSheet = false
+    }
+
+    func selectSource(_ source: ProviderSource) {
+        guard source != .manual else {
+            manualCreationRequested = true
+            isShowingManualSheet = true
+            return
+        }
+
+        selectedSource = source
+        manualCreationRequested = false
+        selectedResult = nil
+        results = []
+        hasSearched = false
+        errorMessage = nil
+        successMessage = nil
+        isShowingManualSheet = false
     }
 
     func reset() {
-        selectedType = .movie
-        selectedSource = .tmdb
+        selectedType = nil
+        selectedSource = nil
         query = ""
         results = []
         selectedResult = nil
@@ -68,19 +88,25 @@ final class AddMediaViewModel {
         manualStatus = .planning
         isSearching = false
         isCreating = false
+        hasSearched = false
+        isShowingManualSheet = false
+        manualCreationRequested = false
         errorMessage = nil
+        successMessage = nil
     }
 
     func search() async {
-        guard !isManualSource else { return }
+        guard let selectedType, let selectedSource, !isManualSource else { return }
 
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedQuery.isEmpty else {
             results = []
             selectedResult = nil
+            hasSearched = false
             return
         }
 
+        hasSearched = true
         isSearching = true
         defer { isSearching = false }
 
@@ -101,13 +127,26 @@ final class AddMediaViewModel {
 
     func createSelectedMedia() async throws {
         guard !isCreating else { return }
+        guard let selectedType, let selectedSource else { return }
 
         isCreating = true
         defer { isCreating = false }
 
         do {
-            let created = try await apiClient.createMedia(makeCreateRequest(), credentials: credentials)
+            let isManualCreation = isManualSource
+            let created = try await apiClient.createMedia(
+                makeCreateRequest(
+                    mediaType: selectedType,
+                    source: selectedSource,
+                    isManualCreation: isManualCreation
+                ),
+                credentials: credentials
+            )
             errorMessage = nil
+            if !isManualCreation {
+                selectedResult = nil
+                successMessage = "Added \(created.title)"
+            }
             onMediaCreated?(created)
         } catch is CancellationError {
             throw CancellationError()
@@ -117,10 +156,14 @@ final class AddMediaViewModel {
         }
     }
 
-    private func makeCreateRequest() -> CreateMediaRequest {
-        if isManualSource {
+    private func makeCreateRequest(
+        mediaType: MediaType,
+        source: ProviderSource,
+        isManualCreation: Bool
+    ) -> CreateMediaRequest {
+        if isManualCreation {
             return .manual(
-                mediaType: selectedType,
+                mediaType: mediaType,
                 title: manualTitle.trimmingCharacters(in: .whitespacesAndNewlines),
                 imageURL: manualImageURL.nilIfBlank,
                 status: manualStatus,
@@ -131,8 +174,8 @@ final class AddMediaViewModel {
         }
 
         return .provider(
-            mediaType: selectedType,
-            source: selectedSource,
+            mediaType: mediaType,
+            source: source,
             mediaID: selectedResult?.mediaID ?? "",
             status: nil,
             progress: defaultProgressForCreate,
@@ -142,6 +185,8 @@ final class AddMediaViewModel {
     }
 
     private var defaultProgressForCreate: Int? {
+        guard let selectedType else { return nil }
+
         switch selectedType {
         case .anime, .manga, .book, .comic, .boardgame:
             return 0
