@@ -61,6 +61,8 @@ final class AddMediaViewModel {
         guard source != .manual else {
             manualCreationRequested = true
             isShowingManualSheet = true
+            errorMessage = nil
+            successMessage = nil
             return
         }
 
@@ -89,6 +91,13 @@ final class AddMediaViewModel {
         isSearching = false
         isCreating = false
         hasSearched = false
+        isShowingManualSheet = false
+        manualCreationRequested = false
+        errorMessage = nil
+        successMessage = nil
+    }
+
+    func dismissManualSheet() {
         isShowingManualSheet = false
         manualCreationRequested = false
         errorMessage = nil
@@ -147,6 +156,34 @@ final class AddMediaViewModel {
                 selectedResult = nil
                 successMessage = "Added \(created.title)"
             }
+            onMediaCreated?(created)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            errorMessage = (error as? LocalizedError)?.errorDescription ?? "Failed to create media"
+            throw error
+        }
+    }
+
+    func createManualMedia() async throws {
+        guard !isCreating else { return }
+        guard let selectedType else { return }
+
+        isCreating = true
+        defer { isCreating = false }
+
+        do {
+            let created = try await apiClient.createMedia(
+                makeCreateRequest(
+                    mediaType: selectedType,
+                    source: .manual,
+                    isManualCreation: true
+                ),
+                credentials: credentials
+            )
+            errorMessage = nil
+            dismissManualSheet()
+            successMessage = "Added \(created.title)"
             onMediaCreated?(created)
         } catch is CancellationError {
             throw CancellationError()
