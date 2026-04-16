@@ -170,6 +170,22 @@ final class APIClientTests: XCTestCase {
         XCTAssertEqual(spy.lastRequest?.httpMethod, "GET")
     }
 
+    func test_fixtureHTTPClient_returnsProviderSearchResults() async throws {
+        let sut = makeSUT(httpClient: UITestLibraryFixtureHTTPClient())
+
+        let results = try await sut.searchMedia(
+            query: "dune",
+            mediaType: .movie,
+            source: .tmdb,
+            credentials: makeCredentials()
+        )
+
+        XCTAssertEqual(results.count, 1)
+        XCTAssertEqual(results.first?.title, "Dune")
+        XCTAssertEqual(results.first?.mediaID, "550")
+        XCTAssertEqual(results.first?.source, "tmdb")
+    }
+
     func test_createMedia_buildsManualCreateRequest() async throws {
         let spy = HTTPClientSpy(result: .success((
             Data(#"{"id":1,"consumption_id":null,"item":{"media_id":1,"source":"manual","media_type":"movie","title":"Manual Movie","image":null,"season_number":null,"episode_number":null},"item_id":"movie/manual/1","parent_id":null,"tracked":true,"created_at":"2026-04-11T08:00:00Z","score":null,"status":0,"progress":0,"progressed_at":null,"start_date":null,"end_date":null,"notes":null,"lists":[]}"#.utf8),
