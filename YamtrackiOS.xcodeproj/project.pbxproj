@@ -15,6 +15,7 @@
 		1CD6B08B69E3BBC27806543D /* SessionCredentials.swift in Sources */ = {isa = PBXBuildFile; fileRef = B35118195EFDF25373259293 /* SessionCredentials.swift */; };
 		3262706D5498A85CAE193113 /* SessionControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23C23ED32477BC7F204AE1E /* SessionControllerTests.swift */; };
 		36CC796BC4F38D28AC525211 /* AddMediaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4582A8D7ED6D84C78EA666F5 /* AddMediaView.swift */; };
+		3C6D5C3E7B8A4E5E9F1A2B3C /* AddMediaManualEntrySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F0A1B2C3D4E5F60718293A4 /* AddMediaManualEntrySheet.swift */; };
 		43833F77F21D49E6FD575492 /* RootViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A325C2370237FAE77FB43DFF /* RootViewModel.swift */; };
 		54C6BF8BA51EA3FD5991D2AF /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC4AE44BD1D1840E5B70C84 /* APIError.swift */; };
 		56EAFB4FBB5606E629157F03 /* SetupFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89E9D0241CD53308786225E7 /* SetupFlowUITests.swift */; };
@@ -78,6 +79,7 @@
 		1FD2B7B876950C9EEC164A19 /* AppScreenshotUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppScreenshotUITests.swift; sourceTree = "<group>"; };
 		34E02CFAD7961E41D7BA466E /* SessionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionController.swift; sourceTree = "<group>"; };
 		4582A8D7ED6D84C78EA666F5 /* AddMediaView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddMediaView.swift; sourceTree = "<group>"; };
+		6F0A1B2C3D4E5F60718293A4 /* AddMediaManualEntrySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddMediaManualEntrySheet.swift; sourceTree = "<group>"; };
 		47AA35E40A30916702D45423 /* RootViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootViewModelTests.swift; sourceTree = "<group>"; };
 		4F2334FA8C398E02A1D0499B /* MediaDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDetail.swift; sourceTree = "<group>"; };
 		4F9DE72FC98EFB5AC4CBFC78 /* SessionStoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStoring.swift; sourceTree = "<group>"; };
@@ -273,6 +275,7 @@
 		B3A27447EC3943CAB63729F9 /* AddMedia */ = {
 			isa = PBXGroup;
 			children = (
+				6F0A1B2C3D4E5F60718293A4 /* AddMediaManualEntrySheet.swift */,
 				4582A8D7ED6D84C78EA666F5 /* AddMediaView.swift */,
 				FE5F3615395A65F275F69CAE /* AddMediaViewModel.swift */,
 			);
@@ -483,6 +486,7 @@
 				54C6BF8BA51EA3FD5991D2AF /* APIError.swift in Sources */,
 				8B7CFF46B9F828463A079E27 /* APIRequest.swift in Sources */,
 				D9B96FDA57CE1BC6CB21BD06 /* AddMediaModels.swift in Sources */,
+				3C6D5C3E7B8A4E5E9F1A2B3C /* AddMediaManualEntrySheet.swift in Sources */,
 				36CC796BC4F38D28AC525211 /* AddMediaView.swift in Sources */,
 				83A91A3F9922107CABEA8AAA /* AddMediaViewModel.swift in Sources */,
 				D856405C0D24D0E867BA493A /* AppTab.swift in Sources */,

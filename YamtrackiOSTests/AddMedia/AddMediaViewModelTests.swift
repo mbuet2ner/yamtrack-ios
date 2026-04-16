@@ -60,11 +60,32 @@ final class AddMediaViewModelTests: XCTestCase {
         let sut = makeSUT()
         sut.selectType(.movie)
         let selectedSource = sut.selectedSource
+        sut.errorMessage = "Previous error"
+        sut.successMessage = "Previous success"
 
         sut.selectSource(.manual)
 
         XCTAssertEqual(sut.selectedSource, selectedSource)
         XCTAssertTrue(sut.isShowingManualSheet)
+        XCTAssertNil(sut.errorMessage)
+        XCTAssertNil(sut.successMessage)
+    }
+
+    func test_dismissManualSheetHidesSheetWithoutChangingCurrentProviderSelection() {
+        let sut = makeSUT()
+        sut.selectType(.book)
+        sut.selectSource(.hardcover)
+        let selectedSource = sut.selectedSource
+        sut.selectSource(.manual)
+        sut.errorMessage = "Previous error"
+        sut.successMessage = "Previous success"
+
+        sut.dismissManualSheet()
+
+        XCTAssertEqual(sut.selectedSource, selectedSource)
+        XCTAssertFalse(sut.isShowingManualSheet)
+        XCTAssertNil(sut.errorMessage)
+        XCTAssertNil(sut.successMessage)
     }
 
     func test_resetReturnsToNoSelectionState() {
@@ -137,7 +158,30 @@ final class AddMediaViewModelTests: XCTestCase {
         XCTAssertTrue(sut.hasSearched)
     }
 
-    func test_createManualMedia_notifiesOnSuccess() async throws {
+    func test_createManualMedia_dismissesSheetStoresSuccessMessageAndNotifiesOnSuccess() async throws {
+        let spy = HTTPClientSpy(result: .success((
+            Data(#"{"id":1,"consumption_id":null,"item":{"media_id":1,"source":"manual","media_type":"movie","title":"Manual Movie","image":null,"season_number":null,"episode_number":null},"item_id":"movie/manual/1","parent_id":null,"tracked":true,"created_at":"2026-04-11T08:00:00Z","score":null,"status":0,"progress":0,"progressed_at":null,"start_date":null,"end_date":null,"notes":null,"lists":[]}"#.utf8),
+            makeResponse(statusCode: 201, url: URL(string: "https://demo.local/api/v1/media/movie/")!)
+        )))
+        let sut = makeSUT(apiClient: APIClient(httpClient: spy))
+        var createdMedia: MediaSummary?
+        sut.onMediaCreated = { createdMedia = $0 }
+        sut.selectType(.movie)
+        sut.selectSource(.manual)
+        sut.manualTitle = "Manual Movie"
+
+        try await sut.createManualMedia()
+
+        XCTAssertEqual(createdMedia?.title, "Manual Movie")
+        XCTAssertFalse(sut.isCreating)
+        XCTAssertFalse(sut.isShowingManualSheet)
+        XCTAssertNil(sut.errorMessage)
+        XCTAssertEqual(sut.successMessage, "Added Manual Movie")
+        XCTAssertEqual(spy.lastRequest?.httpMethod, "POST")
+        XCTAssertTrue(String(data: spy.lastRequest?.httpBody ?? Data(), encoding: .utf8)?.contains(#""source":"manual""#) == true)
+    }
+
+    func test_createSelectedMedia_withManualSourceSendsManualCreateRequest() async throws {
         let spy = HTTPClientSpy(result: .success((
             Data(#"{"id":1,"consumption_id":null,"item":{"media_id":1,"source":"manual","media_type":"movie","title":"Manual Movie","image":null,"season_number":null,"episode_number":null},"item_id":"movie/manual/1","parent_id":null,"tracked":true,"created_at":"2026-04-11T08:00:00Z","score":null,"status":0,"progress":0,"progressed_at":null,"start_date":null,"end_date":null,"notes":null,"lists":[]}"#.utf8),
             makeResponse(statusCode: 201, url: URL(string: "https://demo.local/api/v1/media/movie/")!)
@@ -152,11 +196,10 @@ final class AddMediaViewModelTests: XCTestCase {
         try await sut.createSelectedMedia()
 
         XCTAssertEqual(createdMedia?.title, "Manual Movie")
-        XCTAssertFalse(sut.isCreating)
-        XCTAssertNil(sut.errorMessage)
-        XCTAssertNil(sut.successMessage)
         XCTAssertEqual(spy.lastRequest?.httpMethod, "POST")
         XCTAssertTrue(String(data: spy.lastRequest?.httpBody ?? Data(), encoding: .utf8)?.contains(#""source":"manual""#) == true)
+        XCTAssertNil(sut.successMessage)
+        XCTAssertNil(sut.errorMessage)
     }
 
     func test_createProviderMediaClearsSelectionAndStoresSuccessMessage() async throws {
