@@ -95,11 +95,7 @@ struct RootView: View {
         if let libraryViewModel = viewModel.libraryViewModel {
             AddMediaView(
                 viewModel: libraryViewModel.makeAddMediaViewModel(),
-                showsCloseButton: false,
-                onMediaCreated: {
-                    libraryViewModel.makeAddMediaViewModel().reset()
-                    selectedTab = .library
-                }
+                showsCloseButton: false
             )
         } else {
             ScrollView {
