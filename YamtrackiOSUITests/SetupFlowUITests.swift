@@ -165,12 +165,16 @@ final class SetupFlowUITests: XCTestCase {
         XCTAssertTrue(app.buttons["add-media-type-movie"].waitForExistence(timeout: 2))
         XCTAssertFalse(app.textFields["add-media-search-field"].exists)
         XCTAssertFalse(app.buttons["add-media-provider-menu"].exists)
+        XCTAssertFalse(app.staticTexts["Results"].exists)
+        XCTAssertFalse(app.buttons["add-media-submit-button"].isEnabled)
 
         app.buttons["add-media-type-movie"].tap()
 
         XCTAssertTrue(app.textFields["add-media-search-field"].waitForExistence(timeout: 2))
         XCTAssertTrue(app.buttons["add-media-provider-menu"].exists)
-        XCTAssertFalse(app.staticTexts["Search for something to add."].exists)
+        XCTAssertFalse(app.staticTexts["Results"].exists)
+        XCTAssertFalse(app.buttons["add-media-submit-button"].isEnabled)
+        XCTAssertEqual(app.staticTexts["add-media-bottom-title"].label, "Search Movie")
     }
 
     func test_addTabChoosingManualOpensManualEntrySheet() {
@@ -208,6 +212,7 @@ final class SetupFlowUITests: XCTestCase {
 
         XCTAssertFalse(app.navigationBars["Manual Entry"].waitForExistence(timeout: 2))
         XCTAssertTrue(app.navigationBars["Add Media"].waitForExistence(timeout: 2))
+        XCTAssertEqual(app.staticTexts["add-media-bottom-subtitle"].label, "Added Codex Manual Movie")
 
         app.tabBars.firstMatch.buttons["Library"].tap()
         XCTAssertTrue(app.staticTexts["Codex Manual Movie"].waitForExistence(timeout: 5))
