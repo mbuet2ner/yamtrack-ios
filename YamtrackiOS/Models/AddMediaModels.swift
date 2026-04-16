@@ -126,6 +126,24 @@ struct AddMediaSearchResult: Decodable, Equatable, Identifiable {
         case itemID = "item_id"
     }
 
+    init(
+        mediaID: String,
+        source: String,
+        mediaType: String,
+        title: String,
+        image: String?,
+        tracked: Bool,
+        itemID: String?
+    ) {
+        self.mediaID = mediaID
+        self.source = source
+        self.mediaType = mediaType
+        self.title = title
+        self.image = image
+        self.tracked = tracked
+        self.itemID = itemID
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         if let numericID = try? container.decode(Int.self, forKey: .mediaID) {
