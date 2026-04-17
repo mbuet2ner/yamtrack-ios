@@ -7,41 +7,50 @@ struct AddMediaView: View {
     @State private var isShowingBookBarcodeScanner = false
     @State private var didTriggerUITestBarcodeLookup = false
     @State private var pendingAddResult: AddMediaSearchResult?
+    private var searchChromePresentation: AddMediaSearchChromePresentation {
+        AddMediaSearchChromePresentation(selectedType: viewModel.selectedType)
+    }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                typeSection
+        ZStack {
+            Color(uiColor: .systemGroupedBackground)
+                .ignoresSafeArea()
 
-                if viewModel.selectedType != nil {
-                    if let successMessage = viewModel.successMessage {
-                        successBanner(successMessage)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    introSection
+
+                    if viewModel.selectedType != nil {
+                        if let successMessage = viewModel.successMessage {
+                            successBanner(successMessage)
+                        }
+
+                        searchComposer
+
+                        if let errorMessage = viewModel.errorMessage {
+                            errorCard(errorMessage)
+                        }
+
+                        if viewModel.hasSearched {
+                            resultsSection
+                        }
                     }
 
-                    searchComposer
-
-                    if let errorMessage = viewModel.errorMessage {
-                        errorCard(errorMessage)
-                    }
-
-                    if viewModel.hasSearched {
-                        resultsSection
+                    if viewModel.selectedType == .book && viewModel.barcodeLookupState == .noMatch {
+                        barcodeNoMatchSection
                     }
                 }
-
-                if viewModel.selectedType == .book && viewModel.barcodeLookupState == .noMatch {
-                    barcodeNoMatchSection
-                }
+                .padding(.horizontal, Theme.screenPadding)
+                .padding(.top, showsCloseButton ? 144 : 108)
+                .padding(.bottom, 36)
             }
-            .padding(.horizontal, Theme.screenPadding)
-            .padding(.top, showsCloseButton ? 20 : 12)
-            .padding(.bottom, 36)
         }
         .scrollIndicators(.hidden)
-        .background(addMediaBackground)
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarVisibility(showsCloseButton ? .automatic : .hidden, for: .navigationBar)
+        .presentationBackground(Color(uiColor: .systemGroupedBackground))
+        .overlay(alignment: .top) {
+            floatingHeader
+        }
+        .toolbarVisibility(.hidden, for: .navigationBar)
         .sheet(isPresented: manualSheetBinding) {
             AddMediaManualEntrySheet(viewModel: viewModel)
         }
@@ -74,100 +83,137 @@ struct AddMediaView: View {
         .onAppear {
             triggerUITestBarcodeLookupIfNeeded()
         }
-        .toolbar {
-            if showsCloseButton {
-                ToolbarItem(placement: .cancellationAction) {
+    }
+
+    private var floatingHeader: some View {
+        VStack(spacing: 22) {
+            HStack {
+                if showsCloseButton {
                     Button("Close") {
                         dismiss()
                     }
+                    .font(.title3.weight(.medium))
+                    .foregroundStyle(.primary)
+                    .padding(.horizontal, 22)
+                    .padding(.vertical, 12)
+                    .glassEffect(.regular.interactive(), in: .capsule)
+                }
+
+                Spacer(minLength: 0)
+
+                Text("Add Media")
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+
+                Spacer(minLength: 0)
+
+                if showsCloseButton {
+                    Color.clear
+                        .frame(width: 92, height: 46)
                 }
             }
+
+            typePickerRow
+        }
+        .padding(.horizontal, Theme.screenPadding)
+        .padding(.top, 10)
+    }
+
+    private var introSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Choose a type")
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(.primary)
+
+            Text("Start with the kind of media you want to bring into your library.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
     }
 
-    private var typeSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Choose a type")
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(.primary)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(viewModel.availableTypes) { type in
-                        selectionChip(
-                            title: type.singularTitle,
-                            systemImage: type.systemImage,
-                            isSelected: viewModel.selectedType == type,
-                            accessibilityIdentifier: "add-media-type-\(type.rawValue)"
-                        ) {
-                            viewModel.selectType(type)
-                        }
+    private var typePickerRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                ForEach(viewModel.availableTypes) { type in
+                    selectionChip(
+                        title: type.singularTitle,
+                        systemImage: type.systemImage,
+                        isSelected: viewModel.selectedType == type,
+                        accessibilityIdentifier: "add-media-type-\(type.rawValue)"
+                    ) {
+                        viewModel.selectType(type)
                     }
                 }
-                .padding(.vertical, 2)
             }
+            .padding(.vertical, 2)
         }
     }
 
     private var searchComposer: some View {
-        GlassSurface {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+
+                TextField("Search title", text: $viewModel.query)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .submitLabel(.search)
+                    .font(.title3)
+                    .accessibilityIdentifier("add-media-search-field")
+                    .onSubmit {
+                        performSearch()
+                    }
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 16)
+            .background(fieldBackground, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.06))
+            }
+
+            GlassEffectContainer(spacing: 12) {
+                HStack(spacing: 12) {
                     providerMenu
 
-                    Spacer(minLength: 0)
-
-                    if viewModel.selectedType == .book {
+                    if searchChromePresentation.showsScannerShortcut {
                         Button {
                             isShowingBookBarcodeScanner = true
                         } label: {
                             Label("Scan", systemImage: "barcode.viewfinder")
                                 .font(.subheadline.weight(.semibold))
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 10)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 11)
                         }
-                        .buttonStyle(.bordered)
+                        .buttonStyle(.glass)
                         .accessibilityIdentifier("add-media-scan-book-barcode-button")
                     }
-                }
 
-                HStack(spacing: 12) {
-                    HStack(spacing: 10) {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundStyle(.secondary)
-
-                        TextField("Search title", text: $viewModel.query)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                            .submitLabel(.search)
-                            .accessibilityIdentifier("add-media-search-field")
-                            .onSubmit {
-                                performSearch()
-                            }
-                    }
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 12)
-                    .background(fieldBackground, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    Spacer(minLength: 0)
 
                     Button {
                         performSearch()
                     } label: {
-                        HStack(spacing: 8) {
+                        Group {
                             if viewModel.isSearching {
                                 ProgressView()
                                     .controlSize(.small)
                             } else {
-                                Image(systemName: "arrow.forward.circle.fill")
+                                Image(systemName: "magnifyingglass")
+                                    .font(.headline.weight(.semibold))
                             }
-
-                            Text(viewModel.isSearching ? "Searching" : "Search")
-                                .fontWeight(.semibold)
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
+                        .frame(
+                            width: searchChromePresentation.searchActionDiameter,
+                            height: searchChromePresentation.searchActionDiameter
+                        )
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.plain)
+                    .glassEffect(.regular.tint(Color.accentColor.opacity(0.16)).interactive(), in: .circle)
                     .accessibilityIdentifier("add-media-search-button")
+                    .accessibilityLabel(viewModel.isSearching ? "Searching" : "Search")
                     .disabled(!canSearch)
                 }
             }
@@ -207,10 +253,7 @@ struct AddMediaView: View {
             .foregroundStyle(.primary)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(Color.white.opacity(0.4))
-            )
+            .glassEffect(.regular.interactive(), in: .capsule)
         }
         .accessibilityIdentifier("add-media-provider-menu")
     }
@@ -289,14 +332,14 @@ struct AddMediaView: View {
         } label: {
             Image(systemName: result.tracked ? "checkmark" : "plus")
                 .font(.headline.weight(.semibold))
-                .foregroundStyle(result.tracked ? Color.secondary : Color.white)
+                .foregroundStyle(result.tracked ? Color.secondary : Color.accentColor)
                 .frame(width: 42, height: 42)
-                .background(
-                    Circle()
-                        .fill(result.tracked ? Color.white.opacity(0.34) : Color.accentColor)
-                )
         }
         .buttonStyle(.plain)
+        .glassEffect(
+            result.tracked ? .regular : .regular.tint(Color.accentColor.opacity(0.18)).interactive(),
+            in: .circle
+        )
         .disabled(result.tracked || viewModel.isCreating)
         .accessibilityIdentifier("add-media-result-add-\(result.id)")
         .accessibilityLabel(result.tracked ? "\(result.title) already tracked" : "Add \(result.title)")
@@ -317,7 +360,7 @@ struct AddMediaView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.green.opacity(0.12))
+                .fill(Color.green.opacity(0.10))
         )
         .overlay {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -342,7 +385,7 @@ struct AddMediaView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(Color.red.opacity(0.10))
+                .fill(Color.red.opacity(0.08))
         )
         .overlay {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -363,50 +406,32 @@ struct AddMediaView: View {
             Button("Use ISBN in Search") {
                 viewModel.moveScannedISBNToSearchField()
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.glassProminent)
             .accessibilityIdentifier("add-media-barcode-fallback-button")
         }
     }
 
     private var emptyResultsCard: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "magnifyingglass")
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(.secondary)
+        ContentSurface {
+            VStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .font(.title2.weight(.semibold))
+                    .foregroundStyle(.secondary)
 
-            Text("No matches yet")
-                .font(.headline)
+                Text("No matches yet")
+                    .font(.headline)
 
-            Text("Try a broader title, a different spelling, or another provider.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+                Text("Try a broader title, a different spelling, or another provider.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 24)
-        .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.white.opacity(0.32))
-        )
-    }
-
-    private var addMediaBackground: some View {
-        LinearGradient(
-            colors: [
-                Color(.systemBackground),
-                Color(red: 0.97, green: 0.94, blue: 0.89),
-                Color(red: 0.89, green: 0.93, blue: 0.96).opacity(0.72),
-                Color(.systemBackground)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .ignoresSafeArea()
     }
 
     private var fieldBackground: some ShapeStyle {
-        .regularMaterial
+        Color(uiColor: .secondarySystemGroupedBackground)
     }
 
     private var resultsSubtitle: String? {
@@ -459,15 +484,15 @@ struct AddMediaView: View {
                 Text(title)
                     .font(.subheadline.weight(.semibold))
             }
-            .foregroundStyle(isSelected ? .white : .primary)
+            .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(isSelected ? AnyShapeStyle(.tint) : AnyShapeStyle(Color.white.opacity(0.42)))
-            )
         }
         .buttonStyle(.plain)
+        .glassEffect(
+            isSelected ? .regular.tint(Color.accentColor.opacity(0.18)).interactive() : .regular.interactive(),
+            in: .capsule
+        )
         .accessibilityIdentifier(accessibilityIdentifier)
     }
 
@@ -477,18 +502,15 @@ struct AddMediaView: View {
             .foregroundStyle(.secondary)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(Color.white.opacity(0.4))
-            )
+            .background(Capsule(style: .continuous).fill(Color(uiColor: .secondarySystemGroupedBackground)))
     }
 
     private func resultBackground(isTracked: Bool) -> some View {
         RoundedRectangle(cornerRadius: 20, style: .continuous)
-            .fill(isTracked ? Color.white.opacity(0.26) : Color.white.opacity(0.34))
+            .fill(Color(uiColor: isTracked ? .tertiarySystemGroupedBackground : .secondarySystemGroupedBackground))
             .overlay {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .strokeBorder(isTracked ? Color.white.opacity(0.12) : Color.white.opacity(0.16))
+                    .strokeBorder(Color.primary.opacity(isTracked ? 0.04 : 0.06))
             }
     }
 
@@ -516,21 +538,12 @@ struct AddMediaView: View {
         .frame(width: width, height: height)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(.tertiarySystemBackground),
-                            Color(.secondarySystemBackground).opacity(0.95)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .fill(Color(uiColor: .tertiarySystemGroupedBackground))
         )
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(.white.opacity(0.18))
+                .strokeBorder(Color.primary.opacity(0.08))
         }
     }
 
@@ -540,8 +553,8 @@ struct AddMediaView: View {
         return ZStack {
             LinearGradient(
                 colors: [
-                    Color(red: 0.93, green: 0.88, blue: 0.81),
-                    Color(red: 0.81, green: 0.86, blue: 0.91)
+                    Color(uiColor: .tertiarySystemGroupedBackground),
+                    Color(uiColor: .secondarySystemGroupedBackground)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -588,5 +601,17 @@ struct AddMediaView: View {
         Task {
             await viewModel.lookupBookBarcode(simulatedISBN)
         }
+    }
+}
+
+struct AddMediaSearchChromePresentation: Equatable {
+    let usesDetachedSearchAction: Bool
+    let showsScannerShortcut: Bool
+    let searchActionDiameter: CGFloat
+
+    init(selectedType: MediaType?) {
+        usesDetachedSearchAction = true
+        showsScannerShortcut = selectedType == .book
+        searchActionDiameter = 52
     }
 }

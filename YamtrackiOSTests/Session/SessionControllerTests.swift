@@ -161,6 +161,39 @@ final class SessionControllerTests: XCTestCase {
         }
     }
 
+    func test_connectAllowsEphemeralSessionWhenCredentialsCannotBeSaved() async throws {
+        let store = FailingSessionStore(
+            saveError: NSError(domain: NSOSStatusErrorDomain, code: -34018)
+        )
+        let sut = SessionController(
+            store: store,
+            apiClient: APIClient(
+                httpClient: HTTPClientSpy(
+                    result: .success((
+                        Data(#"{"name":"Yamtrack","version":"0.0.24"}"#.utf8),
+                        HTTPURLResponse(
+                            url: URL(string: "https://demo.local/api/v1/info/")!,
+                            statusCode: 200,
+                            httpVersion: nil,
+                            headerFields: nil
+                        )!
+                    ))
+                )
+            )
+        )
+        sut.baseURLString = "https://demo.local"
+        sut.token = "secret"
+
+        try await sut.connect()
+
+        XCTAssertFalse(sut.hasPersistedSession)
+        XCTAssertEqual(sut.connectionStatus, .connected)
+        XCTAssertEqual(
+            sut.sessionWarningMessage,
+            "Connected for now, but couldn't save your connection securely on this device."
+        )
+    }
+
     func test_failedConnectDoesNotPersistCredentials() async throws {
         let store = InMemorySessionStore()
         let response = HTTPURLResponse(
@@ -247,4 +280,18 @@ final class SessionControllerTests: XCTestCase {
             apiClient: APIClient(httpClient: httpClient)
         )
     }
+}
+
+private struct FailingSessionStore: SessionStoring {
+    let saveError: Error
+
+    func save(_ data: Data, for key: String) throws {
+        throw saveError
+    }
+
+    func loadValue(for key: String) throws -> Data? {
+        nil
+    }
+
+    func deleteValue(for key: String) {}
 }
