@@ -16,6 +16,10 @@ final class AppLaunchTests: XCTestCase {
         app.launch()
 
         XCTAssertTrue(app.navigationBars["Library"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.tabBars.buttons["Library"].exists)
+        XCTAssertTrue(app.tabBars.buttons["Add"].exists)
+        XCTAssertFalse(app.tabBars.buttons["Settings"].exists)
+        XCTAssertTrue(app.buttons["server-status-pill"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["library-card-title-1"].waitForExistence(timeout: 10))
     }
 
@@ -26,6 +30,7 @@ final class AppLaunchTests: XCTestCase {
 
         XCTAssertTrue(app.navigationBars["Library"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.otherElements["library-control-bar"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["server-status-pill"].exists)
         XCTAssertTrue(app.staticTexts["library-card-title-1"].waitForExistence(timeout: 10))
     }
 }

@@ -57,6 +57,10 @@ enum ProviderSource: String, Codable, CaseIterable, Identifiable {
         }
     }
 
+    static func preferredSearchSource(for mediaType: MediaType) -> ProviderSource? {
+        supportedSources(for: mediaType).first { $0 != .manual }
+    }
+
     var systemImage: String {
         switch self {
         case .tmdb:
@@ -78,6 +82,26 @@ enum ProviderSource: String, Codable, CaseIterable, Identifiable {
         case .manual:
             return "pencil.and.outline"
         }
+    }
+}
+
+extension Optional where Wrapped == MediaType {
+    var singularTitle: String {
+        self?.singularTitle ?? MediaType.all.singularTitle
+    }
+
+    var systemImage: String {
+        self?.systemImage ?? MediaType.all.systemImage
+    }
+}
+
+extension Optional where Wrapped == ProviderSource {
+    var title: String {
+        self?.title ?? "Source"
+    }
+
+    var systemImage: String {
+        self?.systemImage ?? "square.stack.3d.up.fill"
     }
 }
 
