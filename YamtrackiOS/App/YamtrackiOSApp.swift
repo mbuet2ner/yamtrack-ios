@@ -87,6 +87,7 @@ private actor UITestLibraryFixtureState {
     private var remainingLibraryFailures: Int
     private let isLibraryAuthExpired: Bool
     private var remainingAuthenticatedLibraryLoads: Int
+    private let simulatedBookISBN: String?
 
     private let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
@@ -100,6 +101,7 @@ private actor UITestLibraryFixtureState {
         remainingLibraryFailures = configuration.libraryFailureCount
         isLibraryAuthExpired = configuration.libraryAuthExpired
         remainingAuthenticatedLibraryLoads = configuration.libraryAuthExpired ? 1 : 0
+        simulatedBookISBN = configuration.simulatedBookISBN
 
         var initialItems = [UITestTrackedMediaState.manualMovie]
         if configuration.includesTrackedDune {
@@ -191,9 +193,19 @@ private actor UITestLibraryFixtureState {
 
         let results = searchableItems
             .filter {
-                $0.mediaType == route.mediaType &&
-                $0.source == source &&
-                (query.isEmpty || $0.title.lowercased().contains(query) || route.mediaType == MediaType.movie.rawValue)
+                guard $0.mediaType == route.mediaType, $0.source == source else {
+                    return false
+                }
+
+                if route.mediaType == MediaType.book.rawValue,
+                   let simulatedBookISBN = simulatedBookISBN?.lowercased(),
+                   query == simulatedBookISBN
+                {
+                    return simulatedBookISBN == Self.matchedFixtureBookISBN &&
+                        $0.mediaID == UITestSearchCatalogItem.glasperlenspiel.mediaID
+                }
+
+                return query.isEmpty || $0.title.lowercased().contains(query) || route.mediaType == MediaType.movie.rawValue
             }
             .map { item in
                 UITestSearchResultResponse(
@@ -387,6 +399,8 @@ private actor UITestLibraryFixtureState {
         let response = HTTPURLResponse(url: url, statusCode: 404, httpVersion: nil, headerFields: nil)!
         return (Data(#"{"detail":"Not found"}"#.utf8), response)
     }
+
+    private static let matchedFixtureBookISBN = "9780306406157"
 }
 
 private struct UITestTrackedMediaState {
@@ -536,12 +550,19 @@ fileprivate struct UITestLibraryFixtureConfiguration {
     let searchErrorMessage: String?
     let libraryFailureCount: Int
     let libraryAuthExpired: Bool
+    let simulatedBookISBN: String?
 
     init(arguments: [String]) {
         includesTrackedDune = arguments.contains("-ui-testing-tracked-search-result")
         searchErrorMessage = arguments.contains("-ui-testing-search-error") ? "Search service offline" : nil
         libraryFailureCount = arguments.contains("-ui-testing-library-fails-once") ? 1 : 0
         libraryAuthExpired = arguments.contains("-ui-testing-library-auth-expired")
+        if let index = arguments.firstIndex(of: "-ui-testing-simulated-book-isbn") {
+            let valueIndex = arguments.index(after: index)
+            simulatedBookISBN = valueIndex < arguments.endIndex ? arguments[valueIndex] : nil
+        } else {
+            simulatedBookISBN = nil
+        }
     }
 }
 

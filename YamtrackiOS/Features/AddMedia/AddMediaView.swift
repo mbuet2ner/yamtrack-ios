@@ -4,6 +4,8 @@ struct AddMediaView: View {
     @Environment(\.dismiss) private var dismiss
     @Bindable var viewModel: AddMediaViewModel
     var showsCloseButton = true
+    @State private var isShowingBookBarcodeScanner = false
+    @State private var didTriggerUITestBarcodeLookup = false
 
     var body: some View {
         ScrollView {
@@ -22,6 +24,10 @@ struct AddMediaView: View {
                         resultsSection
                     }
                 }
+
+                if viewModel.selectedType == .book && viewModel.barcodeLookupState == .noMatch {
+                    barcodeNoMatchSection
+                }
             }
             .padding(.horizontal, Theme.screenPadding)
             .padding(.top, 20)
@@ -36,6 +42,27 @@ struct AddMediaView: View {
         }
         .sheet(isPresented: manualSheetBinding) {
             AddMediaManualEntrySheet(viewModel: viewModel)
+        }
+        .sheet(isPresented: $isShowingBookBarcodeScanner) {
+            NavigationStack {
+                BookBarcodeScannerView { scannedValue in
+                    Task {
+                        await viewModel.lookupBookBarcode(scannedValue)
+                    }
+                }
+            }
+            .presentationDetents([.medium, .large])
+        }
+        .onChange(of: viewModel.selectedType) { _, newValue in
+            if newValue != .book {
+                isShowingBookBarcodeScanner = false
+                didTriggerUITestBarcodeLookup = false
+            } else {
+                triggerUITestBarcodeLookupIfNeeded()
+            }
+        }
+        .onAppear {
+            triggerUITestBarcodeLookupIfNeeded()
         }
         .toolbar {
             if showsCloseButton {
@@ -73,11 +100,11 @@ struct AddMediaView: View {
                         selectionChip(
                             title: type.singularTitle,
                             systemImage: type.systemImage,
-                            isSelected: viewModel.selectedType == type
+                            isSelected: viewModel.selectedType == type,
+                            accessibilityIdentifier: "add-media-type-\(type.rawValue)"
                         ) {
                             viewModel.selectType(type)
                         }
-                        .accessibilityIdentifier("add-media-type-\(type.rawValue)")
                     }
                 }
                 .padding(.vertical, 2)
@@ -144,6 +171,23 @@ struct AddMediaView: View {
                     .disabled(!canSearch)
                 }
 
+                if viewModel.selectedType == .book {
+                    Button {
+                        isShowingBookBarcodeScanner = true
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: "barcode.viewfinder")
+                            Text("Scan Book Barcode")
+                                .fontWeight(.semibold)
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 12)
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier("add-media-scan-book-barcode-button")
+                }
+
                 if !viewModel.hasSearched {
                     Text("Results stay hidden until you run a search.")
                         .font(.caption)
@@ -154,7 +198,9 @@ struct AddMediaView: View {
     }
 
     private var providerMenu: some View {
-        Menu {
+        let selectedSource = viewModel.selectedSource ?? searchProviders.first ?? .manual
+
+        return Menu {
             ForEach(searchProviders) { source in
                 Button {
                     viewModel.selectSource(source)
@@ -174,9 +220,9 @@ struct AddMediaView: View {
             .accessibilityIdentifier("add-media-provider-manual")
         } label: {
             HStack(spacing: 8) {
-                Image(systemName: viewModel.selectedSource.systemImage)
+                Image(systemName: selectedSource.systemImage)
                     .font(.caption.weight(.semibold))
-                Text(viewModel.selectedSource.title)
+                Text(selectedSource.title)
                     .font(.subheadline.weight(.semibold))
                 Image(systemName: "chevron.down")
                     .font(.caption.weight(.bold))
@@ -300,6 +346,24 @@ struct AddMediaView: View {
         }
     }
 
+    private var barcodeNoMatchSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("No barcode match found.")
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(.primary)
+
+            Text("Use the scanned ISBN in the search field to try a title search instead.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+
+            Button("Use ISBN in Search") {
+                viewModel.moveScannedISBNToSearchField()
+            }
+            .buttonStyle(.borderedProminent)
+            .accessibilityIdentifier("add-media-barcode-fallback-button")
+        }
+    }
+
     private var bottomActionBar: some View {
         VStack(spacing: 0) {
             Divider()
@@ -400,6 +464,10 @@ struct AddMediaView: View {
         }
 
         if let selectedType = viewModel.selectedType {
+            if selectedType == .book {
+                return "Search for a book, switch providers, or scan a barcode to jump straight to the right result."
+            }
+
             return "Search for a \(selectedType.singularTitle.lowercased()) from a provider or jump to manual entry from the menu."
         }
 
@@ -415,12 +483,14 @@ struct AddMediaView: View {
     }
 
     private var searchComposerSubtitle: String {
-        "Using \(viewModel.selectedSource.title). Switch providers or choose Manual Entry from the menu."
+        let selectedSource = viewModel.selectedSource ?? searchProviders.first ?? .manual
+        return "Using \(selectedSource.title). Switch providers or choose Manual Entry from the menu."
     }
 
     private var resultsSubtitle: String? {
         guard !viewModel.results.isEmpty else { return nil }
-        return "\(viewModel.results.count) result\(viewModel.results.count == 1 ? "" : "s") from \(viewModel.selectedSource.title)."
+        let selectedSource = viewModel.selectedSource ?? searchProviders.first ?? .manual
+        return "\(viewModel.results.count) result\(viewModel.results.count == 1 ? "" : "s") from \(selectedSource.title)."
     }
 
     private var bottomActionTitle: String {
@@ -498,6 +568,7 @@ struct AddMediaView: View {
         title: String,
         systemImage: String,
         isSelected: Bool,
+        accessibilityIdentifier: String,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -516,6 +587,7 @@ struct AddMediaView: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier(accessibilityIdentifier)
     }
 
     private func badge(title: String, systemImage: String) -> some View {
@@ -619,6 +691,19 @@ struct AddMediaView: View {
         viewModel.successMessage = nil
         Task {
             await viewModel.search()
+        }
+    }
+
+    private func triggerUITestBarcodeLookupIfNeeded() {
+        guard !didTriggerUITestBarcodeLookup else { return }
+        guard viewModel.selectedType == .book else { return }
+        guard let simulatedISBN = ProcessInfo.processInfo.value(after: "-ui-testing-simulated-book-isbn") else {
+            return
+        }
+
+        didTriggerUITestBarcodeLookup = true
+        Task {
+            await viewModel.lookupBookBarcode(simulatedISBN)
         }
     }
 }
