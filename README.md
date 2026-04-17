@@ -1,6 +1,8 @@
-# 📱 yamtrack-ios
+<p align="center">
+  <img src="docs/branding/png/yamtrack-mark.png" alt="Yamtrack app icon mark" width="132" />
+</p>
 
-An iOS client for Yamtrack with a glassy, library-first interface for browsing, adding, and updating media.
+An (unofficial) iOS client for [Yamtrack](https://github.com/FuzzyGrim/Yamtrack) with a library-first interface for browsing, adding, and updating media.
 
 ## 🔌 API Note
 
@@ -46,16 +48,6 @@ An iOS client for Yamtrack with a glassy, library-first interface for browsing, 
   - [ ] The spike found a few quirks that the current handwritten client already smooths over manually
     - mixed `media_id` typing between provider creates and detail-style routes
     - incomplete response modeling for some routes, especially update flows
-
-## 🎨 Branding
-
-<p align="center">
-  <img src="docs/branding/png/yamtrack-mark.png" alt="Yamtrack app icon mark" width="148" />
-</p>
-
-<p align="center">
-  <img src="docs/branding/png/yamtrack-logo.png" alt="Yamtrack logo" width="320" />
-</p>
 
 ## 📸 Screenshots
 

@@ -16,6 +16,7 @@
 		3262706D5498A85CAE193113 /* SessionControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23C23ED32477BC7F204AE1E /* SessionControllerTests.swift */; };
 		36CC796BC4F38D28AC525211 /* AddMediaView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4582A8D7ED6D84C78EA666F5 /* AddMediaView.swift */; };
 		3C6D5C3E7B8A4E5E9F1A2B3C /* AddMediaManualEntrySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F0A1B2C3D4E5F60718293A4 /* AddMediaManualEntrySheet.swift */; };
+		A6B1E6E7B75C4E5A8C1D2F30 /* BookBarcodeScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F84D7F6B3A34F7C8DDC2E21 /* BookBarcodeScannerView.swift */; };
 		43833F77F21D49E6FD575492 /* RootViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A325C2370237FAE77FB43DFF /* RootViewModel.swift */; };
 		54C6BF8BA51EA3FD5991D2AF /* APIError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BC4AE44BD1D1840E5B70C84 /* APIError.swift */; };
 		56EAFB4FBB5606E629157F03 /* SetupFlowUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89E9D0241CD53308786225E7 /* SetupFlowUITests.swift */; };
@@ -38,6 +39,7 @@
 		A34477AD2523F7CBC837DB03 /* RootViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47AA35E40A30916702D45423 /* RootViewModelTests.swift */; };
 		AA0270DD3918957BB0541A80 /* media-list.json in Resources */ = {isa = PBXBuildFile; fileRef = FB6F6C2C5A27B68CE5D02AEE /* media-list.json */; };
 		AD1CA24E9329FB0616C19025 /* MediaRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF9C6C89728A3043E19BC2E9 /* MediaRowView.swift */; };
+		B422257C1709F5D4300A4FCF /* ISBN.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CFF86A4D02BA2AB9688F53B /* ISBN.swift */; };
 		B4DD9909372AE9CDC9DCD18D /* AppLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9DDBFD983AC3EBECCBEAD67 /* AppLaunchTests.swift */; };
 		C329FA36656CB38A3DF1FE2C /* LibraryViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74EDABBF7C18658784DD79D3 /* LibraryViewModelTests.swift */; };
 		C68618878EED7C2F13E19EC8 /* HTTPClientSpy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B68F3EC01CED987C727290 /* HTTPClientSpy.swift */; };
@@ -49,6 +51,7 @@
 		DB74A522611D2066A2B7E38E /* SessionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E02CFAD7961E41D7BA466E /* SessionController.swift */; };
 		E9982841CC2C7DE05DFDFE41 /* SessionStoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F9DE72FC98EFB5AC4CBFC78 /* SessionStoring.swift */; };
 		F15A8B3C6725C787195525CA /* MediaDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F2334FA8C398E02A1D0499B /* MediaDetail.swift */; };
+		F449B110A1B7A5B7D2D6BD09 /* ISBNTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 519A02CCB26DAC774F1A8111 /* ISBNTests.swift */; };
 		FA4D3335E83E4159C89FF3AD /* YamtrackiOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98CE5E019B7FDE1479405C79 /* YamtrackiOSApp.swift */; };
 /* End PBXBuildFile section */
 
@@ -83,6 +86,7 @@
 		47AA35E40A30916702D45423 /* RootViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootViewModelTests.swift; sourceTree = "<group>"; };
 		4F2334FA8C398E02A1D0499B /* MediaDetail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDetail.swift; sourceTree = "<group>"; };
 		4F9DE72FC98EFB5AC4CBFC78 /* SessionStoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStoring.swift; sourceTree = "<group>"; };
+		519A02CCB26DAC774F1A8111 /* ISBNTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ISBNTests.swift; sourceTree = "<group>"; };
 		52F0FFF52A489E0325139C1D /* APIRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIRequest.swift; sourceTree = "<group>"; };
 		55BBCAEADD0050E6C630A5D8 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		7391E36A5804763722700460 /* YamtrackiOSUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = YamtrackiOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -90,6 +94,8 @@
 		74EDABBF7C18658784DD79D3 /* LibraryViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewModelTests.swift; sourceTree = "<group>"; };
 		7A429D582243CF783FCE4B57 /* MediaDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaDetailView.swift; sourceTree = "<group>"; };
 		7AAD185B05CA6692A53CB5C1 /* GlassSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassSurface.swift; sourceTree = "<group>"; };
+		5F84D7F6B3A34F7C8DDC2E21 /* BookBarcodeScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookBarcodeScannerView.swift; sourceTree = "<group>"; };
+		7CFF86A4D02BA2AB9688F53B /* ISBN.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ISBN.swift; sourceTree = "<group>"; };
 		7D3E9947D7854C7512944B9B /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		81AE329EEEAFED8DAEE2D274 /* AppTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTab.swift; sourceTree = "<group>"; };
 		89E9D0241CD53308786225E7 /* SetupFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupFlowUITests.swift; sourceTree = "<group>"; };
@@ -277,7 +283,9 @@
 			children = (
 				6F0A1B2C3D4E5F60718293A4 /* AddMediaManualEntrySheet.swift */,
 				4582A8D7ED6D84C78EA666F5 /* AddMediaView.swift */,
+				5F84D7F6B3A34F7C8DDC2E21 /* BookBarcodeScannerView.swift */,
 				FE5F3615395A65F275F69CAE /* AddMediaViewModel.swift */,
+				7CFF86A4D02BA2AB9688F53B /* ISBN.swift */,
 			);
 			path = AddMedia;
 			sourceTree = "<group>";
@@ -316,6 +324,7 @@
 			isa = PBXGroup;
 			children = (
 				8F96B93CEDD67DC36396E817 /* AddMediaViewModelTests.swift */,
+				519A02CCB26DAC774F1A8111 /* ISBNTests.swift */,
 			);
 			path = AddMedia;
 			sourceTree = "<group>";
@@ -471,6 +480,7 @@
 				6580153A8C36091ED6F19ADA /* APIClientTests.swift in Sources */,
 				9E8BA2D660A8A45F5267055A /* AddMediaViewModelTests.swift in Sources */,
 				C68618878EED7C2F13E19EC8 /* HTTPClientSpy.swift in Sources */,
+				F449B110A1B7A5B7D2D6BD09 /* ISBNTests.swift in Sources */,
 				C329FA36656CB38A3DF1FE2C /* LibraryViewModelTests.swift in Sources */,
 				5EAA0B26D92BE900085650CE /* MediaDetailViewModelTests.swift in Sources */,
 				A34477AD2523F7CBC837DB03 /* RootViewModelTests.swift in Sources */,
@@ -488,10 +498,12 @@
 				D9B96FDA57CE1BC6CB21BD06 /* AddMediaModels.swift in Sources */,
 				3C6D5C3E7B8A4E5E9F1A2B3C /* AddMediaManualEntrySheet.swift in Sources */,
 				36CC796BC4F38D28AC525211 /* AddMediaView.swift in Sources */,
+				A6B1E6E7B75C4E5A8C1D2F30 /* BookBarcodeScannerView.swift in Sources */,
 				83A91A3F9922107CABEA8AAA /* AddMediaViewModel.swift in Sources */,
 				D856405C0D24D0E867BA493A /* AppTab.swift in Sources */,
 				D5A892510613AF12C5FE28F0 /* Endpoint.swift in Sources */,
 				82F096FC2BB31DD3A9079CE0 /* GlassSurface.swift in Sources */,
+				B422257C1709F5D4300A4FCF /* ISBN.swift in Sources */,
 				9F9DE6ED28F63260D517CF15 /* InfoResponse.swift in Sources */,
 				0BA1967A3FC3A1D5C872009B /* KeychainStore.swift in Sources */,
 				086BCE24D9AB9E90B8F420C4 /* LibraryView.swift in Sources */,

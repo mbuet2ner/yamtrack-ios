@@ -300,6 +300,41 @@ final class SetupFlowUITests: XCTestCase {
         XCTAssertFalse(app.buttons["add-media-submit-button"].isEnabled)
     }
 
+    func test_bookBarcodeScanAddsFixtureBookToLibrary() {
+        let isbn = "9780306406157"
+        let app = makeFixtureApp(extraArguments: ["-ui-testing-simulated-book-isbn", isbn])
+
+        openBookAddMedia(in: app)
+
+        let resultButton = app.buttons["add-media-result-book-openlibrary-OL27448W"]
+        XCTAssertTrue(resultButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["add-media-submit-button"].isEnabled)
+
+        app.buttons["add-media-submit-button"].tap()
+
+        XCTAssertTrue(app.navigationBars["Add Media"].waitForExistence(timeout: 3))
+        XCTAssertEqual(app.staticTexts["add-media-bottom-subtitle"].label, "Added Das Glasperlenspiel")
+
+        app.tabBars.firstMatch.buttons["Library"].tap()
+        XCTAssertTrue(app.staticTexts["Das Glasperlenspiel"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.otherElements["library-card-2"].waitForExistence(timeout: 3))
+    }
+
+    func test_bookBarcodeNoMatchFallbackPrefillsISBNInSearchField() {
+        let isbn = "9780140449136"
+        let app = makeFixtureApp(extraArguments: ["-ui-testing-simulated-book-isbn", isbn])
+
+        openBookAddMedia(in: app)
+
+        XCTAssertTrue(app.staticTexts["No barcode match found."].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["add-media-barcode-fallback-button"].waitForExistence(timeout: 2))
+        app.buttons["add-media-barcode-fallback-button"].tap()
+
+        let searchField = app.textFields["add-media-search-field"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 2))
+        XCTAssertEqual(searchField.value as? String, isbn)
+    }
+
     func test_libraryDetailEditorCanSaveProgressChanges() {
         let app = makeFixtureApp()
 
@@ -358,6 +393,12 @@ final class SetupFlowUITests: XCTestCase {
         app.launchArguments = ["-ui-testing-persisted-session", "-ui-testing-library-auth-expired"]
         app.launch()
         return app
+    }
+
+    private func openBookAddMedia(in app: XCUIApplication) {
+        app.tabBars.firstMatch.buttons["Add"].tap()
+        XCTAssertTrue(app.navigationBars["Add Media"].waitForExistence(timeout: 2))
+        app.buttons["add-media-type-book"].tap()
     }
 
     private func replaceText(in element: XCUIElement, with text: String) {
