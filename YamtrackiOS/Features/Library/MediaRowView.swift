@@ -29,7 +29,7 @@ struct MediaRowView: View {
     }
 
     var body: some View {
-        GlassSurface {
+        ContentSurface {
             HStack(alignment: .top, spacing: 14) {
                 posterView
 
@@ -49,12 +49,8 @@ struct MediaRowView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 6) {
-                        if let status = item.statusLabel {
-                            metadataChip(systemImage: "circle.fill", text: status)
-                        }
-
-                        if let progressLabel = item.progressLabel {
-                            metadataChip(systemImage: "chart.bar.fill", text: "Progress \(progressLabel)")
+                        ForEach(MediaMetadataChipPresentation.makeChips(for: item), id: \.self) { chip in
+                            metadataChip(chip)
                         }
                     }
                 }
@@ -93,23 +89,13 @@ struct MediaRowView: View {
         .frame(width: 92, height: 136)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            Color(.tertiarySystemBackground),
-                            Color(.secondarySystemBackground).opacity(0.95)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .fill(Color(uiColor: .tertiarySystemGroupedBackground))
         )
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(.white.opacity(0.18))
+                .strokeBorder(Color.primary.opacity(0.08))
         }
-        .shadow(color: .black.opacity(0.08), radius: 10, x: 0, y: 6)
     }
 
     private var posterPlaceholder: some View {
@@ -118,8 +104,8 @@ struct MediaRowView: View {
                 .fill(
                     LinearGradient(
                         colors: [
-                            Color(red: 0.90, green: 0.88, blue: 0.84),
-                            Color(red: 0.80, green: 0.78, blue: 0.74)
+                            Color(uiColor: .tertiarySystemGroupedBackground),
+                            Color(uiColor: .secondarySystemGroupedBackground)
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
@@ -141,16 +127,88 @@ struct MediaRowView: View {
         .accessibilityIdentifier(posterIdentifier)
     }
 
-    private func metadataChip(systemImage: String, text: String) -> some View {
-        Label(text, systemImage: systemImage)
+    private func metadataChip(_ chip: MediaMetadataChipPresentation) -> some View {
+        Label(chip.text, systemImage: chip.systemImage)
             .font(.caption.weight(.semibold))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(chip.foregroundColor)
             .labelStyle(.titleAndIcon)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .background(
                 Capsule(style: .continuous)
-                    .fill(Color(.secondarySystemBackground).opacity(0.95))
+                    .fill(chip.backgroundColor)
             )
+    }
+}
+
+struct MediaMetadataChipPresentation: Equatable, Hashable {
+    enum Tone: Equatable, Hashable {
+        case neutral
+        case accent
+        case positive
+        case subdued
+    }
+
+    let text: String
+    let systemImage: String
+    let tone: Tone
+
+    static func makeChips(for item: MediaSummary) -> [MediaMetadataChipPresentation] {
+        var chips: [MediaMetadataChipPresentation] = []
+
+        if let status = item.status {
+            chips.append(Self.statusChip(for: status))
+        }
+
+        if let progressLabel = item.progressLabel {
+            chips.append(
+                .init(
+                    text: "Progress \(progressLabel)",
+                    systemImage: "chart.bar.fill",
+                    tone: .accent
+                )
+            )
+        }
+
+        return chips
+    }
+
+    private static func statusChip(for status: MediaSummary.Status) -> MediaMetadataChipPresentation {
+        switch status {
+        case .planning:
+            return .init(text: status.title, systemImage: "clock.fill", tone: .neutral)
+        case .inProgress:
+            return .init(text: status.title, systemImage: "play.circle.fill", tone: .accent)
+        case .paused:
+            return .init(text: status.title, systemImage: "pause.circle.fill", tone: .subdued)
+        case .completed:
+            return .init(text: status.title, systemImage: "checkmark.circle.fill", tone: .positive)
+        case .dropped:
+            return .init(text: status.title, systemImage: "xmark.circle.fill", tone: .subdued)
+        }
+    }
+
+    var backgroundColor: Color {
+        switch tone {
+        case .neutral:
+            return Color(.secondarySystemBackground).opacity(0.92)
+        case .accent:
+            return Color.accentColor.opacity(0.12)
+        case .positive:
+            return Color.green.opacity(0.14)
+        case .subdued:
+            return Color(.tertiarySystemBackground).opacity(0.94)
+        }
+    }
+
+    var foregroundColor: Color {
+        switch tone {
+        case .neutral, .subdued:
+            return .secondary
+        case .accent:
+            return .accentColor
+        case .positive:
+            return Color.green
+        }
     }
 }

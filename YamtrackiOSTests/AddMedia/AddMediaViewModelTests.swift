@@ -490,6 +490,22 @@ final class AddMediaViewModelTests: XCTestCase {
         XCTAssertTrue(sut.results[0].tracked)
         XCTAssertNil(sut.selectedResult)
     }
+
+    func test_searchChromeUsesDetachedActionAndScannerForBooks() {
+        let presentation = AddMediaSearchChromePresentation(selectedType: .book)
+
+        XCTAssertTrue(presentation.usesDetachedSearchAction)
+        XCTAssertTrue(presentation.showsScannerShortcut)
+        XCTAssertEqual(presentation.searchActionDiameter, 52)
+    }
+
+    func test_searchChromeOmitsScannerForNonBooks() {
+        let presentation = AddMediaSearchChromePresentation(selectedType: .movie)
+
+        XCTAssertTrue(presentation.usesDetachedSearchAction)
+        XCTAssertFalse(presentation.showsScannerShortcut)
+        XCTAssertEqual(presentation.searchActionDiameter, 52)
+    }
 }
 
 @MainActor

@@ -1,10 +1,10 @@
 import SwiftUI
 
 struct RootView: View {
-    @State private var selectedTab: AppTab = .library
     @State private var isShowingConnectionSheet = false
     @State private var session: SessionController
     @State private var viewModel: RootViewModel
+    private let addOrbPresentation = FloatingActionPresentation.addMedia
 
     init(session: SessionController, apiClient: APIClient = .live) {
         _session = State(initialValue: session)
@@ -23,23 +23,17 @@ struct RootView: View {
         .task {
             await viewModel.restoreSession(using: session)
             if !session.hasPersistedSession {
-                selectedTab = .library
                 isShowingConnectionSheet = true
             }
         }
-        .onChange(of: selectedTab) { _, newValue in
-            guard newValue == .addMedia, let libraryViewModel = viewModel.libraryViewModel else { return }
-            libraryViewModel.makeAddMediaViewModel().reset()
-        }
         .onChange(of: session.connectionStatus) { _, _ in
             viewModel.sessionDidChange(using: session)
-            if session.hasPersistedSession {
+            if session.connectionStatus == .connected {
                 isShowingConnectionSheet = false
             }
         }
         .onChange(of: session.hasPersistedSession) { _, hasPersistedSession in
-            if !hasPersistedSession {
-                selectedTab = .library
+            if !hasPersistedSession, session.connectionStatus != .connected {
                 isShowingConnectionSheet = true
             }
         }
@@ -55,21 +49,30 @@ struct RootView: View {
                 )
             }
         }
+        .sheet(isPresented: addMediaSheetBinding) {
+            if let libraryViewModel = viewModel.libraryViewModel {
+                NavigationStack {
+                    AddMediaView(viewModel: libraryViewModel.makeAddMediaViewModel())
+                }
+                .presentationBackground(Color(uiColor: .systemGroupedBackground))
+            }
+        }
     }
 
     private var appShell: some View {
-        TabView(selection: $selectedTab) {
+        ZStack(alignment: .bottomTrailing) {
             NavigationStack {
                 libraryContent
             }
-            .tabItem { Label("Library", systemImage: "square.stack.fill") }
-            .tag(AppTab.library)
 
-            NavigationStack {
-                addMediaContent
+            if shouldShowFloatingAddOrb {
+                FloatingAddOrb {
+                    viewModel.libraryViewModel?.presentAddMedia()
+                }
+                .padding(.trailing, Theme.screenPadding + 2)
+                .padding(.bottom, addOrbPresentation.bottomOffset)
+                .ignoresSafeArea(.container, edges: .bottom)
             }
-            .tabItem { Label("Add", systemImage: "plus.square.fill") }
-            .tag(AppTab.addMedia)
         }
     }
 
@@ -79,7 +82,8 @@ struct RootView: View {
             LibraryView(
                 viewModel: libraryViewModel,
                 baseURLString: session.baseURLString,
-                onOpenAdd: { selectedTab = .addMedia },
+                sessionWarningMessage: session.sessionWarningMessage,
+                onOpenAdd: { libraryViewModel.presentAddMedia() },
                 onOpenConnectionSettings: { isShowingConnectionSheet = true }
             )
         } else {
@@ -90,43 +94,19 @@ struct RootView: View {
         }
     }
 
-    @ViewBuilder
-    private var addMediaContent: some View {
-        if let libraryViewModel = viewModel.libraryViewModel {
-            AddMediaView(
-                viewModel: libraryViewModel.makeAddMediaViewModel(),
-                showsCloseButton: false
-            )
-        } else {
-            ScrollView {
-                ConnectionRequiredView(
-                    title: "Reconnect To Add Media",
-                    description: "Reconnect to your Yamtrack server before searching providers or creating new entries.",
-                    actionTitle: "Open Connection Settings",
-                    onOpenConnectionSettings: { isShowingConnectionSheet = true }
-                )
-                .padding(.horizontal, Theme.screenPadding)
-                .padding(.top, 20)
-                .padding(.bottom, 28)
-            }
-            .scrollIndicators(.hidden)
-            .background(addMediaPlaceholderBackground)
-            .toolbarVisibility(.hidden, for: .navigationBar)
-        }
+    private var shouldShowFloatingAddOrb: Bool {
+        viewModel.libraryViewModel != nil && !isShowingConnectionSheet
     }
 
-    private var addMediaPlaceholderBackground: some View {
-        LinearGradient(
-            colors: [
-                Color(.systemBackground),
-                Color(red: 0.98, green: 0.94, blue: 0.90),
-                Color(.secondarySystemBackground).opacity(0.55),
-                Color(.systemBackground)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
+    private var addMediaSheetBinding: Binding<Bool> {
+        Binding(
+            get: { viewModel.libraryViewModel?.isShowingAddMedia ?? false },
+            set: { isPresented in
+                if !isPresented {
+                    viewModel.libraryViewModel?.dismissAddMedia()
+                }
+            }
         )
-        .ignoresSafeArea()
     }
 }
 
@@ -136,29 +116,14 @@ private struct DisconnectedLibraryView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                controlBar
+            VStack(alignment: .leading, spacing: 20) {
+                Text("Library")
+                    .font(.largeTitle.weight(.bold))
 
-                ConnectionRequiredView(
-                    title: "Reconnect To Load Your Library",
-                    description: description,
-                    actionTitle: "Open Connection Settings",
-                    onOpenConnectionSettings: onOpenConnectionSettings
-                )
-            }
-            .padding(.horizontal, Theme.screenPadding)
-            .padding(.top, 12)
-            .padding(.bottom, 28)
-        }
-        .scrollIndicators(.hidden)
-        .background(libraryBackground)
-        .navigationTitle("Library")
-        .navigationBarTitleDisplayMode(.inline)
-    }
+                Text("Reconnect to refresh your tracked media and open detail views again.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
 
-    private var controlBar: some View {
-        GlassSurface {
-            VStack(alignment: .leading, spacing: 12) {
                 Button {
                     onOpenConnectionSettings()
                 } label: {
@@ -171,16 +136,20 @@ private struct DisconnectedLibraryView: View {
                 .accessibilityIdentifier("server-status-pill")
                 .accessibilityLabel("Disconnected")
 
-                Text("Library")
-                    .font(.title2.weight(.semibold))
-                    .foregroundStyle(.primary)
-
-                Text("Reconnect to refresh your tracked media and open detail views again.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                ConnectionRequiredView(
+                    title: "Reconnect To Load Your Library",
+                    description: description,
+                    actionTitle: "Open Connection Settings",
+                    onOpenConnectionSettings: onOpenConnectionSettings
+                )
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, Theme.screenPadding)
+            .padding(.top, 20)
+            .padding(.bottom, 28)
         }
+        .scrollIndicators(.hidden)
+        .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
+        .toolbarVisibility(.hidden, for: .navigationBar)
     }
 
     private var description: String {
@@ -191,20 +160,6 @@ private struct DisconnectedLibraryView: View {
 
         return "Your saved connection to \(label) is still on this device. Open connection settings to reconnect."
     }
-
-    private var libraryBackground: some View {
-        LinearGradient(
-            colors: [
-                Color(.systemBackground),
-                Color(red: 0.96, green: 0.95, blue: 0.93),
-                Color(.secondarySystemBackground).opacity(0.55),
-                Color(.systemBackground)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .ignoresSafeArea()
-    }
 }
 
 private struct ConnectionRequiredView: View {
@@ -214,13 +169,13 @@ private struct ConnectionRequiredView: View {
     let onOpenConnectionSettings: () -> Void
 
     var body: some View {
-        GlassSurface {
-            VStack(spacing: 16) {
+        ContentSurface {
+            VStack(spacing: 18) {
                 Image(systemName: "wifi.slash")
-                    .font(.system(size: 34, weight: .semibold))
+                    .font(.system(size: 32, weight: .semibold))
                     .foregroundStyle(.secondary)
 
-                VStack(spacing: 6) {
+                VStack(spacing: 8) {
                     Text(title)
                         .font(.title3.weight(.semibold))
                         .multilineTextAlignment(.center)
@@ -234,7 +189,7 @@ private struct ConnectionRequiredView: View {
                 Button(actionTitle) {
                     onOpenConnectionSettings()
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.glassProminent)
             }
             .frame(maxWidth: .infinity)
         }
