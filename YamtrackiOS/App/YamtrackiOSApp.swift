@@ -8,9 +8,9 @@ struct YamtrackiOSApp: App {
     init() {
         let arguments = ProcessInfo.processInfo.arguments
         let invalidAuth = arguments.contains("-ui-testing-invalid-auth")
-        let useLibraryFixture = arguments.contains("-ui-testing-library-fixture")
+        let useLibraryFixture = arguments.contains("-ui-testing-library-fixture") || arguments.contains("-ui-testing-library-auth-expired")
         let fixtureConfiguration = UITestLibraryFixtureConfiguration(arguments: arguments)
-        let shouldUseTestStore = arguments.contains("-ui-testing-persisted-session") || arguments.contains("-ui-testing-invalid-auth") || arguments.contains("-ui-testing-reset-session")
+        let shouldUseTestStore = arguments.contains("-ui-testing-persisted-session") || arguments.contains("-ui-testing-invalid-auth") || arguments.contains("-ui-testing-reset-session") || arguments.contains("-ui-testing-library-auth-expired")
         let store: SessionStoring = shouldUseTestStore ? InMemorySessionStore() : KeychainStore(service: "org.yamtrack.ios.session", accessGroup: nil)
 
         if arguments.contains("-ui-testing-persisted-session"),
@@ -85,6 +85,8 @@ private actor UITestLibraryFixtureState {
     private var nextManualMediaID: Int
     private let searchErrorMessage: String?
     private var remainingLibraryFailures: Int
+    private let isLibraryAuthExpired: Bool
+    private var remainingAuthenticatedLibraryLoads: Int
     private let simulatedBookISBN: String?
 
     private let encoder: JSONEncoder = {
@@ -97,6 +99,8 @@ private actor UITestLibraryFixtureState {
         searchableItems = [.dune, .glasperlenspiel]
         searchErrorMessage = configuration.searchErrorMessage
         remainingLibraryFailures = configuration.libraryFailureCount
+        isLibraryAuthExpired = configuration.libraryAuthExpired
+        remainingAuthenticatedLibraryLoads = configuration.libraryAuthExpired ? 1 : 0
         simulatedBookISBN = configuration.simulatedBookISBN
 
         var initialItems = [UITestTrackedMediaState.manualMovie]
@@ -120,6 +124,19 @@ private actor UITestLibraryFixtureState {
 
         let method = request.httpMethod ?? "GET"
         let path = normalizedPath(for: url)
+
+        if isLibraryAuthExpired {
+            if method == "GET", path == "/api/v1/info" {
+                return try response(for: UITestInfoResponse(version: "dev"), url: url)
+            }
+
+            if method == "GET", path == "/api/v1/media", remainingAuthenticatedLibraryLoads > 0 {
+                remainingAuthenticatedLibraryLoads -= 1
+                return try response(for: UITestPaginatedResponse(results: items.map(\.summaryResponse)), url: url)
+            }
+
+            return try unauthorizedResponse(url: url)
+        }
 
         switch (method, path) {
         case ("GET", "/api/v1/info"):
@@ -374,6 +391,10 @@ private actor UITestLibraryFixtureState {
         try response(for: UITestErrorResponse(detail: message), statusCode: statusCode, url: url)
     }
 
+    private func unauthorizedResponse(url: URL) throws -> (Data, URLResponse) {
+        try errorResponse(message: "Invalid token", statusCode: 401, url: url)
+    }
+
     private func notFoundResponse(url: URL) -> (Data, URLResponse) {
         let response = HTTPURLResponse(url: url, statusCode: 404, httpVersion: nil, headerFields: nil)!
         return (Data(#"{"detail":"Not found"}"#.utf8), response)
@@ -528,12 +549,14 @@ fileprivate struct UITestLibraryFixtureConfiguration {
     let includesTrackedDune: Bool
     let searchErrorMessage: String?
     let libraryFailureCount: Int
+    let libraryAuthExpired: Bool
     let simulatedBookISBN: String?
 
     init(arguments: [String]) {
         includesTrackedDune = arguments.contains("-ui-testing-tracked-search-result")
         searchErrorMessage = arguments.contains("-ui-testing-search-error") ? "Search service offline" : nil
         libraryFailureCount = arguments.contains("-ui-testing-library-fails-once") ? 1 : 0
+        libraryAuthExpired = arguments.contains("-ui-testing-library-auth-expired")
         if let index = arguments.firstIndex(of: "-ui-testing-simulated-book-isbn") {
             let valueIndex = arguments.index(after: index)
             simulatedBookISBN = valueIndex < arguments.endIndex ? arguments[valueIndex] : nil
