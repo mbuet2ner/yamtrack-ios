@@ -221,40 +221,29 @@ final class AddMediaViewModel {
         guard !isCreating else { return }
         guard let selectedType, let selectedSource else { return }
 
+        if !isManualSource {
+            guard let selectedResult else { return }
+            try await createProviderMedia(
+                mediaType: selectedType,
+                source: selectedSource,
+                result: selectedResult
+            )
+            return
+        }
+
         isCreating = true
         defer { isCreating = false }
 
         do {
-            let isManualCreation = isManualSource
-            let createdResultID = selectedResult?.id
             let created = try await apiClient.createMedia(
                 makeCreateRequest(
                     mediaType: selectedType,
                     source: selectedSource,
-                    isManualCreation: isManualCreation
+                    isManualCreation: true
                 ),
                 credentials: credentials
             )
             errorMessage = nil
-            if !isManualCreation {
-                if let createdResultID {
-                    results = results.map { result in
-                        guard result.id == createdResultID else { return result }
-
-                        return AddMediaSearchResult(
-                            mediaID: result.mediaID,
-                            source: result.source,
-                            mediaType: result.mediaType,
-                            title: result.title,
-                            image: result.image,
-                            tracked: true,
-                            itemID: created.itemID
-                        )
-                    }
-                }
-                selectedResult = nil
-                successMessage = "Added \(created.title)"
-            }
             onMediaCreated?(created)
         } catch is CancellationError {
             throw CancellationError()
@@ -262,6 +251,17 @@ final class AddMediaViewModel {
             errorMessage = (error as? LocalizedError)?.errorDescription ?? "Failed to create media"
             throw error
         }
+    }
+
+    func createMedia(for result: AddMediaSearchResult) async throws {
+        guard !isCreating else { return }
+        guard let selectedType, let selectedSource, !isManualSource else { return }
+
+        try await createProviderMedia(
+            mediaType: selectedType,
+            source: selectedSource,
+            result: result
+        )
     }
 
     func createManualMedia() async throws {
@@ -344,7 +344,8 @@ final class AddMediaViewModel {
     private func makeCreateRequest(
         mediaType: MediaType,
         source: ProviderSource,
-        isManualCreation: Bool
+        isManualCreation: Bool,
+        result: AddMediaSearchResult? = nil
     ) -> CreateMediaRequest {
         if isManualCreation {
             return .manual(
@@ -358,18 +359,63 @@ final class AddMediaViewModel {
             )
         }
 
-        let providerSource = selectedResult
+        let providerSource = result
             .flatMap { ProviderSource(rawValue: $0.source) } ?? source
 
         return .provider(
             mediaType: mediaType,
             source: providerSource,
-            mediaID: selectedResult?.mediaID ?? "",
+            mediaID: result?.mediaID ?? "",
             status: nil,
             progress: defaultProgressForCreate,
             score: nil,
             notes: nil
         )
+    }
+
+    private func createProviderMedia(
+        mediaType: MediaType,
+        source: ProviderSource,
+        result: AddMediaSearchResult
+    ) async throws {
+        isCreating = true
+        defer { isCreating = false }
+
+        do {
+            let created = try await apiClient.createMedia(
+                makeCreateRequest(
+                    mediaType: mediaType,
+                    source: source,
+                    isManualCreation: false,
+                    result: result
+                ),
+                credentials: credentials
+            )
+            errorMessage = nil
+            results = results.map { currentResult in
+                guard currentResult.id == result.id else { return currentResult }
+
+                return AddMediaSearchResult(
+                    mediaID: currentResult.mediaID,
+                    source: currentResult.source,
+                    mediaType: currentResult.mediaType,
+                    title: currentResult.title,
+                    image: currentResult.image,
+                    tracked: true,
+                    itemID: created.itemID
+                )
+            }
+            if selectedResult?.id == result.id {
+                selectedResult = nil
+            }
+            successMessage = "Added \(created.title)"
+            onMediaCreated?(created)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            errorMessage = (error as? LocalizedError)?.errorDescription ?? "Failed to create media"
+            throw error
+        }
     }
 
     private var defaultProgressForCreate: Int? {

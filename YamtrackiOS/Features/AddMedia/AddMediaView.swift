@@ -6,14 +6,18 @@ struct AddMediaView: View {
     var showsCloseButton = true
     @State private var isShowingBookBarcodeScanner = false
     @State private var didTriggerUITestBarcodeLookup = false
+    @State private var pendingAddResult: AddMediaSearchResult?
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                introSection
+            VStack(alignment: .leading, spacing: 20) {
                 typeSection
 
                 if viewModel.selectedType != nil {
+                    if let successMessage = viewModel.successMessage {
+                        successBanner(successMessage)
+                    }
+
                     searchComposer
 
                     if let errorMessage = viewModel.errorMessage {
@@ -30,16 +34,14 @@ struct AddMediaView: View {
                 }
             }
             .padding(.horizontal, Theme.screenPadding)
-            .padding(.top, 20)
-            .padding(.bottom, 132)
+            .padding(.top, showsCloseButton ? 20 : 12)
+            .padding(.bottom, 36)
         }
         .scrollIndicators(.hidden)
         .background(addMediaBackground)
-        .navigationTitle("Add Media")
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .safeAreaInset(edge: .bottom) {
-            bottomActionBar
-        }
+        .toolbarVisibility(showsCloseButton ? .automatic : .hidden, for: .navigationBar)
         .sheet(isPresented: manualSheetBinding) {
             AddMediaManualEntrySheet(viewModel: viewModel)
         }
@@ -52,6 +54,14 @@ struct AddMediaView: View {
                 }
             }
             .presentationDetents([.medium, .large])
+        }
+        .alert("Add To Library?", isPresented: pendingAddBinding, presenting: pendingAddResult) { result in
+            Button("Cancel", role: .cancel) {}
+            Button("Add") {
+                confirmAdd(result)
+            }
+        } message: { result in
+            Text(result.title)
         }
         .onChange(of: viewModel.selectedType) { _, newValue in
             if newValue != .book {
@@ -73,19 +83,6 @@ struct AddMediaView: View {
                 }
             }
         }
-    }
-
-    private var introSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Add something new")
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(.primary)
-
-            Text(introCopy)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var typeSection: some View {
@@ -114,21 +111,24 @@ struct AddMediaView: View {
 
     private var searchComposer: some View {
         GlassSurface {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack(alignment: .top, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(searchComposerTitle)
-                            .font(.headline.weight(.semibold))
-                            .foregroundStyle(.primary)
-
-                        Text(searchComposerSubtitle)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 10) {
+                    providerMenu
 
                     Spacer(minLength: 0)
 
-                    providerMenu
+                    if viewModel.selectedType == .book {
+                        Button {
+                            isShowingBookBarcodeScanner = true
+                        } label: {
+                            Label("Scan", systemImage: "barcode.viewfinder")
+                                .font(.subheadline.weight(.semibold))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
+                        }
+                        .buttonStyle(.bordered)
+                        .accessibilityIdentifier("add-media-scan-book-barcode-button")
+                    }
                 }
 
                 HStack(spacing: 12) {
@@ -169,29 +169,6 @@ struct AddMediaView: View {
                     .buttonStyle(.borderedProminent)
                     .accessibilityIdentifier("add-media-search-button")
                     .disabled(!canSearch)
-                }
-
-                if viewModel.selectedType == .book {
-                    Button {
-                        isShowingBookBarcodeScanner = true
-                    } label: {
-                        HStack(spacing: 10) {
-                            Image(systemName: "barcode.viewfinder")
-                            Text("Scan Book Barcode")
-                                .fontWeight(.semibold)
-                            Spacer(minLength: 0)
-                        }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 12)
-                    }
-                    .buttonStyle(.bordered)
-                    .accessibilityIdentifier("add-media-scan-book-barcode-button")
-                }
-
-                if !viewModel.hasSearched {
-                    Text("Results stay hidden until you run a search.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
                 }
             }
         }
@@ -265,61 +242,88 @@ struct AddMediaView: View {
     }
 
     private func resultCard(_ result: AddMediaSearchResult) -> some View {
-        Button {
-            viewModel.selectedResult = result
-            viewModel.successMessage = nil
-        } label: {
-            HStack(alignment: .top, spacing: 14) {
-                resultPoster(imageURL: result.image, mediaType: result.mediaType)
+        HStack(alignment: .top, spacing: 14) {
+            resultPoster(imageURL: result.image, mediaType: result.mediaType)
 
-                VStack(alignment: .leading, spacing: 10) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(result.title)
-                            .font(.headline.weight(.semibold))
-                            .foregroundStyle(.primary)
-                            .multilineTextAlignment(.leading)
-                            .lineLimit(3)
+            VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(result.title)
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(3)
 
-                        HStack(spacing: 8) {
-                            badge(
-                                title: MediaType(rawValue: result.mediaType)?.singularTitle ?? result.mediaType.capitalized,
-                                systemImage: MediaType(rawValue: result.mediaType)?.systemImage ?? "square.stack.fill"
-                            )
-                            badge(
-                                title: ProviderSource(rawValue: result.source)?.title ?? result.source.uppercased(),
-                                systemImage: ProviderSource(rawValue: result.source)?.systemImage ?? "globe"
-                            )
-                        }
-                    }
-
-                    Spacer(minLength: 0)
-
-                    HStack {
-                        if result.tracked {
-                            Text("Already tracked")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.secondary)
-                        } else {
-                            Text(viewModel.selectedResult?.id == result.id ? "Selected" : "Tap to select")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(viewModel.selectedResult?.id == result.id ? Color.accentColor : Color.secondary)
-                        }
-
-                        Spacer()
-
-                        Image(systemName: resultIndicator(for: result))
-                            .font(.title3.weight(.semibold))
-                            .foregroundStyle(result.tracked ? Color.secondary : (viewModel.selectedResult?.id == result.id ? Color.accentColor : Color.secondary.opacity(0.45)))
+                    HStack(spacing: 8) {
+                        badge(
+                            title: MediaType(rawValue: result.mediaType)?.singularTitle ?? result.mediaType.capitalized,
+                            systemImage: MediaType(rawValue: result.mediaType)?.systemImage ?? "square.stack.fill"
+                        )
+                        badge(
+                            title: ProviderSource(rawValue: result.source)?.title ?? result.source.uppercased(),
+                            systemImage: ProviderSource(rawValue: result.source)?.systemImage ?? "globe"
+                        )
                     }
                 }
+
+                if result.tracked {
+                    Text("Tracked")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(14)
-            .background(resultBackground(isSelected: viewModel.selectedResult?.id == result.id))
+
+            Spacer(minLength: 0)
+
+            resultActionButton(for: result)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(resultBackground(isTracked: result.tracked))
+        .accessibilityElement(children: .contain)
+    }
+
+    private func resultActionButton(for result: AddMediaSearchResult) -> some View {
+        Button {
+            pendingAddResult = result
+            viewModel.successMessage = nil
+        } label: {
+            Image(systemName: result.tracked ? "checkmark" : "plus")
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(result.tracked ? Color.secondary : Color.white)
+                .frame(width: 42, height: 42)
+                .background(
+                    Circle()
+                        .fill(result.tracked ? Color.white.opacity(0.34) : Color.accentColor)
+                )
         }
         .buttonStyle(.plain)
-        .disabled(result.tracked)
-        .accessibilityIdentifier("add-media-result-\(result.id)")
+        .disabled(result.tracked || viewModel.isCreating)
+        .accessibilityIdentifier("add-media-result-add-\(result.id)")
+        .accessibilityLabel(result.tracked ? "\(result.title) already tracked" : "Add \(result.title)")
+    }
+
+    private func successBanner(_ message: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+
+            Text(message)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color.green.opacity(0.12))
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .strokeBorder(Color.green.opacity(0.16))
+        }
+        .accessibilityIdentifier("add-media-success-message")
     }
 
     private func errorCard(_ message: String) -> some View {
@@ -364,59 +368,6 @@ struct AddMediaView: View {
         }
     }
 
-    private var bottomActionBar: some View {
-        VStack(spacing: 0) {
-            Divider()
-                .opacity(0.12)
-
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(bottomActionTitle)
-                        .font(.headline.weight(.semibold))
-                        .foregroundStyle(.primary)
-                        .accessibilityIdentifier("add-media-bottom-title")
-
-                    Text(bottomActionSubtitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .accessibilityIdentifier("add-media-bottom-subtitle")
-                }
-
-                Spacer(minLength: 0)
-
-                Button {
-                    Task {
-                        do {
-                            try await viewModel.createSelectedMedia()
-                        } catch {
-                        }
-                    }
-                } label: {
-                    HStack(spacing: 8) {
-                        if viewModel.isCreating {
-                            ProgressView()
-                                .controlSize(.small)
-                        } else {
-                            Image(systemName: "plus.circle.fill")
-                        }
-
-                        Text("Add")
-                            .fontWeight(.semibold)
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
-                }
-                .buttonStyle(.borderedProminent)
-                .accessibilityIdentifier("add-media-submit-button")
-                .disabled(createDisabled)
-            }
-            .padding(.horizontal, Theme.screenPadding)
-            .padding(.top, 12)
-            .padding(.bottom, 12)
-            .background(.ultraThinMaterial)
-        }
-    }
-
     private var emptyResultsCard: some View {
         VStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
@@ -458,83 +409,10 @@ struct AddMediaView: View {
         .regularMaterial
     }
 
-    private var introCopy: String {
-        if let successMessage = viewModel.successMessage {
-            return "\(successMessage). Search again or switch types to keep adding."
-        }
-
-        if let selectedType = viewModel.selectedType {
-            if selectedType == .book {
-                return "Search for a book, switch providers, or scan a barcode to jump straight to the right result."
-            }
-
-            return "Search for a \(selectedType.singularTitle.lowercased()) from a provider or jump to manual entry from the menu."
-        }
-
-        return "Pick a media type first. The search composer appears after that."
-    }
-
-    private var searchComposerTitle: String {
-        guard let selectedType = viewModel.selectedType else {
-            return "Search"
-        }
-
-        return "Search \(selectedType.singularTitle)"
-    }
-
-    private var searchComposerSubtitle: String {
-        let selectedSource = viewModel.selectedSource ?? searchProviders.first ?? .manual
-        return "Using \(selectedSource.title). Switch providers or choose Manual Entry from the menu."
-    }
-
     private var resultsSubtitle: String? {
         guard !viewModel.results.isEmpty else { return nil }
         let selectedSource = viewModel.selectedSource ?? searchProviders.first ?? .manual
         return "\(viewModel.results.count) result\(viewModel.results.count == 1 ? "" : "s") from \(selectedSource.title)."
-    }
-
-    private var bottomActionTitle: String {
-        if let successMessage = viewModel.successMessage, viewModel.selectedResult == nil {
-            return successMessage
-        }
-
-        guard let selectedType = viewModel.selectedType else {
-            return "Choose A Type"
-        }
-
-        if viewModel.selectedResult != nil {
-            return "Add \(selectedType.singularTitle)"
-        }
-
-        if viewModel.hasSearched {
-            return viewModel.results.isEmpty ? "No Match Yet" : "Select A Result"
-        }
-
-        return "Search \(selectedType.singularTitle)"
-    }
-
-    private var bottomActionSubtitle: String {
-        if let successMessage = viewModel.successMessage, viewModel.selectedResult == nil {
-            return successMessage
-        }
-
-        guard let selectedType = viewModel.selectedType else {
-            return "Pick a media type to unlock search."
-        }
-
-        if let selectedResult = viewModel.selectedResult {
-            return selectedResult.title
-        }
-
-        if viewModel.hasSearched {
-            if viewModel.results.isEmpty {
-                return "Try another title or switch providers from the menu."
-            }
-
-            return "Choose one \(selectedType.singularTitle.lowercased()) from the results list."
-        }
-
-        return "The default provider is ready. Run a search when you are."
     }
 
     private var searchProviders: [ProviderSource] {
@@ -545,20 +423,23 @@ struct AddMediaView: View {
         !viewModel.isSearching && !viewModel.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    private var createDisabled: Bool {
-        if viewModel.isCreating {
-            return true
-        }
-
-        return viewModel.selectedResult == nil || viewModel.selectedResult?.tracked == true
-    }
-
     private var manualSheetBinding: Binding<Bool> {
         Binding(
             get: { viewModel.isShowingManualSheet },
             set: { isPresented in
                 if !isPresented {
                     viewModel.dismissManualSheet()
+                }
+            }
+        )
+    }
+
+    private var pendingAddBinding: Binding<Bool> {
+        Binding(
+            get: { pendingAddResult != nil },
+            set: { isPresented in
+                if !isPresented {
+                    pendingAddResult = nil
                 }
             }
         )
@@ -602,21 +483,13 @@ struct AddMediaView: View {
             )
     }
 
-    private func resultBackground(isSelected: Bool) -> some View {
+    private func resultBackground(isTracked: Bool) -> some View {
         RoundedRectangle(cornerRadius: 20, style: .continuous)
-            .fill(isSelected ? Color.accentColor.opacity(0.12) : Color.white.opacity(0.34))
+            .fill(isTracked ? Color.white.opacity(0.26) : Color.white.opacity(0.34))
             .overlay {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .strokeBorder(isSelected ? Color.accentColor.opacity(0.35) : Color.white.opacity(0.16))
+                    .strokeBorder(isTracked ? Color.white.opacity(0.12) : Color.white.opacity(0.16))
             }
-    }
-
-    private func resultIndicator(for result: AddMediaSearchResult) -> String {
-        if result.tracked {
-            return "checkmark.circle"
-        }
-
-        return viewModel.selectedResult?.id == result.id ? "checkmark.circle.fill" : "circle"
     }
 
     private func resultPoster(imageURL: String?, mediaType: String, width: CGFloat = 76, height: CGFloat = 112) -> some View {
@@ -691,6 +564,16 @@ struct AddMediaView: View {
         viewModel.successMessage = nil
         Task {
             await viewModel.search()
+        }
+    }
+
+    private func confirmAdd(_ result: AddMediaSearchResult) {
+        Task {
+            do {
+                try await viewModel.createMedia(for: result)
+                pendingAddResult = nil
+            } catch {
+            }
         }
     }
 

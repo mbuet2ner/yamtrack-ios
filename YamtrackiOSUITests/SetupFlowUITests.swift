@@ -161,20 +161,18 @@ final class SetupFlowUITests: XCTestCase {
 
         app.tabBars.firstMatch.buttons["Add"].tap()
 
-        XCTAssertTrue(app.navigationBars["Add Media"].waitForExistence(timeout: 2))
         XCTAssertTrue(app.buttons["add-media-type-movie"].waitForExistence(timeout: 2))
         XCTAssertFalse(app.textFields["add-media-search-field"].exists)
         XCTAssertFalse(app.buttons["add-media-provider-menu"].exists)
         XCTAssertFalse(app.staticTexts["Results"].exists)
-        XCTAssertFalse(app.buttons["add-media-submit-button"].isEnabled)
 
         app.buttons["add-media-type-movie"].tap()
 
         XCTAssertTrue(app.textFields["add-media-search-field"].waitForExistence(timeout: 2))
         XCTAssertTrue(app.buttons["add-media-provider-menu"].exists)
         XCTAssertFalse(app.staticTexts["Results"].exists)
-        XCTAssertFalse(app.buttons["add-media-submit-button"].isEnabled)
-        XCTAssertEqual(app.staticTexts["add-media-bottom-title"].label, "Search Movie")
+        XCTAssertFalse(app.staticTexts["Search Movie"].exists)
+        XCTAssertFalse(app.staticTexts["Results stay hidden until you run a search."].exists)
     }
 
     func test_addTabChoosingManualOpensManualEntrySheet() {
@@ -211,14 +209,12 @@ final class SetupFlowUITests: XCTestCase {
         submitButton.tap()
 
         XCTAssertFalse(app.navigationBars["Manual Entry"].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.navigationBars["Add Media"].waitForExistence(timeout: 2))
-        XCTAssertEqual(app.staticTexts["add-media-bottom-subtitle"].label, "Added Codex Manual Movie")
 
         app.tabBars.firstMatch.buttons["Library"].tap()
         XCTAssertTrue(app.staticTexts["Codex Manual Movie"].waitForExistence(timeout: 5))
     }
 
-    func test_addTabProviderSearchCanSelectAndCreateResultAndStayOnAddScreen() {
+    func test_addTabProviderSearchCanCreateResultInlineAndStayOnAddScreen() {
         let app = makeFixtureApp()
 
         app.tabBars.firstMatch.buttons["Add"].tap()
@@ -229,18 +225,16 @@ final class SetupFlowUITests: XCTestCase {
         searchField.tap()
         searchField.typeText("dune\n")
 
-        let resultButton = app.buttons["add-media-result-movie-tmdb-550"]
-        XCTAssertTrue(resultButton.waitForExistence(timeout: 5))
-        resultButton.tap()
+        let addButton = app.buttons["add-media-result-add-movie-tmdb-550"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5))
+        addButton.tap()
 
-        let submitButton = app.buttons["add-media-submit-button"]
-        XCTAssertTrue(submitButton.isEnabled)
-        submitButton.tap()
+        let confirmationAlert = app.alerts.firstMatch
+        XCTAssertTrue(confirmationAlert.waitForExistence(timeout: 2))
+        confirmationAlert.buttons["Add"].tap()
 
-        XCTAssertTrue(app.navigationBars["Add Media"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["add-media-bottom-subtitle"].waitForExistence(timeout: 5))
-        XCTAssertEqual(app.staticTexts["add-media-bottom-subtitle"].label, "Added Dune")
-        XCTAssertFalse(submitButton.isEnabled)
+        XCTAssertTrue(app.staticTexts["Added Dune"].waitForExistence(timeout: 5))
+        XCTAssertFalse(addButton.isEnabled)
     }
 
     func test_addTabProviderSearchShowsTrackedResultAsDisabled() {
@@ -254,10 +248,9 @@ final class SetupFlowUITests: XCTestCase {
         searchField.tap()
         searchField.typeText("dune\n")
 
-        let resultButton = app.buttons["add-media-result-movie-tmdb-550"]
-        XCTAssertTrue(resultButton.waitForExistence(timeout: 5))
-        XCTAssertFalse(resultButton.isEnabled)
-        XCTAssertFalse(app.buttons["add-media-submit-button"].isEnabled)
+        let addButton = app.buttons["add-media-result-add-movie-tmdb-550"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5))
+        XCTAssertFalse(addButton.isEnabled)
     }
 
     func test_addTabBookSearchCreatesNonNumericProviderItemWithoutOpeningDetail() {
@@ -271,10 +264,11 @@ final class SetupFlowUITests: XCTestCase {
         searchField.tap()
         searchField.typeText("Glasperlenspiel\n")
 
-        let resultButton = app.buttons["add-media-result-book-openlibrary-OL27448W"]
-        XCTAssertTrue(resultButton.waitForExistence(timeout: 5))
-        resultButton.tap()
-        app.buttons["add-media-submit-button"].tap()
+        let addButton = app.buttons["add-media-result-add-book-openlibrary-OL27448W"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5))
+        addButton.tap()
+        XCTAssertTrue(app.alerts.firstMatch.waitForExistence(timeout: 2))
+        app.alerts.firstMatch.buttons["Add"].tap()
 
         app.tabBars.firstMatch.buttons["Library"].tap()
         let bookTitle = app.staticTexts["Das Glasperlenspiel"]
@@ -297,7 +291,6 @@ final class SetupFlowUITests: XCTestCase {
         searchField.typeText("dune\n")
 
         XCTAssertTrue(app.staticTexts["Search service offline"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.buttons["add-media-submit-button"].isEnabled)
     }
 
     func test_bookBarcodeScanAddsFixtureBookToLibrary() {
@@ -306,14 +299,13 @@ final class SetupFlowUITests: XCTestCase {
 
         openBookAddMedia(in: app)
 
-        let resultButton = app.buttons["add-media-result-book-openlibrary-OL27448W"]
-        XCTAssertTrue(resultButton.waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["add-media-submit-button"].isEnabled)
+        let addButton = app.buttons["add-media-result-add-book-openlibrary-OL27448W"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5))
+        addButton.tap()
+        XCTAssertTrue(app.alerts.firstMatch.waitForExistence(timeout: 2))
+        app.alerts.firstMatch.buttons["Add"].tap()
 
-        app.buttons["add-media-submit-button"].tap()
-
-        XCTAssertTrue(app.navigationBars["Add Media"].waitForExistence(timeout: 3))
-        XCTAssertEqual(app.staticTexts["add-media-bottom-subtitle"].label, "Added Das Glasperlenspiel")
+        XCTAssertTrue(app.staticTexts["Added Das Glasperlenspiel"].waitForExistence(timeout: 3))
 
         app.tabBars.firstMatch.buttons["Library"].tap()
         XCTAssertTrue(app.staticTexts["Das Glasperlenspiel"].waitForExistence(timeout: 3))
@@ -397,7 +389,7 @@ final class SetupFlowUITests: XCTestCase {
 
     private func openBookAddMedia(in app: XCUIApplication) {
         app.tabBars.firstMatch.buttons["Add"].tap()
-        XCTAssertTrue(app.navigationBars["Add Media"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["add-media-type-book"].waitForExistence(timeout: 2))
         app.buttons["add-media-type-book"].tap()
     }
 
