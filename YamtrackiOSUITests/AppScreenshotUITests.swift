@@ -14,7 +14,6 @@ final class AppScreenshotUITests: XCTestCase {
         saveScreenshot(named: "library", to: outputDirectory)
 
         app.tabBars.buttons["Add"].tap()
-        XCTAssertTrue(app.navigationBars["Add Media"].waitForExistence(timeout: 10))
         let movieTypeButton = app.buttons["add-media-type-movie"]
         XCTAssertTrue(movieTypeButton.waitForExistence(timeout: 10))
         movieTypeButton.tap()

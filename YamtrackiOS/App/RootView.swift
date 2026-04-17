@@ -111,8 +111,7 @@ struct RootView: View {
             }
             .scrollIndicators(.hidden)
             .background(addMediaPlaceholderBackground)
-            .navigationTitle("Add Media")
-            .navigationBarTitleDisplayMode(.inline)
+            .toolbarVisibility(.hidden, for: .navigationBar)
         }
     }
 

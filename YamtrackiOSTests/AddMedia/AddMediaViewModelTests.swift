@@ -317,7 +317,7 @@ final class AddMediaViewModelTests: XCTestCase {
         let lookupTask = Task { await sut.lookupBookBarcode("9780306406157") }
         await spy.waitUntilRequestIsStarted()
 
-        sut.selectedType = .movie
+        sut.selectType(.movie)
         spy.resume(with: .success((
             Data(#"{"pagination":{"total":1,"limit":20,"offset":0,"next":null,"previous":null},"results":[{"media_id":"123","source":"openlibrary","media_type":"book","title":"Stale Result","image":null,"tracked":false,"item_id":null}]}"#.utf8),
             makeResponse(statusCode: 200, url: URL(string: "https://demo.local/api/v1/search/book/?search=9780306406157&source=openlibrary")!)
@@ -462,6 +462,32 @@ final class AddMediaViewModelTests: XCTestCase {
         XCTAssertEqual(sut.results.count, 1)
         XCTAssertTrue(sut.results[0].tracked)
         XCTAssertEqual(sut.results[0].itemID, "movie/tmdb/42")
+        XCTAssertNil(sut.selectedResult)
+    }
+
+    func test_createMediaForResultUsesProvidedResultWithoutSelection() async throws {
+        let spy = HTTPClientSpy(result: .success((
+            Data(#"{"database_id":1,"consumption_id":null,"item":{"media_id":42,"source":"tmdb","media_type":"movie","title":"Dune","image":"https://cdn.example.com/dune.jpg","season_number":null,"episode_number":null},"item_id":"movie/tmdb/42","parent_id":null,"tracked":true,"created_at":"2026-04-11T08:00:00Z","score":null,"status":0,"progress":0,"progressed_at":null,"start_date":null,"end_date":null,"notes":null,"lists":[]}"#.utf8),
+            makeResponse(statusCode: 201, url: URL(string: "https://demo.local/api/v1/media/movie/")!)
+        )))
+        let sut = makeSUT(apiClient: APIClient(httpClient: spy))
+        let result = try makeSearchResult(
+            mediaID: "42",
+            source: "tmdb",
+            mediaType: "movie",
+            title: "Dune"
+        )
+        sut.selectType(.movie)
+        sut.results = [result]
+        sut.selectedResult = nil
+
+        try await sut.createMedia(for: result)
+
+        let body = try bodyDictionary(from: spy)
+        XCTAssertEqual(body["source"] as? String, "tmdb")
+        XCTAssertEqual(body["media_id"] as? String, "42")
+        XCTAssertEqual(sut.successMessage, "Added Dune")
+        XCTAssertTrue(sut.results[0].tracked)
         XCTAssertNil(sut.selectedResult)
     }
 }
