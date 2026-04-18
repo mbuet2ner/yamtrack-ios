@@ -217,6 +217,79 @@ final class LibraryViewModelTests: XCTestCase {
     }
 }
 
+final class MediaMetadataChipPresentationTests: XCTestCase {
+    func test_makeChipsBuildsSemanticStatusAndProgressDescriptors() {
+        let item = MediaSummary(
+            databaseID: 42,
+            consumptionID: nil,
+            item: .init(
+                mediaID: "99",
+                source: "tmdb",
+                mediaType: "movie",
+                title: "Arrival",
+                image: nil,
+                seasonNumber: nil,
+                episodeNumber: nil
+            ),
+            itemID: nil,
+            parentID: nil,
+            tracked: true,
+            createdAt: nil,
+            score: nil,
+            status: .completed,
+            progress: 1,
+            progressedAt: nil,
+            startDate: nil,
+            endDate: nil,
+            notes: nil,
+            lists: []
+        )
+
+        XCTAssertEqual(
+            MediaMetadataChipPresentation.makeChips(for: item),
+            [
+                .init(text: "Completed", systemImage: "checkmark.circle.fill", tone: .positive),
+                .init(text: "Progress 1", systemImage: "chart.bar.fill", tone: .accent)
+            ]
+        )
+    }
+
+    func test_makeChipsOmitsProgressChipWhenProgressIsMissing() {
+        let item = MediaSummary(
+            databaseID: 43,
+            consumptionID: nil,
+            item: .init(
+                mediaID: "100",
+                source: "tmdb",
+                mediaType: "tv",
+                title: "Severance",
+                image: nil,
+                seasonNumber: nil,
+                episodeNumber: nil
+            ),
+            itemID: nil,
+            parentID: nil,
+            tracked: true,
+            createdAt: nil,
+            score: nil,
+            status: .planning,
+            progress: nil,
+            progressedAt: nil,
+            startDate: nil,
+            endDate: nil,
+            notes: nil,
+            lists: []
+        )
+
+        XCTAssertEqual(
+            MediaMetadataChipPresentation.makeChips(for: item),
+            [
+                .init(text: "Planning", systemImage: "clock.fill", tone: .neutral)
+            ]
+        )
+    }
+}
+
 private func loadFixtureData(named name: String) throws -> Data {
     let bundle = Bundle(for: LibraryViewModelTests.self)
     let url = try XCTUnwrap(bundle.url(forResource: name, withExtension: "json"))

@@ -6,26 +6,18 @@ struct MediaDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 18) {
                 header
 
                 if let detail = viewModel.detail {
-                    GlassSurface {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Button {
-                                isShowingEditor = true
-                            } label: {
-                                Label(viewModel.primaryActionTitle, systemImage: "slider.horizontal.3")
-                                    .frame(maxWidth: .infinity)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .controlSize(.large)
-                            .accessibilityIdentifier("media-detail-primary-action-button")
-
+                    ContentSurface {
+                        VStack(alignment: .leading, spacing: 14) {
                             metadataRow(title: "Status", value: detail.status ?? "Unknown")
                             metadataRow(title: "Progress", value: viewModel.progressSummary ?? "Unknown")
 
                             if let overview = detail.overview, !overview.isEmpty {
+                                Divider()
+
                                 Text(overview)
                                     .foregroundStyle(.secondary)
                                     .fixedSize(horizontal: false, vertical: true)
@@ -34,8 +26,8 @@ struct MediaDetailView: View {
                     }
 
                     if let seasons = detail.seasons, !seasons.isEmpty {
-                        GlassSurface {
-                            VStack(alignment: .leading, spacing: 10) {
+                        ContentSurface {
+                            VStack(alignment: .leading, spacing: 12) {
                                 Text("Seasons")
                                     .font(.headline)
 
@@ -57,7 +49,7 @@ struct MediaDetailView: View {
                         }
                     }
                 } else if let errorMessage = viewModel.errorMessage {
-                    GlassSurface {
+                    ContentSurface {
                         VStack(alignment: .leading, spacing: 12) {
                             Label("Media Detail Error", systemImage: "exclamationmark.triangle.fill")
                                 .font(.headline)
@@ -74,7 +66,7 @@ struct MediaDetailView: View {
                                 Label("Retry", systemImage: "arrow.clockwise")
                                     .frame(maxWidth: .infinity)
                             }
-                            .buttonStyle(.borderedProminent)
+                            .buttonStyle(.glassProminent)
                             .accessibilityIdentifier("media-detail-retry-button")
                         }
                     }
@@ -86,26 +78,53 @@ struct MediaDetailView: View {
             }
             .padding(Theme.screenPadding)
         }
+        .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
         .navigationTitle(viewModel.title.isEmpty ? "Detail" : viewModel.title)
+        .navigationBarTitleDisplayMode(.inline)
         .task {
             await viewModel.load()
         }
         .sheet(isPresented: $isShowingEditor) {
             MediaDetailEditorSheet(viewModel: viewModel)
         }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                if viewModel.detail != nil {
+                    Button(viewModel.primaryActionTitle, systemImage: "slider.horizontal.3") {
+                        isShowingEditor = true
+                    }
+                    .buttonStyle(.glass)
+                    .accessibilityIdentifier("media-detail-primary-action-button")
+                }
+            }
+        }
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             Text(viewModel.title.isEmpty ? "Loading Detail" : viewModel.title)
                 .font(.largeTitle.bold())
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            if let progressSummary = viewModel.progressSummary {
-                Text(progressSummary)
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
+            HStack(spacing: 8) {
+                if let status = viewModel.detail?.trackingStatus {
+                    metadataChip(MediaMetadataChipPresentation(
+                        text: status.title,
+                        systemImage: statusChipIcon(for: status),
+                        tone: statusChipTone(for: status)
+                    ))
+                }
+
+                if let progressSummary = viewModel.progressSummary {
+                    metadataChip(
+                        MediaMetadataChipPresentation(
+                            text: progressSummary,
+                            systemImage: "chart.bar.fill",
+                            tone: .accent
+                        )
+                    )
                     .accessibilityIdentifier("media-detail-progress-summary")
+                }
             }
         }
     }
@@ -117,6 +136,43 @@ struct MediaDetailView: View {
             Spacer()
             Text(value)
                 .multilineTextAlignment(.trailing)
+        }
+    }
+
+    private func metadataChip(_ chip: MediaMetadataChipPresentation) -> some View {
+        Label(chip.text, systemImage: chip.systemImage)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(chip.foregroundColor)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Capsule(style: .continuous).fill(chip.backgroundColor))
+    }
+
+    private func statusChipIcon(for status: MediaSummary.Status) -> String {
+        switch status {
+        case .planning:
+            return "clock.fill"
+        case .inProgress:
+            return "play.circle.fill"
+        case .paused:
+            return "pause.circle.fill"
+        case .completed:
+            return "checkmark.circle.fill"
+        case .dropped:
+            return "xmark.circle.fill"
+        }
+    }
+
+    private func statusChipTone(for status: MediaSummary.Status) -> MediaMetadataChipPresentation.Tone {
+        switch status {
+        case .planning:
+            return .neutral
+        case .inProgress:
+            return .accent
+        case .paused, .dropped:
+            return .subdued
+        case .completed:
+            return .positive
         }
     }
 }

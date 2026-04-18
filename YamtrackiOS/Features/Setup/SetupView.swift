@@ -17,6 +17,12 @@ struct SetupView: View {
 
     var body: some View {
         Form {
+            Section {
+                Text("Enter your Yamtrack server and API token to reconnect this device.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Server") {
                 TextField("Server URL", text: $viewModel.baseURLString)
                     .textInputAutocapitalization(.never)
@@ -35,6 +41,7 @@ struct SetupView: View {
                         }
                     }
                 }
+                .buttonStyle(.glassProminent)
                 .disabled(viewModel.isConnecting)
             }
 
@@ -56,6 +63,7 @@ struct SetupView: View {
             }
         }
         .navigationTitle(navigationTitle)
+        .scrollContentBackground(.automatic)
         .toolbar {
             if let onDismiss, viewModel.canDisconnect {
                 ToolbarItem(placement: .cancellationAction) {
