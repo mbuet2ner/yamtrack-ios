@@ -87,6 +87,7 @@ private actor UITestLibraryFixtureState {
     private var remainingLibraryFailures: Int
     private let isLibraryAuthExpired: Bool
     private var remainingAuthenticatedLibraryLoads: Int
+    private let libraryLoadDelayMilliseconds: UInt64
 
     private let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
@@ -100,6 +101,7 @@ private actor UITestLibraryFixtureState {
         remainingLibraryFailures = configuration.libraryFailureCount
         isLibraryAuthExpired = configuration.libraryAuthExpired
         remainingAuthenticatedLibraryLoads = configuration.libraryAuthExpired ? 1 : 0
+        libraryLoadDelayMilliseconds = configuration.libraryLoadDelayMilliseconds
 
         var initialItems = [UITestTrackedMediaState.manualMovie]
         if configuration.includesTrackedDune {
@@ -115,7 +117,7 @@ private actor UITestLibraryFixtureState {
             .map { $0 + 1 } ?? 1
     }
 
-    func perform(_ request: URLRequest) throws -> (Data, URLResponse) {
+    func perform(_ request: URLRequest) async throws -> (Data, URLResponse) {
         guard let url = request.url else {
             throw URLError(.badURL)
         }
@@ -140,6 +142,9 @@ private actor UITestLibraryFixtureState {
         case ("GET", "/api/v1/info"):
             return try response(for: UITestInfoResponse(version: "dev"), url: url)
         case ("GET", "/api/v1/media"):
+            if libraryLoadDelayMilliseconds > 0 {
+                try await Task.sleep(nanoseconds: libraryLoadDelayMilliseconds * 1_000_000)
+            }
             if remainingLibraryFailures > 0 {
                 remainingLibraryFailures -= 1
                 return try errorResponse(message: "Server unreachable", statusCode: 503, url: url)
@@ -536,12 +541,23 @@ fileprivate struct UITestLibraryFixtureConfiguration {
     let searchErrorMessage: String?
     let libraryFailureCount: Int
     let libraryAuthExpired: Bool
+    let libraryLoadDelayMilliseconds: UInt64
 
     init(arguments: [String]) {
         includesTrackedDune = arguments.contains("-ui-testing-tracked-search-result")
         searchErrorMessage = arguments.contains("-ui-testing-search-error") ? "Search service offline" : nil
         libraryFailureCount = arguments.contains("-ui-testing-library-fails-once") ? 1 : 0
         libraryAuthExpired = arguments.contains("-ui-testing-library-auth-expired")
+        if let flagIndex = arguments.firstIndex(of: "-ui-testing-library-delay-ms") {
+            let valueIndex = arguments.index(after: flagIndex)
+            if arguments.indices.contains(valueIndex) {
+                libraryLoadDelayMilliseconds = UInt64(arguments[valueIndex]) ?? 0
+            } else {
+                libraryLoadDelayMilliseconds = 0
+            }
+        } else {
+            libraryLoadDelayMilliseconds = 0
+        }
     }
 }
 

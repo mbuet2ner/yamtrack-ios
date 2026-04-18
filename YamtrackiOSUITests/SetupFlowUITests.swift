@@ -166,6 +166,37 @@ final class SetupFlowUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Artwork, provider, and selection state appear here."].exists)
     }
 
+    func test_libraryAddButtonRepeatedlyOpensAddMediaTab() {
+        let app = makeFixtureApp()
+
+        let addButton = app.buttons["library-add-media-button"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5))
+
+        for _ in 0..<5 {
+            XCTAssertTrue(addButton.isHittable)
+            addButton.tap()
+
+            XCTAssertTrue(app.navigationBars["Add Media"].waitForExistence(timeout: 5))
+            XCTAssertTrue(app.textFields["add-media-search-field"].waitForExistence(timeout: 5))
+
+            app.tabBars.firstMatch.buttons["Library"].tap()
+
+            XCTAssertTrue(app.navigationBars["Library"].waitForExistence(timeout: 5))
+            XCTAssertTrue(addButton.waitForExistence(timeout: 5))
+        }
+    }
+
+    func test_libraryAddButtonRemainsHittableWhileInitialLibraryLoadIsInProgress() {
+        let app = makeFixtureApp(extraArguments: ["-ui-testing-library-delay-ms", "3000"])
+
+        let loadingIndicator = app.activityIndicators.firstMatch
+        XCTAssertTrue(loadingIndicator.waitForExistence(timeout: 5))
+
+        let addButton = app.buttons["library-add-media-button"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 2))
+        XCTAssertTrue(addButton.isHittable)
+    }
+
     func test_addTabManualEntryCanCreateNewLibraryItem() {
         let app = makeFixtureApp()
 
