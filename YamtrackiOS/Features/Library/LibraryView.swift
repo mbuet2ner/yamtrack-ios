@@ -3,16 +3,21 @@ import SwiftUI
 struct LibraryView: View {
     @Bindable var viewModel: LibraryViewModel
     let baseURLString: String
+    let sessionWarningMessage: String?
     let onOpenAdd: () -> Void
     let onOpenConnectionSettings: () -> Void
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                controlBar
+                titleSection
 
                 if let errorMessage = viewModel.errorMessage, !viewModel.items.isEmpty {
                     inlineErrorBanner(message: errorMessage)
+                }
+
+                if let sessionWarningMessage, !sessionWarningMessage.isEmpty {
+                    sessionWarningBanner(message: sessionWarningMessage)
                 }
 
                 LazyVStack(spacing: 14) {
@@ -33,11 +38,14 @@ struct LibraryView: View {
                 }
             }
             .padding(.horizontal, Theme.screenPadding)
-            .padding(.top, 12)
-            .padding(.bottom, 28)
+            .padding(.top, 90)
+            .padding(.bottom, 120)
         }
         .scrollIndicators(.hidden)
-        .background(libraryBackground)
+        .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
+        .overlay(alignment: .top) {
+            stickyChrome
+        }
         .overlay {
             if viewModel.isLoading && viewModel.items.isEmpty {
                 ProgressView()
@@ -51,12 +59,12 @@ struct LibraryView: View {
                         Button("Open Connection Settings") {
                             onOpenConnectionSettings()
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.glassProminent)
                     } else {
                         Button("Try Again") {
                             Task { await viewModel.load() }
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.glassProminent)
                     }
                 }
             } else if !viewModel.isLoading && viewModel.items.isEmpty {
@@ -68,7 +76,7 @@ struct LibraryView: View {
                     Button("Add Media") {
                         onOpenAdd()
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.glassProminent)
                 }
             }
         }
@@ -78,86 +86,61 @@ struct LibraryView: View {
         .refreshable {
             await viewModel.load()
         }
-        .navigationTitle("Library")
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbarVisibility(.hidden, for: .navigationBar)
     }
 
-    private var controlBar: some View {
-        GlassSurface {
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Button {
-                        onOpenConnectionSettings()
-                    } label: {
-                        ServerStatusPill(
-                            connectionStatus: .connected,
-                            baseURLString: baseURLString
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("server-status-pill")
-                    .accessibilityLabel(ServerStatusPill.displayLabel(for: baseURLString))
-
-                    Text("Library")
-                        .font(.title2.weight(.semibold))
-                        .foregroundStyle(.primary)
-
-                    Text("\(viewModel.items.count) tracked")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+    private var stickyChrome: some View {
+        GlassEffectContainer(spacing: 14) {
+            HStack(spacing: 14) {
+                Button {
+                    onOpenConnectionSettings()
+                } label: {
+                    ServerStatusPill(
+                        connectionStatus: .connected,
+                        baseURLString: baseURLString
+                    )
                 }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("server-status-pill")
+                .accessibilityLabel(ServerStatusPill.displayLabel(for: baseURLString))
 
                 Spacer(minLength: 0)
 
-                VStack(alignment: .trailing, spacing: 10) {
-                    Button {
-                        onOpenAdd()
-                    } label: {
-                        Label("Add", systemImage: "plus.circle.fill")
-                            .font(.subheadline.weight(.semibold))
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 10)
-                            .background(
-                                Capsule(style: .continuous)
-                                    .fill(Color.accentColor.opacity(0.16))
-                            )
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("library-add-media-button")
-
-                    Picker("Filter", selection: $viewModel.selectedFilter) {
-                        ForEach(MediaType.allCases) { filter in
-                            Label(filter.title, systemImage: filter.systemImage).tag(filter)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .tint(.primary)
-                }
+                LibraryFilterControl(selectedFilter: $viewModel.selectedFilter)
             }
+            .padding(.horizontal, Theme.screenPadding)
+            .padding(.top, 12)
         }
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("library-control-bar")
     }
 
-    private var libraryBackground: some View {
-        LinearGradient(
-            colors: [
-                Color(.systemBackground),
-                Color(red: 0.96, green: 0.95, blue: 0.93),
-                Color(.secondarySystemBackground).opacity(0.55),
-                Color(.systemBackground)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .ignoresSafeArea()
+    private var titleSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Library")
+                    .font(.largeTitle.weight(.bold))
+                    .foregroundStyle(.primary)
+
+                Text("\(viewModel.items.count) tracked")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 
     private func inlineErrorBanner(message: String) -> some View {
-        GlassSurface {
+        ContentSurface {
             Label(message, systemImage: "exclamationmark.triangle.fill")
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(.red)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func sessionWarningBanner(message: String) -> some View {
+        ContentSurface {
+            Label(message, systemImage: "exclamationmark.shield.fill")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(.orange)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -170,7 +153,7 @@ struct LibraryView: View {
         @ViewBuilder actions: () -> Actions = { EmptyView() }
     ) -> some View {
         VStack {
-            GlassSurface {
+            ContentSurface {
                 VStack(spacing: 16) {
                     Image(systemName: systemImage)
                         .font(.system(size: 34, weight: .semibold))
@@ -196,45 +179,78 @@ struct LibraryView: View {
     }
 }
 
+private struct LibraryFilterControl: View {
+    @Binding var selectedFilter: MediaType
+
+    var body: some View {
+        Menu {
+            ForEach(MediaType.allCases) { filter in
+                Button {
+                    selectedFilter = filter
+                } label: {
+                    HStack {
+                        Label(filter.title, systemImage: filter.systemImage)
+                        if selectedFilter == filter {
+                            Spacer()
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: selectedFilter.systemImage)
+                    .font(.caption.weight(.semibold))
+                Text(selectedFilter.title)
+                    .font(.subheadline.weight(.semibold))
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption.weight(.bold))
+            }
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .glassEffect(.regular.interactive(), in: .capsule)
+        }
+        .accessibilityIdentifier("library-filter-control")
+    }
+}
+
 struct ServerStatusPill: View {
     let connectionStatus: ConnectionStatus
     let baseURLString: String
 
     var body: some View {
-        HStack(spacing: 8) {
-            Circle()
-                .fill(indicatorColor)
-                .frame(width: 10, height: 10)
+        let presentation = ServerStatusPresentation(
+            connectionStatus: connectionStatus,
+            baseURLString: baseURLString
+        )
 
-            Text(title)
-                .font(.caption.weight(.semibold))
+        HStack(spacing: 8) {
+            Image(systemName: presentation.systemImage)
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(indicatorColor(for: presentation.tone))
+
+            Text(presentation.title)
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(
-            Capsule(style: .continuous)
-                .fill(backgroundColor)
-        )
-        .overlay(
-            Capsule(style: .continuous)
-                .strokeBorder(borderColor, lineWidth: 1)
-        )
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .glassEffect(glassStyle(for: presentation.tone), in: .capsule)
     }
 
-    private var title: String {
-        switch connectionStatus {
+    private func glassStyle(for tone: ServerStatusPresentation.Tone) -> Glass {
+        switch tone {
         case .connected:
-            let label = Self.displayLabel(for: baseURLString)
-            return label.isEmpty ? "Connected" : label
+            return .regular.interactive()
         case .disconnected:
-            return "Disconnected"
+            return .regular.tint(Color.red.opacity(0.10)).interactive()
         }
     }
 
-    private var indicatorColor: Color {
-        switch connectionStatus {
+    private func indicatorColor(for tone: ServerStatusPresentation.Tone) -> Color {
+        switch tone {
         case .connected:
             return Color(red: 0.20, green: 0.64, blue: 0.36)
         case .disconnected:
@@ -242,25 +258,7 @@ struct ServerStatusPill: View {
         }
     }
 
-    private var backgroundColor: Color {
-        switch connectionStatus {
-        case .connected:
-            return Color(red: 0.86, green: 0.95, blue: 0.88)
-        case .disconnected:
-            return Color.red.opacity(0.10)
-        }
-    }
-
-    private var borderColor: Color {
-        switch connectionStatus {
-        case .connected:
-            return Color(red: 0.20, green: 0.64, blue: 0.36).opacity(0.18)
-        case .disconnected:
-            return Color.red.opacity(0.14)
-        }
-    }
-
-    static func displayLabel(for baseURLString: String) -> String {
+    nonisolated static func displayLabel(for baseURLString: String) -> String {
         let trimmed = baseURLString.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return "" }
 
@@ -272,5 +270,30 @@ struct ServerStatusPill: View {
             .replacingOccurrences(of: "https://", with: "")
             .replacingOccurrences(of: "http://", with: "")
             .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    }
+}
+
+struct ServerStatusPresentation: Equatable {
+    enum Tone: Equatable {
+        case connected
+        case disconnected
+    }
+
+    let title: String
+    let systemImage: String
+    let tone: Tone
+
+    init(connectionStatus: ConnectionStatus, baseURLString: String) {
+        switch connectionStatus {
+        case .connected:
+            let label = ServerStatusPill.displayLabel(for: baseURLString)
+            title = label.isEmpty ? "Connected" : label
+            systemImage = "circle.fill"
+            tone = .connected
+        case .disconnected:
+            title = "Disconnected"
+            systemImage = "wifi.slash"
+            tone = .disconnected
+        }
     }
 }

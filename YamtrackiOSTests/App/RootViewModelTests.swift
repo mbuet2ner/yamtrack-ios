@@ -111,3 +111,47 @@ final class RootViewModelTests: XCTestCase {
         )
     }
 }
+
+final class ServerStatusPresentationTests: XCTestCase {
+    func test_connectedStateUsesDisplayHostWhenAvailable() {
+        let presentation = ServerStatusPresentation(
+            connectionStatus: .connected,
+            baseURLString: "https://demo.local:8000/api/v1/"
+        )
+
+        XCTAssertEqual(presentation.title, "demo.local")
+        XCTAssertEqual(presentation.systemImage, "circle.fill")
+        XCTAssertEqual(presentation.tone, .connected)
+    }
+
+    func test_connectedStateFallsBackWhenDisplayHostIsEmpty() {
+        let presentation = ServerStatusPresentation(
+            connectionStatus: .connected,
+            baseURLString: ""
+        )
+
+        XCTAssertEqual(presentation.title, "Connected")
+        XCTAssertEqual(presentation.tone, .connected)
+    }
+
+    func test_disconnectedStateUsesDisconnectedPresentation() {
+        let presentation = ServerStatusPresentation(
+            connectionStatus: .disconnected,
+            baseURLString: "https://demo.local"
+        )
+
+        XCTAssertEqual(presentation.title, "Disconnected")
+        XCTAssertEqual(presentation.systemImage, "wifi.slash")
+        XCTAssertEqual(presentation.tone, .disconnected)
+    }
+}
+
+final class FloatingActionPresentationTests: XCTestCase {
+    func test_addMediaUsesSubtleGlassOrbPresentation() {
+        let presentation = FloatingActionPresentation.addMedia
+
+        XCTAssertEqual(presentation.symbolName, "plus")
+        XCTAssertEqual(presentation.diameter, 48)
+        XCTAssertEqual(presentation.bottomOffset, 15)
+    }
+}

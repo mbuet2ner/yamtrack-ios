@@ -37,6 +37,7 @@ final class SessionController {
     var token = ""
     var hasPersistedSession = false
     var connectionStatus: ConnectionStatus = .disconnected
+    var sessionWarningMessage: String?
 
     init(store: SessionStoring, apiClient: APIClient) {
         self.store = store
@@ -48,6 +49,7 @@ final class SessionController {
         token = ""
         connectionStatus = .disconnected
         hasPersistedSession = false
+        sessionWarningMessage = nil
 
         guard
             let data = try? store.loadValue(for: Self.storageKey),
@@ -83,6 +85,8 @@ final class SessionController {
             throw SessionError.invalidURL
         }
 
+        sessionWarningMessage = nil
+
         do {
             _ = try await apiClient.fetchInfo(credentials: credentials)
         } catch is CancellationError {
@@ -101,13 +105,22 @@ final class SessionController {
         }
 
         let data = try JSONEncoder().encode(credentials)
-        try store.save(data, for: Self.storageKey)
-        hasPersistedSession = true
+        do {
+            try store.save(data, for: Self.storageKey)
+            hasPersistedSession = true
+        } catch let error as NSError where error.domain == NSOSStatusErrorDomain && error.code == -34018 {
+            hasPersistedSession = false
+            sessionWarningMessage = "Connected for now, but couldn't save your connection securely on this device."
+            connectionStatus = .connected
+            return
+        }
+
         connectionStatus = .connected
     }
 
     func markDisconnected() {
         connectionStatus = .disconnected
+        sessionWarningMessage = nil
     }
 
     func logout() {
@@ -116,6 +129,7 @@ final class SessionController {
         token = ""
         hasPersistedSession = false
         connectionStatus = .disconnected
+        sessionWarningMessage = nil
     }
 
     private func currentCredentials() -> SessionCredentials? {
