@@ -2,6 +2,7 @@ import SwiftUI
 
 struct MediaRowView: View {
     let item: MediaSummary
+    var onEditTracking: ((MediaMetadataChipPresentation.Kind) -> Void)?
 
     private var mediaTypeTitle: String {
         MediaType(rawValue: item.mediaType)?.title ?? item.mediaType.capitalized
@@ -50,7 +51,17 @@ struct MediaRowView: View {
 
                     VStack(alignment: .leading, spacing: 6) {
                         ForEach(MediaMetadataChipPresentation.makeChips(for: item), id: \.self) { chip in
-                            metadataChip(chip)
+                            if let onEditTracking {
+                                Button {
+                                    onEditTracking(chip.kind)
+                                } label: {
+                                    metadataChip(chip)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityIdentifier("library-card-\(chip.kind.accessibilityFragment)-button-\(item.id)")
+                            } else {
+                                metadataChip(chip)
+                            }
                         }
                     }
                 }
@@ -142,16 +153,35 @@ struct MediaRowView: View {
 }
 
 struct MediaMetadataChipPresentation: Equatable, Hashable {
+    enum Kind: Equatable, Hashable {
+        case status
+        case progress
+        case score
+
+        var accessibilityFragment: String {
+            switch self {
+            case .status:
+                return "status"
+            case .progress:
+                return "progress"
+            case .score:
+                return "score"
+            }
+        }
+    }
+
     enum Tone: Equatable, Hashable {
         case neutral
         case accent
         case positive
+        case rating
         case subdued
     }
 
     let text: String
     let systemImage: String
     let tone: Tone
+    let kind: Kind
 
     static func makeChips(for item: MediaSummary) -> [MediaMetadataChipPresentation] {
         var chips: [MediaMetadataChipPresentation] = []
@@ -160,12 +190,22 @@ struct MediaMetadataChipPresentation: Equatable, Hashable {
             chips.append(Self.statusChip(for: status))
         }
 
-        if let progressLabel = item.progressLabel {
+        if MediaType(rawValue: item.mediaType) == .movie, let scoreLabel = item.scoreLabel {
             chips.append(
                 .init(
-                    text: "Progress \(progressLabel)",
+                    text: scoreLabel,
+                    systemImage: "star.fill",
+                    tone: .rating,
+                    kind: .score
+                )
+            )
+        } else if let progressLabel = item.progressLabel {
+            chips.append(
+                .init(
+                    text: progressLabel,
                     systemImage: "chart.bar.fill",
-                    tone: .accent
+                    tone: .accent,
+                    kind: .progress
                 )
             )
         }
@@ -176,15 +216,15 @@ struct MediaMetadataChipPresentation: Equatable, Hashable {
     private static func statusChip(for status: MediaSummary.Status) -> MediaMetadataChipPresentation {
         switch status {
         case .planning:
-            return .init(text: status.title, systemImage: "clock.fill", tone: .neutral)
+            return .init(text: status.title, systemImage: status.systemImage, tone: .neutral, kind: .status)
         case .inProgress:
-            return .init(text: status.title, systemImage: "play.circle.fill", tone: .accent)
+            return .init(text: status.title, systemImage: status.systemImage, tone: .accent, kind: .status)
         case .paused:
-            return .init(text: status.title, systemImage: "pause.circle.fill", tone: .subdued)
+            return .init(text: status.title, systemImage: status.systemImage, tone: .subdued, kind: .status)
         case .completed:
-            return .init(text: status.title, systemImage: "checkmark.circle.fill", tone: .positive)
+            return .init(text: status.title, systemImage: status.systemImage, tone: .positive, kind: .status)
         case .dropped:
-            return .init(text: status.title, systemImage: "xmark.circle.fill", tone: .subdued)
+            return .init(text: status.title, systemImage: status.systemImage, tone: .subdued, kind: .status)
         }
     }
 
@@ -196,6 +236,8 @@ struct MediaMetadataChipPresentation: Equatable, Hashable {
             return Color.accentColor.opacity(0.12)
         case .positive:
             return Color.green.opacity(0.14)
+        case .rating:
+            return Color.yellow.opacity(0.16)
         case .subdued:
             return Color(.tertiarySystemBackground).opacity(0.94)
         }
@@ -209,6 +251,8 @@ struct MediaMetadataChipPresentation: Equatable, Hashable {
             return .accentColor
         case .positive:
             return Color.green
+        case .rating:
+            return Color.orange
         }
     }
 }

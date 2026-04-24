@@ -216,7 +216,27 @@ struct MediaSummary: Decodable, Equatable, Identifiable {
     }
 
     var progressLabel: String? {
-        progress.map(String.init)
+        guard let progress else { return nil }
+
+        switch MediaType(rawValue: mediaType) {
+        case .movie:
+            return nil
+        case .book:
+            return "\(progress) read"
+        case .tv, .anime:
+            return "\(progress) episodes"
+        case .manga, .comic:
+            return "\(progress) chapters"
+        case .game, .boardgame:
+            return "\(progress) played"
+        case .all, .none:
+            return String(progress)
+        }
+    }
+
+    var scoreLabel: String? {
+        guard let score else { return nil }
+        return "\(score.formatted(.number.locale(Locale(identifier: "en_US_POSIX")).precision(.fractionLength(score.truncatingRemainder(dividingBy: 1) == 0 ? 0 : 1)))) / 10"
     }
 
     enum CodingKeys: String, CodingKey {

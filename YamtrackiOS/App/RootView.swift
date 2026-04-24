@@ -4,7 +4,6 @@ struct RootView: View {
     @State private var isShowingConnectionSheet = false
     @State private var session: SessionController
     @State private var viewModel: RootViewModel
-    private let addOrbPresentation = FloatingActionPresentation.addMedia
 
     init(session: SessionController, apiClient: APIClient = .live) {
         _session = State(initialValue: session)
@@ -60,19 +59,8 @@ struct RootView: View {
     }
 
     private var appShell: some View {
-        ZStack(alignment: .bottomTrailing) {
-            NavigationStack {
-                libraryContent
-            }
-
-            if shouldShowFloatingAddOrb {
-                FloatingAddOrb {
-                    viewModel.libraryViewModel?.presentAddMedia()
-                }
-                .padding(.trailing, Theme.screenPadding + 2)
-                .padding(.bottom, addOrbPresentation.bottomOffset)
-                .ignoresSafeArea(.container, edges: .bottom)
-            }
+        NavigationStack {
+            libraryContent
         }
     }
 
@@ -92,10 +80,6 @@ struct RootView: View {
                 onOpenConnectionSettings: { isShowingConnectionSheet = true }
             )
         }
-    }
-
-    private var shouldShowFloatingAddOrb: Bool {
-        viewModel.libraryViewModel != nil && !isShowingConnectionSheet
     }
 
     private var addMediaSheetBinding: Binding<Bool> {
