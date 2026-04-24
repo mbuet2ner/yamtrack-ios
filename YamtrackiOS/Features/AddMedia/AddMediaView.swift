@@ -18,14 +18,14 @@ struct AddMediaView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    introSection
+                    if viewModel.selectedType == nil {
+                        introSection
+                    }
 
                     if viewModel.selectedType != nil {
                         if let successMessage = viewModel.successMessage {
                             successBanner(successMessage)
                         }
-
-                        searchComposer
 
                         if let errorMessage = viewModel.errorMessage {
                             errorCard(errorMessage)
@@ -41,7 +41,7 @@ struct AddMediaView: View {
                     }
                 }
                 .padding(.horizontal, Theme.screenPadding)
-                .padding(.top, showsCloseButton ? 144 : 108)
+                .padding(.top, scrollTopPadding)
                 .padding(.bottom, 36)
             }
         }
@@ -86,7 +86,7 @@ struct AddMediaView: View {
     }
 
     private var floatingHeader: some View {
-        VStack(spacing: 22) {
+        VStack(spacing: 18) {
             HStack {
                 if showsCloseButton {
                     Button("Close") {
@@ -116,8 +116,26 @@ struct AddMediaView: View {
             .padding(.horizontal, Theme.screenPadding)
 
             typePickerRow
+
+            if viewModel.selectedType != nil {
+                searchComposer
+                    .padding(.horizontal, Theme.screenPadding)
+            }
         }
         .padding(.top, 10)
+        .padding(.bottom, 14)
+        .background {
+            LinearGradient(
+                colors: [
+                    Color(uiColor: .systemGroupedBackground).opacity(0.96),
+                    Color(uiColor: .systemGroupedBackground).opacity(0.72),
+                    Color(uiColor: .systemGroupedBackground).opacity(0)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea(edges: .top)
+        }
     }
 
     private var introSection: some View {
@@ -434,6 +452,14 @@ struct AddMediaView: View {
     private var searchActionTint: Color {
         guard canSearch else { return Color.clear }
         return Color.accentColor.opacity(0.16)
+    }
+
+    private var scrollTopPadding: CGFloat {
+        if viewModel.selectedType != nil {
+            return showsCloseButton ? 318 : 282
+        }
+
+        return showsCloseButton ? 144 : 108
     }
 
     private var resultsSubtitle: String? {
