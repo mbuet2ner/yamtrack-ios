@@ -22,7 +22,8 @@ final class LibraryViewModelTests: XCTestCase {
         XCTAssertEqual(sut.items.count, 2)
         XCTAssertEqual(sut.items.first?.title, "Dune")
         XCTAssertEqual(sut.items.first?.statusLabel, "Planning")
-        XCTAssertEqual(sut.items.first?.progressLabel, "0")
+        XCTAssertNil(sut.items.first?.progressLabel)
+        XCTAssertEqual(sut.items.first?.scoreLabel, "8.5 / 10")
 
         sut.selectedFilter = .movie
 
@@ -218,7 +219,7 @@ final class LibraryViewModelTests: XCTestCase {
 }
 
 final class MediaMetadataChipPresentationTests: XCTestCase {
-    func test_makeChipsBuildsSemanticStatusAndProgressDescriptors() {
+    func test_makeChipsBuildsSemanticStatusAndScoreDescriptorsForMovies() {
         let item = MediaSummary(
             databaseID: 42,
             consumptionID: nil,
@@ -235,7 +236,7 @@ final class MediaMetadataChipPresentationTests: XCTestCase {
             parentID: nil,
             tracked: true,
             createdAt: nil,
-            score: nil,
+            score: 8.5,
             status: .completed,
             progress: 1,
             progressedAt: nil,
@@ -248,8 +249,8 @@ final class MediaMetadataChipPresentationTests: XCTestCase {
         XCTAssertEqual(
             MediaMetadataChipPresentation.makeChips(for: item),
             [
-                .init(text: "Completed", systemImage: "checkmark.circle.fill", tone: .positive),
-                .init(text: "Progress 1", systemImage: "chart.bar.fill", tone: .accent)
+                .init(text: "Completed", systemImage: "checkmark.circle.fill", tone: .positive, kind: .status),
+                .init(text: "8.5 / 10", systemImage: "star.fill", tone: .rating, kind: .score)
             ]
         )
     }
@@ -284,7 +285,7 @@ final class MediaMetadataChipPresentationTests: XCTestCase {
         XCTAssertEqual(
             MediaMetadataChipPresentation.makeChips(for: item),
             [
-                .init(text: "Planning", systemImage: "clock.fill", tone: .neutral)
+                .init(text: "Planning", systemImage: "clock.fill", tone: .neutral, kind: .status)
             ]
         )
     }

@@ -6,6 +6,7 @@ struct LibraryView: View {
     let sessionWarningMessage: String?
     let onOpenAdd: () -> Void
     let onOpenConnectionSettings: () -> Void
+    @State private var trackingEditor: LibraryTrackingEditorState?
 
     var body: some View {
         ScrollView {
@@ -23,12 +24,13 @@ struct LibraryView: View {
                 LazyVStack(spacing: 14) {
                     ForEach(viewModel.items) { item in
                         if let detailViewModel = viewModel.makeDetailViewModel(for: item) {
-                            NavigationLink {
-                                MediaDetailView(viewModel: detailViewModel)
-                            } label: {
-                                MediaRowView(item: item)
+                            MediaRowView(item: item) { _ in
+                                trackingEditor = LibraryTrackingEditorState(
+                                    id: item.id,
+                                    item: item,
+                                    viewModel: detailViewModel
+                                )
                             }
-                            .buttonStyle(.plain)
                             .accessibilityIdentifier("library-card-\(item.id)")
                         } else {
                             MediaRowView(item: item)
@@ -39,12 +41,15 @@ struct LibraryView: View {
             }
             .padding(.horizontal, Theme.screenPadding)
             .padding(.top, 90)
-            .padding(.bottom, 120)
+            .padding(.bottom, 32)
         }
         .scrollIndicators(.hidden)
         .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
         .overlay(alignment: .top) {
             stickyChrome
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            bottomChrome
         }
         .overlay {
             if viewModel.isLoading && viewModel.items.isEmpty {
@@ -86,7 +91,26 @@ struct LibraryView: View {
         .refreshable {
             await viewModel.load()
         }
+        .sheet(item: $trackingEditor) { editor in
+            TrackingEditorSheet(
+                viewModel: editor.viewModel,
+                status: editor.item.status,
+                progress: editor.item.progress,
+                score: editor.item.score,
+                notes: editor.item.notes
+            )
+        }
         .toolbarVisibility(.hidden, for: .navigationBar)
+    }
+
+    private var bottomChrome: some View {
+        BottomChrome {
+            Spacer(minLength: 0)
+
+            FloatingAddOrb {
+                onOpenAdd()
+            }
+        }
     }
 
     private var stickyChrome: some View {
@@ -177,6 +201,12 @@ struct LibraryView: View {
             .padding(.horizontal, Theme.screenPadding)
         }
     }
+}
+
+private struct LibraryTrackingEditorState: Identifiable {
+    let id: Int
+    let item: MediaSummary
+    let viewModel: MediaDetailViewModel
 }
 
 private struct LibraryFilterControl: View {

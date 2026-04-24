@@ -1,19 +1,29 @@
 import SwiftUI
 
 struct MediaDetailView: View {
+    @Environment(\.dismiss) private var dismiss
     @Bindable var viewModel: MediaDetailViewModel
     @State private var isShowingEditor = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                detailChrome
                 header
 
                 if let detail = viewModel.detail {
                     ContentSurface {
                         VStack(alignment: .leading, spacing: 14) {
-                            metadataRow(title: "Status", value: detail.status ?? "Unknown")
-                            metadataRow(title: "Progress", value: viewModel.progressSummary ?? "Unknown")
+                            trackingActionRow(
+                                title: "Status",
+                                value: detail.trackingStatus?.title ?? "Unknown",
+                                systemImage: detail.trackingStatus?.systemImage ?? "circle.dashed"
+                            )
+                            trackingActionRow(
+                                title: "Progress",
+                                value: viewModel.progressSummary ?? "Unknown",
+                                systemImage: "chart.bar.fill"
+                            )
 
                             if let overview = detail.overview, !overview.isEmpty {
                                 Divider()
@@ -85,18 +95,47 @@ struct MediaDetailView: View {
             await viewModel.load()
         }
         .sheet(isPresented: $isShowingEditor) {
-            MediaDetailEditorSheet(viewModel: viewModel)
+            TrackingEditorSheet(viewModel: viewModel)
         }
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                if viewModel.detail != nil {
-                    Button(viewModel.primaryActionTitle, systemImage: "slider.horizontal.3") {
-                        isShowingEditor = true
-                    }
-                    .buttonStyle(.glass)
-                    .accessibilityIdentifier("media-detail-primary-action-button")
-                }
+        .toolbarVisibility(.hidden, for: .navigationBar)
+    }
+
+    private var detailChrome: some View {
+        HStack {
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.title2.weight(.semibold))
+                    .frame(width: 64, height: 64)
+                    .contentShape(Circle())
             }
+            .buttonStyle(.plain)
+            .foregroundStyle(.primary)
+            .glassEffect(.regular.interactive(), in: .circle)
+            .accessibilityIdentifier("media-detail-back-button")
+
+            Spacer(minLength: 0)
+
+            Text(viewModel.title.isEmpty ? "Detail" : viewModel.title)
+                .font(.headline.weight(.semibold))
+                .lineLimit(1)
+                .frame(maxWidth: 180)
+
+            Spacer(minLength: 0)
+
+            Button {
+                isShowingEditor = true
+            } label: {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.title3.weight(.semibold))
+                    .frame(width: 64, height: 64)
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.primary)
+            .glassEffect(.regular.interactive(), in: .circle)
+            .accessibilityIdentifier("media-detail-tracking-button")
         }
     }
 
@@ -108,25 +147,59 @@ struct MediaDetailView: View {
 
             HStack(spacing: 8) {
                 if let status = viewModel.detail?.trackingStatus {
-                    metadataChip(MediaMetadataChipPresentation(
-                        text: status.title,
-                        systemImage: statusChipIcon(for: status),
-                        tone: statusChipTone(for: status)
-                    ))
+                    Button {
+                        isShowingEditor = true
+                    } label: {
+                        metadataChip(MediaMetadataChipPresentation(
+                            text: status.title,
+                            systemImage: status.systemImage,
+                            tone: statusChipTone(for: status),
+                            kind: .status
+                        ))
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 if let progressSummary = viewModel.progressSummary {
-                    metadataChip(
-                        MediaMetadataChipPresentation(
-                            text: progressSummary,
-                            systemImage: "chart.bar.fill",
-                            tone: .accent
+                    Button {
+                        isShowingEditor = true
+                    } label: {
+                        metadataChip(
+                            MediaMetadataChipPresentation(
+                                text: progressSummary,
+                                systemImage: "chart.bar.fill",
+                                tone: .accent,
+                                kind: .progress
+                            )
                         )
-                    )
+                    }
+                    .buttonStyle(.plain)
                     .accessibilityIdentifier("media-detail-progress-summary")
                 }
             }
         }
+    }
+
+    private func trackingActionRow(title: String, value: String, systemImage: String) -> some View {
+        Button {
+            isShowingEditor = true
+        } label: {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Label(title, systemImage: systemImage)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(value)
+                    .foregroundStyle(.primary)
+                    .multilineTextAlignment(.trailing)
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.tertiary)
+            }
+            .font(.title3.weight(.medium))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(title == "Progress" ? "media-detail-progress-summary" : "")
     }
 
     private func metadataRow(title: String, value: String) -> some View {
@@ -174,87 +247,5 @@ struct MediaDetailView: View {
         case .completed:
             return .positive
         }
-    }
-}
-
-private struct MediaDetailEditorSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    @Bindable var viewModel: MediaDetailViewModel
-    @State private var selectedStatus: MediaSummary.Status
-    @State private var progressText: String
-    @State private var scoreText: String
-    @State private var notes: String
-
-    init(viewModel: MediaDetailViewModel) {
-        self.viewModel = viewModel
-        _selectedStatus = State(initialValue: viewModel.detail?.trackingStatus ?? .planning)
-        _progressText = State(initialValue: viewModel.detail?.progress.map(String.init) ?? "")
-        _scoreText = State(initialValue: viewModel.detail?.score.map { String($0) } ?? "")
-        _notes = State(initialValue: viewModel.detail?.notes ?? "")
-    }
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Picker("Status", selection: $selectedStatus) {
-                    ForEach(MediaSummary.Status.allCases, id: \.self) { status in
-                        Text(status.title).tag(status)
-                    }
-                }
-
-                TextField("Progress", text: $progressText)
-                    .keyboardType(.numberPad)
-                    .accessibilityIdentifier("media-detail-progress-field")
-
-                TextField("Score", text: $scoreText)
-                    .keyboardType(.decimalPad)
-
-                TextField("Notes", text: $notes, axis: .vertical)
-                    .lineLimit(3...6)
-
-                if let saveErrorMessage = viewModel.saveErrorMessage {
-                    Text(saveErrorMessage)
-                        .font(.footnote)
-                        .foregroundStyle(.red)
-                }
-            }
-            .navigationTitle("Edit Tracking")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        Task {
-                            do {
-                                try await viewModel.saveEdits(
-                                    MediaUpdateRequest(
-                                        status: selectedStatus,
-                                        progress: Int(progressText),
-                                        score: Double(scoreText),
-                                        notes: notes.nilIfBlank
-                                    )
-                                )
-                                dismiss()
-                            } catch {
-                            }
-                        }
-                    }
-                    .disabled(viewModel.isSaving)
-                    .accessibilityIdentifier("media-detail-save-button")
-                }
-            }
-        }
-    }
-}
-
-private extension String {
-    var nilIfBlank: String? {
-        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
     }
 }

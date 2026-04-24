@@ -113,10 +113,10 @@ struct AddMediaView: View {
                         .frame(width: 92, height: 46)
                 }
             }
+            .padding(.horizontal, Theme.screenPadding)
 
             typePickerRow
         }
-        .padding(.horizontal, Theme.screenPadding)
         .padding(.top, 10)
     }
 
@@ -133,20 +133,23 @@ struct AddMediaView: View {
     }
 
     private var typePickerRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(viewModel.availableTypes) { type in
-                    selectionChip(
-                        title: type.singularTitle,
-                        systemImage: type.systemImage,
-                        isSelected: viewModel.selectedType == type,
-                        accessibilityIdentifier: "add-media-type-\(type.rawValue)"
-                    ) {
-                        viewModel.selectType(type)
+        GlassEffectContainer(spacing: 10) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(viewModel.availableTypes) { type in
+                        selectionChip(
+                            title: type.singularTitle,
+                            systemImage: type.systemImage,
+                            isSelected: viewModel.selectedType == type,
+                            accessibilityIdentifier: "add-media-type-\(type.rawValue)"
+                        ) {
+                            viewModel.selectType(type)
+                        }
                     }
                 }
+                .padding(.horizontal, Theme.screenPadding)
+                .padding(.vertical, 4)
             }
-            .padding(.vertical, 2)
         }
     }
 
@@ -154,28 +157,25 @@ struct AddMediaView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
                 Image(systemName: "magnifyingglass")
+                    .font(.title3.weight(.medium))
                     .foregroundStyle(.secondary)
 
                 TextField("Search title", text: $viewModel.query)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                     .submitLabel(.search)
-                    .font(.title3)
+                    .font(.title3.weight(.medium))
                     .accessibilityIdentifier("add-media-search-field")
                     .onSubmit {
                         performSearch()
                     }
             }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 16)
-            .background(fieldBackground, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.06))
-            }
+            .padding(.horizontal, 20)
+            .frame(height: searchChromePresentation.searchFieldHeight)
+            .glassEffect(.regular, in: .rect(cornerRadius: 28))
 
             GlassEffectContainer(spacing: 12) {
-                HStack(spacing: 12) {
+                HStack(alignment: .center, spacing: 12) {
                     providerMenu
 
                     if searchChromePresentation.showsScannerShortcut {
@@ -184,10 +184,11 @@ struct AddMediaView: View {
                         } label: {
                             Label("Scan", systemImage: "barcode.viewfinder")
                                 .font(.subheadline.weight(.semibold))
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 11)
+                                .frame(height: searchChromePresentation.controlHeight)
+                                .padding(.horizontal, 18)
                         }
-                        .buttonStyle(.glass)
+                        .buttonStyle(.plain)
+                        .glassEffect(.regular.interactive(), in: .capsule)
                         .accessibilityIdentifier("add-media-scan-book-barcode-button")
                     }
 
@@ -211,7 +212,7 @@ struct AddMediaView: View {
                         )
                     }
                     .buttonStyle(.plain)
-                    .glassEffect(.regular.tint(Color.accentColor.opacity(0.16)).interactive(), in: .circle)
+                    .glassEffect(.regular.tint(searchActionTint).interactive(), in: .circle)
                     .accessibilityIdentifier("add-media-search-button")
                     .accessibilityLabel(viewModel.isSearching ? "Searching" : "Search")
                     .disabled(!canSearch)
@@ -251,8 +252,8 @@ struct AddMediaView: View {
                     .font(.caption.weight(.bold))
             }
             .foregroundStyle(.primary)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            .frame(height: searchChromePresentation.controlHeight)
+            .padding(.horizontal, 18)
             .glassEffect(.regular.interactive(), in: .capsule)
         }
         .accessibilityIdentifier("add-media-provider-menu")
@@ -430,8 +431,9 @@ struct AddMediaView: View {
         }
     }
 
-    private var fieldBackground: some ShapeStyle {
-        Color(uiColor: .secondarySystemGroupedBackground)
+    private var searchActionTint: Color {
+        guard canSearch else { return Color.clear }
+        return Color.accentColor.opacity(0.16)
     }
 
     private var resultsSubtitle: String? {
@@ -485,8 +487,8 @@ struct AddMediaView: View {
                     .font(.subheadline.weight(.semibold))
             }
             .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
+            .frame(height: 48)
+            .padding(.horizontal, 18)
         }
         .buttonStyle(.plain)
         .glassEffect(
@@ -607,11 +609,15 @@ struct AddMediaView: View {
 struct AddMediaSearchChromePresentation: Equatable {
     let usesDetachedSearchAction: Bool
     let showsScannerShortcut: Bool
+    let searchFieldHeight: CGFloat
+    let controlHeight: CGFloat
     let searchActionDiameter: CGFloat
 
     init(selectedType: MediaType?) {
         usesDetachedSearchAction = true
         showsScannerShortcut = selectedType == .book
-        searchActionDiameter = 52
+        searchFieldHeight = 64
+        controlHeight = 56
+        searchActionDiameter = 64
     }
 }

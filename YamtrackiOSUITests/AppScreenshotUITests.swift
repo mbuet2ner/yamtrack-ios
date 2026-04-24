@@ -10,10 +10,10 @@ final class AppScreenshotUITests: XCTestCase {
         app.launchArguments = ["-ui-testing-persisted-session", "-ui-testing-library-fixture"]
         app.launch()
 
-        XCTAssertTrue(app.navigationBars["Library"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Library"].waitForExistence(timeout: 10))
         saveScreenshot(named: "library", to: outputDirectory)
 
-        app.tabBars.buttons["Add"].tap()
+        app.buttons["library-add-media-button"].tap()
         let movieTypeButton = app.buttons["add-media-type-movie"]
         XCTAssertTrue(movieTypeButton.waitForExistence(timeout: 10))
         movieTypeButton.tap()
@@ -21,10 +21,10 @@ final class AppScreenshotUITests: XCTestCase {
         XCTAssertTrue(app.buttons["add-media-provider-menu"].exists)
         saveScreenshot(named: "add-media", to: outputDirectory)
 
-        app.tabBars.buttons["Library"].tap()
-        XCTAssertTrue(app.navigationBars["Library"].waitForExistence(timeout: 10))
+        app.buttons["Close"].tap()
+        XCTAssertTrue(app.staticTexts["Library"].waitForExistence(timeout: 10))
         app.buttons["server-status-pill"].tap()
-        XCTAssertTrue(app.navigationBars["Connection"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Connection"].waitForExistence(timeout: 10))
         saveScreenshot(named: "settings", to: outputDirectory)
     }
 
