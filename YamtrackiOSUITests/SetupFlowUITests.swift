@@ -274,7 +274,7 @@ final class SetupFlowUITests: XCTestCase {
         let bookTitle = app.staticTexts["Das Glasperlenspiel"]
         XCTAssertTrue(bookTitle.waitForExistence(timeout: 5))
 
-        bookTitle.tap()
+        app.otherElements["library-card-2"].tap()
         XCTAssertFalse(app.buttons["media-detail-primary-action-button"].waitForExistence(timeout: 1))
         XCTAssertTrue(app.navigationBars["Library"].exists)
     }
@@ -327,23 +327,19 @@ final class SetupFlowUITests: XCTestCase {
         XCTAssertEqual(searchField.value as? String, isbn)
     }
 
-    func test_libraryDetailEditorCanSaveProgressChanges() {
+    func test_libraryTrackingEditorCanSaveStatusChanges() {
         let app = makeFixtureApp()
 
-        let libraryCardTitle = app.staticTexts["library-card-title-1"]
-        XCTAssertTrue(libraryCardTitle.waitForExistence(timeout: 5))
-        libraryCardTitle.tap()
+        let statusSummary = app.buttons["library-card-status-button-1"]
+        XCTAssertTrue(statusSummary.waitForExistence(timeout: 5))
+        statusSummary.tap()
 
-        let actionButton = app.buttons["media-detail-primary-action-button"]
-        XCTAssertTrue(actionButton.waitForExistence(timeout: 5))
-        actionButton.tap()
-
-        let progressField = app.textFields["media-detail-progress-field"]
-        XCTAssertTrue(progressField.waitForExistence(timeout: 2))
-        replaceText(in: progressField, with: "43")
+        let completedButton = app.buttons["media-detail-status-3-button"]
+        XCTAssertTrue(completedButton.waitForExistence(timeout: 2))
+        completedButton.tap()
         app.buttons["media-detail-save-button"].tap()
 
-        XCTAssertFalse(app.textFields["media-detail-progress-field"].waitForExistence(timeout: 2))
+        XCTAssertFalse(app.buttons["media-detail-status-3-button"].waitForExistence(timeout: 2))
     }
 
     func test_libraryLoadErrorCanRetrySuccessfully() {

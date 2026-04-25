@@ -43,5 +43,6 @@ final class RootViewModel {
             session.markDisconnected()
         }
         self.libraryViewModel = libraryViewModel
+        Task { await libraryViewModel.load() }
     }
 }

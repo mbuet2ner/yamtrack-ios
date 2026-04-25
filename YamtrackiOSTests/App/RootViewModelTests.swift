@@ -151,7 +151,15 @@ final class FloatingActionPresentationTests: XCTestCase {
         let presentation = FloatingActionPresentation.addMedia
 
         XCTAssertEqual(presentation.symbolName, "plus")
-        XCTAssertEqual(presentation.diameter, 48)
-        XCTAssertEqual(presentation.bottomOffset, 15)
+        XCTAssertEqual(presentation.diameter, 64)
+        XCTAssertEqual(presentation.hitTargetDiameter, 76)
+    }
+
+    func test_bottomChromeOwnsFloatingActionPlacement() {
+        let presentation = BottomChromePresentation.floatingAction
+
+        XCTAssertEqual(presentation.horizontalPadding, Theme.screenPadding + (FloatingActionPresentation.addMedia.diameter / 2) - 8)
+        XCTAssertEqual(presentation.bottomPadding, Theme.contentSpacing)
+        XCTAssertEqual(presentation.spacing, Theme.contentSpacing)
     }
 }

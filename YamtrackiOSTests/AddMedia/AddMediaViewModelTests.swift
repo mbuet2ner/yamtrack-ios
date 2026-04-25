@@ -496,7 +496,9 @@ final class AddMediaViewModelTests: XCTestCase {
 
         XCTAssertTrue(presentation.usesDetachedSearchAction)
         XCTAssertTrue(presentation.showsScannerShortcut)
-        XCTAssertEqual(presentation.searchActionDiameter, 52)
+        XCTAssertEqual(presentation.searchFieldHeight, 64)
+        XCTAssertEqual(presentation.controlHeight, 56)
+        XCTAssertEqual(presentation.searchActionDiameter, 64)
     }
 
     func test_searchChromeOmitsScannerForNonBooks() {
@@ -504,7 +506,9 @@ final class AddMediaViewModelTests: XCTestCase {
 
         XCTAssertTrue(presentation.usesDetachedSearchAction)
         XCTAssertFalse(presentation.showsScannerShortcut)
-        XCTAssertEqual(presentation.searchActionDiameter, 52)
+        XCTAssertEqual(presentation.searchFieldHeight, 64)
+        XCTAssertEqual(presentation.controlHeight, 56)
+        XCTAssertEqual(presentation.searchActionDiameter, 64)
     }
 }
 
