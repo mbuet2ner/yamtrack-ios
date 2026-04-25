@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/branding/png/yamtrack-mark.png" alt="Yamtrack app icon mark" width="132" />
+  <img src="yamtrack-ios-logo.png" alt="Yamtrack app icon mark" width="132" />
 </p>
 
 An (unofficial) iOS client for [Yamtrack](https://github.com/FuzzyGrim/Yamtrack) with a library-first interface for browsing, adding, and updating media.
