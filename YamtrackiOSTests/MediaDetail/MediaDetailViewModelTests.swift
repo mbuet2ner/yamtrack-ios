@@ -3,6 +3,75 @@ import XCTest
 
 @MainActor
 final class MediaDetailViewModelTests: XCTestCase {
+    func test_trackingPresentation_clampsAndFormatsProgressByMediaType() {
+        XCTAssertEqual(
+            TrackingEditorPresentation.progressMaximum(mediaType: .tv, currentProgress: 30, totalCount: 24),
+            30
+        )
+        XCTAssertEqual(
+            TrackingEditorPresentation.progressMaximum(mediaType: .book, currentProgress: 12, totalCount: nil),
+            100
+        )
+        XCTAssertEqual(
+            TrackingEditorPresentation.clampedProgress(from: 14.6, maximum: 20),
+            15
+        )
+        XCTAssertEqual(
+            TrackingEditorPresentation.clampedProgress(from: -3, maximum: 20),
+            0
+        )
+        XCTAssertEqual(
+            TrackingEditorPresentation.progressDescription(mediaType: .anime, progress: 7),
+            "7 episodes"
+        )
+    }
+
+    func test_trackingPresentation_mapsBinaryProgressFromStatus() {
+        XCTAssertEqual(
+            TrackingEditorPresentation.savedProgress(
+                mediaType: .movie,
+                status: .completed,
+                progress: 0
+            ),
+            1
+        )
+        XCTAssertEqual(
+            TrackingEditorPresentation.savedProgress(
+                mediaType: .movie,
+                status: .inProgress,
+                progress: 1
+            ),
+            0
+        )
+        XCTAssertEqual(
+            TrackingEditorPresentation.progressAfterStatusChange(
+                mediaType: .movie,
+                status: .completed,
+                currentProgress: 0
+            ),
+            1
+        )
+        XCTAssertEqual(
+            TrackingEditorPresentation.progressAfterStatusChange(
+                mediaType: .tv,
+                status: .completed,
+                currentProgress: 6
+            ),
+            6
+        )
+    }
+
+    func test_trackingPresentation_formatsAndAdjustsScore() {
+        XCTAssertEqual(TrackingEditorPresentation.scoreText(nil), "No score")
+        XCTAssertEqual(TrackingEditorPresentation.scoreText(8), "8 / 10")
+        XCTAssertEqual(TrackingEditorPresentation.scoreText(8.5), "8.5 / 10")
+        XCTAssertEqual(TrackingEditorPresentation.scoreAfterAdjustment(nil, direction: .increment), 2)
+        XCTAssertEqual(TrackingEditorPresentation.scoreAfterAdjustment(9, direction: .increment), 10)
+        XCTAssertEqual(TrackingEditorPresentation.scoreAfterAdjustment(1, direction: .decrement), nil)
+        XCTAssertEqual(TrackingEditorPresentation.scoreButtonAccessibilityValue(score: 6, buttonScore: 6), "Selected")
+        XCTAssertEqual(TrackingEditorPresentation.scoreButtonAccessibilityValue(score: 6, buttonScore: 8), "Not selected")
+    }
+
     func test_load_populatesActionFirstState() async throws {
         let spy = HTTPClientSpy(result: .success((
             try loadFixtureData(named: "media-detail-tv"),

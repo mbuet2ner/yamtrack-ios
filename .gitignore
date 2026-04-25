@@ -30,6 +30,9 @@ playground.xcworkspace
 # .swiftpm
 
 .build/
+.derived-data*/
+DerivedData/
+*.xcresult
 
 # CocoaPods
 #
@@ -63,3 +66,12 @@ fastlane/test_output
 
 .superpowers/
 .worktrees/
+docs/superpowers/plans/
+
+# Local/private files
+.DS_Store
+.env
+.env.*
+*.sqlite
+*.sqlite3
+Yamtrack/

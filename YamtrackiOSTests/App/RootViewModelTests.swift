@@ -66,6 +66,42 @@ final class RootViewModelTests: XCTestCase {
         XCTAssertNotNil(sut.libraryViewModel)
     }
 
+    func test_sessionDidChangeKeepsLibraryViewModelForSameConnectedCredentials() async throws {
+        let store = InMemorySessionStore()
+        let client = makeInfoClient()
+        let session = SessionController(store: store, apiClient: client)
+        session.baseURLString = "https://demo.local"
+        session.token = "secret"
+        let sut = RootViewModel(apiClient: client)
+
+        try await session.connect()
+        sut.sessionDidChange(using: session)
+        let originalLibraryViewModel = try XCTUnwrap(sut.libraryViewModel)
+
+        sut.sessionDidChange(using: session)
+
+        XCTAssertTrue(sut.libraryViewModel === originalLibraryViewModel)
+    }
+
+    func test_sessionDidChangeReplacesLibraryViewModelForDifferentConnectedCredentials() async throws {
+        let store = InMemorySessionStore()
+        let client = makeInfoClient()
+        let session = SessionController(store: store, apiClient: client)
+        session.baseURLString = "https://demo.local"
+        session.token = "secret"
+        let sut = RootViewModel(apiClient: client)
+
+        try await session.connect()
+        sut.sessionDidChange(using: session)
+        let originalLibraryViewModel = try XCTUnwrap(sut.libraryViewModel)
+
+        session.token = "new-secret"
+        try await session.connect()
+        sut.sessionDidChange(using: session)
+
+        XCTAssertFalse(sut.libraryViewModel === originalLibraryViewModel)
+    }
+
     func test_sessionDidChangeClearsLibraryViewModelAfterLogout() async throws {
         let store = InMemorySessionStore()
         let session = SessionController(store: store, apiClient: makeInfoClient())

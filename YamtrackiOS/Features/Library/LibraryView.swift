@@ -11,10 +11,17 @@ struct LibraryView: View {
     @State private var selectedIndexLetter = ""
 
     var body: some View {
+        let presentation = LibraryPresentation(
+            items: viewModel.items,
+            allItems: viewModel.allItems,
+            selectedFilter: viewModel.selectedFilter,
+            searchText: searchText
+        )
+
         ScrollViewReader { scrollProxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
-                    titleSection
+                    titleSection(presentation: presentation)
 
                     if let errorMessage = viewModel.errorMessage, !viewModel.items.isEmpty {
                         inlineErrorBanner(message: errorMessage)
@@ -25,35 +32,48 @@ struct LibraryView: View {
                     }
 
                     if viewModel.items.isEmpty, !viewModel.isLoading {
-                        emptyLibraryContent
-                    } else if librarySections.isEmpty {
+                        emptyLibraryContent(presentation: presentation)
+                    } else if presentation.sections.isEmpty {
                         noSearchResultsCard
                     } else {
                         LazyVStack(alignment: .leading, spacing: 16) {
-                            ForEach(librarySections) { section in
-                                librarySection(section)
+                            ForEach(presentation.sections) { section in
+                                LibrarySectionView(
+                                    section: section,
+                                    makeDetailViewModel: viewModel.makeDetailViewModel(for:),
+                                    onEdit: { item, detailViewModel in
+                                        trackingEditor = LibraryTrackingEditorState(
+                                            id: item.id,
+                                            item: item,
+                                            viewModel: detailViewModel
+                                        )
+                                    }
+                                )
                                     .id(section.id)
                             }
                         }
                     }
                 }
                 .padding(.horizontal, Theme.screenPadding)
-                .padding(.top, 90)
                 .padding(.bottom, 32)
             }
             .scrollIndicators(.hidden)
             .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
-            .overlay(alignment: .top) {
-                stickyChrome
+            .safeAreaInset(edge: .top, spacing: 0) {
+                LibraryChrome(
+                    baseURLString: baseURLString,
+                    selectedFilter: $viewModel.selectedFilter,
+                    onOpenConnectionSettings: onOpenConnectionSettings
+                )
             }
             .overlay(alignment: .trailing) {
-                if !indexLetters.isEmpty {
+                if !presentation.indexLetters.isEmpty {
                     AlphabetIndexRail(
-                        letters: alphabetIndexLetters,
-                        enabledLetters: Set(indexLetters),
+                        letters: presentation.alphabetIndexLetters,
+                        enabledLetters: Set(presentation.indexLetters),
                         selectedLetter: selectedIndexLetter
                     ) { letter in
-                        guard indexLetters.contains(letter) else { return }
+                        guard presentation.indexLetters.contains(letter) else { return }
                         selectedIndexLetter = letter
                         withAnimation(.smooth(duration: 0.22)) {
                             scrollProxy.scrollTo(letter, anchor: .top)
@@ -96,31 +116,7 @@ struct LibraryView: View {
         }
     }
 
-    private var stickyChrome: some View {
-        GlassEffectContainer(spacing: 14) {
-            HStack(spacing: 14) {
-                Button {
-                    onOpenConnectionSettings()
-                } label: {
-                    ServerStatusPill(
-                        connectionStatus: .connected,
-                        baseURLString: baseURLString
-                    )
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("server-status-pill")
-                .accessibilityLabel(ServerStatusPill.displayLabel(for: baseURLString))
-
-                Spacer(minLength: 0)
-
-                LibraryFilterControl(selectedFilter: $viewModel.selectedFilter)
-            }
-            .padding(.horizontal, Theme.screenPadding)
-            .padding(.top, 12)
-        }
-    }
-
-    private var titleSection: some View {
+    private func titleSection(presentation: LibraryPresentation) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Library")
@@ -136,13 +132,13 @@ struct LibraryView: View {
                 GlassEffectContainer(spacing: 9) {
                     HStack(spacing: 9) {
                         libraryMetricChip(
-                            title: "\(completedCount)",
+                            title: "\(presentation.completedCount)",
                             subtitle: "Done",
                             systemImage: "checkmark.circle.fill",
                             tint: .green
                         )
                         libraryMetricChip(
-                            title: "\(ratedCount)",
+                            title: "\(presentation.ratedCount)",
                             subtitle: "Rated",
                             systemImage: "star.fill",
                             tint: .orange
@@ -187,33 +183,6 @@ struct LibraryView: View {
         )
     }
 
-    private func librarySection(_ section: LibrarySection) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(section.title)
-                .font(.headline.weight(.bold))
-                .foregroundStyle(.secondary)
-                .padding(.leading, 4)
-
-            LazyVStack(spacing: 14) {
-                ForEach(section.items) { item in
-                    if let detailViewModel = viewModel.makeDetailViewModel(for: item) {
-                        MediaRowView(item: item) { _ in
-                            trackingEditor = LibraryTrackingEditorState(
-                                id: item.id,
-                                item: item,
-                                viewModel: detailViewModel
-                            )
-                        }
-                        .accessibilityIdentifier("library-card-\(item.id)")
-                    } else {
-                        MediaRowView(item: item)
-                            .accessibilityIdentifier("library-card-\(item.id)")
-                    }
-                }
-            }
-        }
-    }
-
     private var noSearchResultsCard: some View {
         ContentSurface {
             VStack(spacing: 10) {
@@ -234,7 +203,7 @@ struct LibraryView: View {
     }
 
     @ViewBuilder
-    private var emptyLibraryContent: some View {
+    private func emptyLibraryContent(presentation: LibraryPresentation) -> some View {
         if let errorMessage = viewModel.errorMessage {
             libraryStateCard(
                 title: viewModel.isAuthenticationError ? "Session Expired" : "Library Error",
@@ -255,9 +224,9 @@ struct LibraryView: View {
             }
         } else {
             libraryStateCard(
-                title: emptyLibraryTitle,
-                systemImage: emptyLibrarySystemImage,
-                description: emptyLibraryDescription
+                title: presentation.emptyLibraryTitle,
+                systemImage: presentation.emptyLibrarySystemImage,
+                description: presentation.emptyLibraryDescription
             ) {
                 Button("Add Media") {
                     onOpenAdd()
@@ -301,86 +270,6 @@ struct LibraryView: View {
         .background(Capsule(style: .continuous).fill(Color(uiColor: .secondarySystemGroupedBackground)))
     }
 
-    private var completedCount: Int {
-        viewModel.items.filter { $0.status == .completed }.count
-    }
-
-    private var ratedCount: Int {
-        viewModel.items.filter { $0.score != nil }.count
-    }
-
-    private var planningCount: Int {
-        viewModel.items.filter { $0.status == .planning }.count
-    }
-
-    private var emptyLibraryTitle: String {
-        guard viewModel.selectedFilter != .all, !viewModel.allItems.isEmpty else {
-            return "No Media Yet"
-        }
-
-        return "No \(viewModel.selectedFilter.title) Yet"
-    }
-
-    private var emptyLibrarySystemImage: String {
-        guard viewModel.selectedFilter != .all, !viewModel.allItems.isEmpty else {
-            return "square.stack"
-        }
-
-        return viewModel.selectedFilter.systemImage
-    }
-
-    private var emptyLibraryDescription: String {
-        guard viewModel.selectedFilter != .all, !viewModel.allItems.isEmpty else {
-            return "Add something to your library and it will show up here."
-        }
-
-        return "Change the filter or add a matching item to this library."
-    }
-
-    private var visibleItems: [MediaSummary] {
-        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        let filteredItems = query.isEmpty ? viewModel.items : viewModel.items.filter {
-            $0.title.localizedCaseInsensitiveContains(query)
-        }
-
-        return filteredItems.sorted {
-            $0.title.localizedStandardCompare($1.title) == .orderedAscending
-        }
-    }
-
-    private var librarySections: [LibrarySection] {
-        let grouped = Dictionary(grouping: visibleItems) { item in
-            sectionTitle(for: item.title)
-        }
-
-        return grouped.keys.sorted(by: sectionSort).map { title in
-            LibrarySection(title: title, items: grouped[title] ?? [])
-        }
-    }
-
-    private var indexLetters: [String] {
-        librarySections.map(\.title)
-    }
-
-    private var alphabetIndexLetters: [String] {
-        (65...90).compactMap { UnicodeScalar($0).map(String.init) } + ["#"]
-    }
-
-    private func sectionTitle(for title: String) -> String {
-        guard let first = title.trimmingCharacters(in: .whitespacesAndNewlines).first else {
-            return "#"
-        }
-
-        let letter = String(first).uppercased()
-        return letter.rangeOfCharacter(from: .letters) == nil ? "#" : letter
-    }
-
-    private func sectionSort(_ lhs: String, _ rhs: String) -> Bool {
-        if lhs == "#" { return false }
-        if rhs == "#" { return true }
-        return lhs < rhs
-    }
-
     @ViewBuilder
     private func libraryStateCard<Actions: View>(
         title: String,
@@ -421,11 +310,135 @@ private struct LibraryTrackingEditorState: Identifiable {
     let viewModel: MediaDetailViewModel
 }
 
-private struct LibrarySection: Identifiable {
+struct LibraryPresentation: Equatable {
+    let sections: [LibrarySection]
+    let indexLetters: [String]
+    let alphabetIndexLetters: [String]
+    let completedCount: Int
+    let ratedCount: Int
+    let emptyLibraryTitle: String
+    let emptyLibrarySystemImage: String
+    let emptyLibraryDescription: String
+
+    init(
+        items: [MediaSummary],
+        allItems: [MediaSummary],
+        selectedFilter: MediaType,
+        searchText: String
+    ) {
+        completedCount = items.filter { $0.status == .completed }.count
+        ratedCount = items.filter { $0.score != nil }.count
+        alphabetIndexLetters = (65...90).compactMap { UnicodeScalar($0).map(String.init) } + ["#"]
+
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let filteredItems = query.isEmpty ? items : items.filter {
+            $0.title.localizedCaseInsensitiveContains(query)
+        }
+        let visibleItems = filteredItems.sorted {
+            $0.title.localizedStandardCompare($1.title) == .orderedAscending
+        }
+        let grouped = Dictionary(grouping: visibleItems) { item in
+            Self.sectionTitle(for: item.title)
+        }
+
+        sections = grouped.keys.sorted(by: Self.sectionSort).map { title in
+            LibrarySection(title: title, items: grouped[title] ?? [])
+        }
+        indexLetters = sections.map(\.title)
+
+        if selectedFilter != .all, !allItems.isEmpty {
+            emptyLibraryTitle = "No \(selectedFilter.title) Yet"
+            emptyLibrarySystemImage = selectedFilter.systemImage
+            emptyLibraryDescription = "Change the filter or add a matching item to this library."
+        } else {
+            emptyLibraryTitle = "No Media Yet"
+            emptyLibrarySystemImage = "square.stack"
+            emptyLibraryDescription = "Add something to your library and it will show up here."
+        }
+    }
+
+    private static func sectionTitle(for title: String) -> String {
+        guard let first = title.trimmingCharacters(in: .whitespacesAndNewlines).first else {
+            return "#"
+        }
+
+        let letter = String(first).uppercased()
+        return letter.rangeOfCharacter(from: .letters) == nil ? "#" : letter
+    }
+
+    private static func sectionSort(_ lhs: String, _ rhs: String) -> Bool {
+        if lhs == "#" { return false }
+        if rhs == "#" { return true }
+        return lhs < rhs
+    }
+}
+
+struct LibrarySection: Equatable, Identifiable {
     let title: String
     let items: [MediaSummary]
 
     var id: String { title }
+}
+
+private struct LibraryChrome: View {
+    let baseURLString: String
+    @Binding var selectedFilter: MediaType
+    let onOpenConnectionSettings: () -> Void
+
+    var body: some View {
+        GlassEffectContainer(spacing: 14) {
+            HStack(spacing: 14) {
+                Button {
+                    onOpenConnectionSettings()
+                } label: {
+                    ServerStatusPill(
+                        connectionStatus: .connected,
+                        baseURLString: baseURLString
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("server-status-pill")
+                .accessibilityLabel(ServerStatusPill.displayLabel(for: baseURLString))
+
+                Spacer(minLength: 0)
+
+                LibraryFilterControl(selectedFilter: $selectedFilter)
+            }
+            .padding(.horizontal, Theme.screenPadding)
+            .padding(.top, 12)
+            .padding(.bottom, 10)
+        }
+        .background(.clear)
+    }
+}
+
+private struct LibrarySectionView: View {
+    let section: LibrarySection
+    let makeDetailViewModel: (MediaSummary) -> MediaDetailViewModel?
+    let onEdit: (MediaSummary, MediaDetailViewModel) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(section.title)
+                .font(.headline.weight(.bold))
+                .foregroundStyle(.secondary)
+                .padding(.leading, 4)
+
+            LazyVStack(spacing: 14) {
+                ForEach(section.items) { item in
+                    if let detailViewModel = makeDetailViewModel(item) {
+                        MediaRowView(item: item) { _ in
+                            onEdit(item, detailViewModel)
+                        }
+                        .accessibilityIdentifier("library-card-\(item.id)")
+                    } else {
+                        MediaRowView(item: item)
+                            .accessibilityIdentifier("library-card-\(item.id)")
+                    }
+                }
+            }
+        }
+    }
 }
 
 private struct AlphabetIndexRail: View {

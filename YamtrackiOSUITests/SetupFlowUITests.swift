@@ -1,17 +1,14 @@
 import XCTest
 
+@MainActor
 final class SetupFlowUITests: XCTestCase {
     func test_signedInLaunchShowsTabShell() {
         let app = makeFixtureApp()
 
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 2))
-        XCTAssertTrue(tabBar.buttons["Library"].exists)
-        XCTAssertTrue(tabBar.buttons["Add"].exists)
-        XCTAssertFalse(tabBar.buttons["Settings"].exists)
+        assertLibraryShell(in: app)
         XCTAssertTrue(app.buttons["server-status-pill"].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.otherElements["library-control-bar"].waitForExistence(timeout: 2))
-        XCTAssertFalse(app.navigationBars["Connect"].exists)
+        XCTAssertTrue(app.buttons["library-filter-control"].waitForExistence(timeout: 2))
+        XCTAssertFalse(app.staticTexts["Connect"].exists)
     }
 
     func test_invalidCredentialsShowError() {
@@ -36,20 +33,15 @@ final class SetupFlowUITests: XCTestCase {
     func test_disconnectedLaunchShowsLibraryShellAndCanOpenConnectionSheet() {
         let app = makeDisconnectedApp()
 
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
-        XCTAssertTrue(tabBar.buttons["Library"].exists)
-        XCTAssertTrue(tabBar.buttons["Add"].exists)
-        XCTAssertFalse(tabBar.buttons["Settings"].exists)
-        XCTAssertTrue(app.navigationBars["Library"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Library"].waitForExistence(timeout: 5))
         let disconnectedPill = app.buttons["server-status-pill"]
         XCTAssertTrue(disconnectedPill.waitForExistence(timeout: 5))
         XCTAssertEqual(disconnectedPill.label, "Disconnected")
 
         app.buttons["Open Connection Settings"].tap()
 
-        XCTAssertTrue(app.navigationBars["Connection"].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.buttons["Connect"].exists)
+        XCTAssertTrue(app.staticTexts["Connection"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["setup-connect-button"].exists)
     }
 
     func test_connectedLaunchConnectionSheetReconnectsAndUpdatesServerPill() {
@@ -60,18 +52,19 @@ final class SetupFlowUITests: XCTestCase {
         XCTAssertEqual(pillButton.label, "demo.local")
         pillButton.tap()
 
-        XCTAssertTrue(app.navigationBars["Connection"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["Connection"].waitForExistence(timeout: 2))
 
         let serverField = app.textFields["Server URL"]
         XCTAssertTrue(serverField.waitForExistence(timeout: 2))
         replaceText(in: serverField, with: "https://second.local")
+        app.secureTextFields["API Token"].tap()
 
-        let connectButton = app.buttons["Connect"]
+        let connectButton = app.buttons["setup-connect-button"]
         XCTAssertTrue(connectButton.isEnabled)
         connectButton.tap()
 
-        XCTAssertTrue(app.navigationBars["Library"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.navigationBars["Connection"].exists)
+        XCTAssertTrue(app.staticTexts["Library"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Connection"].exists)
         let updatedPill = app.buttons["server-status-pill"]
         XCTAssertTrue(updatedPill.waitForExistence(timeout: 5))
         XCTAssertEqual(updatedPill.label, "second.local")
@@ -85,22 +78,23 @@ final class SetupFlowUITests: XCTestCase {
         XCTAssertEqual(pillButton.label, "demo.local")
         pillButton.tap()
 
-        XCTAssertTrue(app.navigationBars["Connection"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["Connection"].waitForExistence(timeout: 2))
 
         let serverField = app.textFields["Server URL"]
         XCTAssertTrue(serverField.waitForExistence(timeout: 2))
-        replaceText(in: serverField, with: "not a url")
+        replaceText(in: serverField, with: "not-a-url")
+        app.secureTextFields["API Token"].tap()
 
-        let connectButton = app.buttons["Connect"]
+        let connectButton = app.buttons["setup-connect-button"]
         XCTAssertTrue(connectButton.isEnabled)
         connectButton.tap()
 
         XCTAssertTrue(app.staticTexts["Invalid server URL"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.navigationBars["Connection"].exists)
+        XCTAssertTrue(app.staticTexts["Connection"].exists)
 
         app.buttons["Done"].tap()
 
-        XCTAssertTrue(app.navigationBars["Library"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Library"].waitForExistence(timeout: 5))
         let unchangedPill = app.buttons["server-status-pill"]
         XCTAssertTrue(unchangedPill.waitForExistence(timeout: 5))
         XCTAssertEqual(unchangedPill.label, "demo.local")
@@ -109,16 +103,12 @@ final class SetupFlowUITests: XCTestCase {
     func test_restoredSessionWithExpiredLibraryAuthShowsDisconnectedRecoveryPill() {
         let app = makeExpiredAuthFixtureApp()
 
-        let tabBar = app.tabBars.firstMatch
-        XCTAssertTrue(tabBar.waitForExistence(timeout: 5))
-        XCTAssertTrue(tabBar.buttons["Library"].exists)
-        XCTAssertTrue(tabBar.buttons["Add"].exists)
-        XCTAssertTrue(app.navigationBars["Library"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Library"].waitForExistence(timeout: 5))
 
         let disconnectedPill = app.buttons["server-status-pill"]
         XCTAssertTrue(disconnectedPill.waitForExistence(timeout: 5))
         XCTAssertEqual(disconnectedPill.label, "demo.local")
-        XCTAssertTrue(app.otherElements["library-control-bar"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["library-filter-control"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Manual Movie"].waitForExistence(timeout: 5))
 
         refreshLibrary(in: app)
@@ -132,8 +122,8 @@ final class SetupFlowUITests: XCTestCase {
 
         reconnectButton.tap()
 
-        XCTAssertTrue(app.navigationBars["Connection"].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.buttons["Connect"].exists)
+        XCTAssertTrue(app.staticTexts["Connection"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["setup-connect-button"].exists)
     }
 
     func test_connectedLaunchConnectionSheetAllowsDisconnectBackToConnectSheet() {
@@ -143,14 +133,14 @@ final class SetupFlowUITests: XCTestCase {
         XCTAssertTrue(pillButton.waitForExistence(timeout: 2))
         pillButton.tap()
 
-        XCTAssertTrue(app.navigationBars["Connection"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["Connection"].waitForExistence(timeout: 2))
         let disconnectButton = app.buttons["Disconnect"]
         XCTAssertTrue(disconnectButton.waitForExistence(timeout: 2))
 
         disconnectButton.tap()
 
-        XCTAssertTrue(app.navigationBars["Connect"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["Connect"].exists)
+        XCTAssertTrue(app.staticTexts["Connect"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["setup-connect-button"].exists)
         XCTAssertFalse(app.buttons["Disconnect"].exists)
     }
 
@@ -159,7 +149,7 @@ final class SetupFlowUITests: XCTestCase {
         app.launchArguments = ["-ui-testing-persisted-session", "-ui-testing-library-fixture"]
         app.launch()
 
-        app.tabBars.firstMatch.buttons["Add"].tap()
+        openAddMedia(in: app)
 
         XCTAssertTrue(app.buttons["add-media-type-movie"].waitForExistence(timeout: 2))
         XCTAssertFalse(app.textFields["add-media-search-field"].exists)
@@ -178,7 +168,7 @@ final class SetupFlowUITests: XCTestCase {
     func test_addTabChoosingManualOpensManualEntrySheet() {
         let app = makeFixtureApp()
 
-        app.tabBars.firstMatch.buttons["Add"].tap()
+        openAddMedia(in: app)
         app.buttons["add-media-type-movie"].tap()
         app.buttons["add-media-provider-menu"].tap()
         let manualProviderButton = app.buttons["add-media-provider-manual"]
@@ -192,7 +182,7 @@ final class SetupFlowUITests: XCTestCase {
     func test_addTabManualEntryCanCreateNewLibraryItem() {
         let app = makeFixtureApp()
 
-        app.tabBars.firstMatch.buttons["Add"].tap()
+        openAddMedia(in: app)
         app.buttons["add-media-type-movie"].tap()
         app.buttons["add-media-provider-menu"].tap()
         let manualProviderButton = app.buttons["add-media-provider-manual"]
@@ -209,15 +199,14 @@ final class SetupFlowUITests: XCTestCase {
         submitButton.tap()
 
         XCTAssertFalse(app.navigationBars["Manual Entry"].waitForExistence(timeout: 2))
-
-        app.tabBars.firstMatch.buttons["Library"].tap()
+        assertLibraryShell(in: app)
         XCTAssertTrue(app.staticTexts["Codex Manual Movie"].waitForExistence(timeout: 5))
     }
 
-    func test_addTabProviderSearchCanCreateResultInlineAndStayOnAddScreen() {
+    func test_addTabProviderSearchCanCreateResultAndReturnToLibrary() {
         let app = makeFixtureApp()
 
-        app.tabBars.firstMatch.buttons["Add"].tap()
+        openAddMedia(in: app)
         app.buttons["add-media-type-movie"].tap()
 
         let searchField = app.textFields["add-media-search-field"]
@@ -233,14 +222,14 @@ final class SetupFlowUITests: XCTestCase {
         XCTAssertTrue(confirmationAlert.waitForExistence(timeout: 2))
         confirmationAlert.buttons["Add"].tap()
 
-        XCTAssertTrue(app.staticTexts["Added Dune"].waitForExistence(timeout: 5))
-        XCTAssertFalse(addButton.isEnabled)
+        assertLibraryShell(in: app)
+        XCTAssertTrue(app.staticTexts["Dune"].waitForExistence(timeout: 5))
     }
 
     func test_addTabProviderSearchShowsTrackedResultAsDisabled() {
         let app = makeFixtureApp(extraArguments: ["-ui-testing-tracked-search-result"])
 
-        app.tabBars.firstMatch.buttons["Add"].tap()
+        openAddMedia(in: app)
         app.buttons["add-media-type-movie"].tap()
 
         let searchField = app.textFields["add-media-search-field"]
@@ -256,7 +245,7 @@ final class SetupFlowUITests: XCTestCase {
     func test_addTabBookSearchCreatesNonNumericProviderItemWithoutOpeningDetail() {
         let app = makeFixtureApp()
 
-        app.tabBars.firstMatch.buttons["Add"].tap()
+        openAddMedia(in: app)
         app.buttons["add-media-type-book"].tap()
 
         let searchField = app.textFields["add-media-search-field"]
@@ -270,19 +259,19 @@ final class SetupFlowUITests: XCTestCase {
         XCTAssertTrue(app.alerts.firstMatch.waitForExistence(timeout: 2))
         app.alerts.firstMatch.buttons["Add"].tap()
 
-        app.tabBars.firstMatch.buttons["Library"].tap()
         let bookTitle = app.staticTexts["Das Glasperlenspiel"]
+        assertLibraryShell(in: app)
         XCTAssertTrue(bookTitle.waitForExistence(timeout: 5))
 
         app.otherElements["library-card-2"].tap()
         XCTAssertFalse(app.buttons["media-detail-primary-action-button"].waitForExistence(timeout: 1))
-        XCTAssertTrue(app.navigationBars["Library"].exists)
+        XCTAssertTrue(app.staticTexts["Library"].exists)
     }
 
     func test_addTabSearchFailureShowsErrorMessage() {
         let app = makeFixtureApp(extraArguments: ["-ui-testing-search-error"])
 
-        app.tabBars.firstMatch.buttons["Add"].tap()
+        openAddMedia(in: app)
         app.buttons["add-media-type-movie"].tap()
 
         let searchField = app.textFields["add-media-search-field"]
@@ -305,9 +294,7 @@ final class SetupFlowUITests: XCTestCase {
         XCTAssertTrue(app.alerts.firstMatch.waitForExistence(timeout: 2))
         app.alerts.firstMatch.buttons["Add"].tap()
 
-        XCTAssertTrue(app.staticTexts["Added Das Glasperlenspiel"].waitForExistence(timeout: 3))
-
-        app.tabBars.firstMatch.buttons["Library"].tap()
+        assertLibraryShell(in: app)
         XCTAssertTrue(app.staticTexts["Das Glasperlenspiel"].waitForExistence(timeout: 3))
         XCTAssertTrue(app.otherElements["library-card-2"].waitForExistence(timeout: 3))
     }
@@ -351,7 +338,8 @@ final class SetupFlowUITests: XCTestCase {
 
         retryButton.tap()
 
-        XCTAssertTrue(app.otherElements["library-control-bar"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["library-filter-control"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["library-add-media-button"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Manual Movie"].waitForExistence(timeout: 5))
     }
 
@@ -383,8 +371,21 @@ final class SetupFlowUITests: XCTestCase {
         return app
     }
 
+    private func assertLibraryShell(in app: XCUIApplication, timeout: TimeInterval = 5) {
+        XCTAssertTrue(app.staticTexts["Library"].waitForExistence(timeout: timeout))
+        XCTAssertTrue(app.buttons["server-status-pill"].waitForExistence(timeout: timeout))
+        XCTAssertTrue(app.buttons["library-add-media-button"].waitForExistence(timeout: timeout))
+    }
+
+    private func openAddMedia(in app: XCUIApplication) {
+        let addButton = app.buttons["library-add-media-button"]
+        XCTAssertTrue(addButton.waitForExistence(timeout: 5))
+        addButton.tap()
+        XCTAssertTrue(app.buttons["add-media-type-movie"].waitForExistence(timeout: 5))
+    }
+
     private func openBookAddMedia(in app: XCUIApplication) {
-        app.tabBars.firstMatch.buttons["Add"].tap()
+        openAddMedia(in: app)
         XCTAssertTrue(app.buttons["add-media-type-book"].waitForExistence(timeout: 2))
         app.buttons["add-media-type-book"].tap()
     }
@@ -398,7 +399,9 @@ final class SetupFlowUITests: XCTestCase {
         }
 
         let deleteString = String(repeating: XCUIKeyboardKey.delete.rawValue, count: currentValue.count)
-        element.typeText(deleteString + text)
+        element.typeText(deleteString)
+        element.typeText(text)
+        XCTAssertEqual(element.value as? String, text)
     }
 
     private func refreshLibrary(in app: XCUIApplication) {

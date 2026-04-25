@@ -291,10 +291,104 @@ final class MediaMetadataChipPresentationTests: XCTestCase {
     }
 }
 
+final class LibraryPresentationTests: XCTestCase {
+    func test_groupsItemsByFirstLetterWithLocalizedTitleSortAndNumberBucketLast() {
+        let presentation = LibraryPresentation(
+            items: [
+                makeMediaSummary(id: 1, title: "zebra"),
+                makeMediaSummary(id: 2, title: "Alpha"),
+                makeMediaSummary(id: 3, title: "10 Cloverfield Lane"),
+                makeMediaSummary(id: 4, title: "Alien"),
+                makeMediaSummary(id: 5, title: "Beta")
+            ],
+            allItems: [],
+            selectedFilter: .all,
+            searchText: ""
+        )
+
+        XCTAssertEqual(presentation.sections.map(\.title), ["A", "B", "Z", "#"])
+        XCTAssertEqual(presentation.sections.map { $0.items.map(\.title) }, [
+            ["Alien", "Alpha"],
+            ["Beta"],
+            ["zebra"],
+            ["10 Cloverfield Lane"]
+        ])
+        XCTAssertEqual(presentation.indexLetters, ["A", "B", "Z", "#"])
+    }
+
+    func test_filtersSectionsByCaseInsensitiveQueryAfterTrimmingWhitespace() {
+        let presentation = LibraryPresentation(
+            items: [
+                makeMediaSummary(id: 1, title: "Dune"),
+                makeMediaSummary(id: 2, title: "Twin Peaks"),
+                makeMediaSummary(id: 3, title: "Dune Messiah")
+            ],
+            allItems: [],
+            selectedFilter: .all,
+            searchText: "  dune  "
+        )
+
+        XCTAssertEqual(presentation.sections.map { $0.items.map(\.title) }, [
+            ["Dune", "Dune Messiah"]
+        ])
+    }
+
+    func test_metricsCountCompletedAndRatedVisibleItems() {
+        let presentation = LibraryPresentation(
+            items: [
+                makeMediaSummary(id: 1, title: "Done Rated", score: 8, status: .completed),
+                makeMediaSummary(id: 2, title: "Done Unrated", status: .completed),
+                makeMediaSummary(id: 3, title: "Planning Rated", score: 7, status: .planning),
+                makeMediaSummary(id: 4, title: "No Status")
+            ],
+            allItems: [],
+            selectedFilter: .all,
+            searchText: ""
+        )
+
+        XCTAssertEqual(presentation.completedCount, 2)
+        XCTAssertEqual(presentation.ratedCount, 2)
+    }
+}
+
 private func loadFixtureData(named name: String) throws -> Data {
     let bundle = Bundle(for: LibraryViewModelTests.self)
     let url = try XCTUnwrap(bundle.url(forResource: name, withExtension: "json"))
     return try Data(contentsOf: url)
+}
+
+private func makeMediaSummary(
+    id: Int,
+    title: String,
+    mediaType: String = "movie",
+    score: Double? = nil,
+    status: MediaSummary.Status? = nil
+) -> MediaSummary {
+    MediaSummary(
+        databaseID: id,
+        consumptionID: nil,
+        item: .init(
+            mediaID: String(id),
+            source: "manual",
+            mediaType: mediaType,
+            title: title,
+            image: nil,
+            seasonNumber: nil,
+            episodeNumber: nil
+        ),
+        itemID: nil,
+        parentID: nil,
+        tracked: true,
+        createdAt: nil,
+        score: score,
+        status: status,
+        progress: nil,
+        progressedAt: nil,
+        startDate: nil,
+        endDate: nil,
+        notes: nil,
+        lists: []
+    )
 }
 
 private final class SequencedHTTPClientSpy: HTTPClient {

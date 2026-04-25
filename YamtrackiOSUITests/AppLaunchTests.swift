@@ -1,13 +1,14 @@
 import XCTest
 
+@MainActor
 final class AppLaunchTests: XCTestCase {
     func test_appLaunchesIntoSetupFlowWhenNoSessionIsPersisted() {
         let app = XCUIApplication()
         app.launchArguments = ["-ui-testing-reset-session"]
         app.launch()
 
-        XCTAssertTrue(app.navigationBars["Connect"].waitForExistence(timeout: 2))
-        XCTAssertTrue(app.buttons["Connect"].exists)
+        XCTAssertTrue(app.staticTexts["Connect"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["setup-connect-button"].exists)
     }
 
     func test_fixtureBackedSessionShowsSeededLibraryCard() {
@@ -15,11 +16,9 @@ final class AppLaunchTests: XCTestCase {
         app.launchArguments = ["-ui-testing-persisted-session", "-ui-testing-library-fixture"]
         app.launch()
 
-        XCTAssertTrue(app.navigationBars["Library"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.tabBars.buttons["Library"].exists)
-        XCTAssertTrue(app.tabBars.buttons["Add"].exists)
-        XCTAssertFalse(app.tabBars.buttons["Settings"].exists)
+        XCTAssertTrue(app.staticTexts["Library"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.buttons["server-status-pill"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["library-add-media-button"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["library-card-title-1"].waitForExistence(timeout: 10))
     }
 
@@ -28,9 +27,10 @@ final class AppLaunchTests: XCTestCase {
         app.launchArguments = ["-ui-testing-persisted-session", "-ui-testing-library-fixture"]
         app.launch()
 
-        XCTAssertTrue(app.navigationBars["Library"].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.otherElements["library-control-bar"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Library"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["library-filter-control"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.buttons["server-status-pill"].exists)
+        XCTAssertTrue(app.buttons["library-add-media-button"].exists)
         XCTAssertTrue(app.staticTexts["library-card-title-1"].waitForExistence(timeout: 10))
     }
 }

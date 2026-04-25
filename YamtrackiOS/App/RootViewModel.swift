@@ -5,6 +5,7 @@ import Observation
 @Observable
 final class RootViewModel {
     private let apiClient: APIClient
+    private var libraryCredentials: SessionCredentials?
 
     var libraryViewModel: LibraryViewModel?
     var isRestoringSession = true
@@ -32,16 +33,23 @@ final class RootViewModel {
             let baseURL = URL(string: session.baseURLString)
         else {
             libraryViewModel = nil
+            libraryCredentials = nil
+            return
+        }
+
+        let credentials = SessionCredentials(baseURL: baseURL, token: session.token)
+        if libraryCredentials == credentials, libraryViewModel != nil {
             return
         }
 
         let libraryViewModel = LibraryViewModel(
             apiClient: apiClient,
-            credentials: SessionCredentials(baseURL: baseURL, token: session.token)
+            credentials: credentials
         )
         libraryViewModel.onAuthenticationFailure = {
             session.markDisconnected()
         }
+        libraryCredentials = credentials
         self.libraryViewModel = libraryViewModel
         Task { await libraryViewModel.load() }
     }
