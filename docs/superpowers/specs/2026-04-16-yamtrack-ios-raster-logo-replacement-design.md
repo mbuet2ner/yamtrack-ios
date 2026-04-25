@@ -2,7 +2,7 @@
 
 ## Summary
 
-Replace the current Yamtrack capsule-based branding assets with the new square raster mark in `docs/branding/new_logo_cropped.png`.
+Replace the current Yamtrack capsule-based branding assets with the new square raster mark in `yamtrack-ios-logo.png`.
 
 This pass intentionally treats the PNG as the canonical source asset rather than rebuilding vector sources. The same square master should drive both the shipped iOS app icon outputs and the active branding assets in `docs/branding`.
 
@@ -25,7 +25,7 @@ This pass intentionally treats the PNG as the canonical source asset rather than
 
 The source of truth for this pass is:
 
-- `docs/branding/new_logo_cropped.png`
+- `yamtrack-ios-logo.png`
 
 The file is now a square raster asset and can be resized directly for app icon outputs without additional cropping.
 
@@ -33,7 +33,7 @@ The file is now a square raster asset and can be resized directly for app icon o
 
 The project should follow the raster-first option that was approved during brainstorming:
 
-- use `new_logo_cropped.png` as the canonical shipped mark for this pass
+- use `yamtrack-ios-logo.png` as the canonical shipped mark for this pass
 - regenerate all existing iOS app icon PNGs from that square master
 - replace active branding assets under `docs/branding` so the repo reflects the new shipped logo direction
 
@@ -90,7 +90,7 @@ This keeps Xcode integration unchanged while updating the visual output.
 
 The branding folder should align with what the app ships:
 
-- `new_logo_cropped.png` becomes the current primary mark
+- `yamtrack-ios-logo.png` becomes the current primary mark
 - any regenerated PNG previews should derive from the same square source
 - the old capsule mark should stop being presented as the active brand
 
@@ -98,7 +98,7 @@ The branding folder should align with what the app ships:
 
 Required validation for this pass:
 
-- confirm `new_logo_cropped.png` remains the approved square source asset
+- confirm `yamtrack-ios-logo.png` remains the approved square source asset
 - confirm every generated app icon file matches the current required dimensions
 - inspect the 40px and 58px outputs for small-size readability
 - inspect the 87px, 120px, 180px, and marketing outputs for visual consistency
@@ -129,5 +129,5 @@ Mitigation:
 
 - The rollout should cover both the iOS app icon and the branding assets
 - The project should use the square PNG directly rather than rebuilding SVG sources now
-- No additional crop work is needed once `new_logo_cropped.png` is square
+- No additional crop work is needed because `yamtrack-ios-logo.png` is square
 - Small app-icon sizes remain readable enough to proceed with this source asset
