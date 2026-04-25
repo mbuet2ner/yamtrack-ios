@@ -7,13 +7,15 @@ struct YamtrackiOSApp: App {
 
     init() {
         let arguments = ProcessInfo.processInfo.arguments
+        let environment = ProcessInfo.processInfo.environment
         let invalidAuth = arguments.contains("-ui-testing-invalid-auth")
-        let useLibraryFixture = arguments.contains("-ui-testing-library-fixture") || arguments.contains("-ui-testing-library-auth-expired")
-        let fixtureConfiguration = UITestLibraryFixtureConfiguration(arguments: arguments)
-        let shouldUseTestStore = arguments.contains("-ui-testing-persisted-session") || arguments.contains("-ui-testing-invalid-auth") || arguments.contains("-ui-testing-reset-session") || arguments.contains("-ui-testing-library-auth-expired")
+        let useScreenshotLibraryFixture = arguments.contains("-ui-testing-screenshot-library") || environment["YAMTRACK_SCREENSHOT_LIBRARY"] == "1"
+        let useLibraryFixture = useScreenshotLibraryFixture || arguments.contains("-ui-testing-library-fixture") || arguments.contains("-ui-testing-library-auth-expired")
+        let fixtureConfiguration = UITestLibraryFixtureConfiguration(arguments: arguments, environment: environment)
+        let shouldUseTestStore = useScreenshotLibraryFixture || arguments.contains("-ui-testing-persisted-session") || arguments.contains("-ui-testing-invalid-auth") || arguments.contains("-ui-testing-reset-session") || arguments.contains("-ui-testing-library-auth-expired")
         let store: SessionStoring = shouldUseTestStore ? InMemorySessionStore() : KeychainStore(service: "com.maltepaulbuttner.yamtrackios.session", accessGroup: nil)
 
-        if arguments.contains("-ui-testing-persisted-session"),
+        if (useScreenshotLibraryFixture || arguments.contains("-ui-testing-persisted-session")),
            let testStore = store as? InMemorySessionStore {
             let credentials = SessionCredentials(
                 baseURL: URL(string: "https://demo.local")!,
@@ -103,7 +105,7 @@ private actor UITestLibraryFixtureState {
         remainingAuthenticatedLibraryLoads = configuration.libraryAuthExpired ? 1 : 0
         simulatedBookISBN = configuration.simulatedBookISBN
 
-        var initialItems = [UITestTrackedMediaState.manualMovie]
+        var initialItems = configuration.usesScreenshotLibrary ? UITestTrackedMediaState.screenshotLibrary : [UITestTrackedMediaState.manualMovie]
         if configuration.includesTrackedDune {
             initialItems.insert(.trackedDune, at: 0)
         }
@@ -516,6 +518,87 @@ private struct UITestTrackedMediaState {
         notes: nil,
         synopsis: "Tracked fixture-backed provider result for UI testing."
     )
+
+    static let screenshotLibrary: [UITestTrackedMediaState] = [
+        .init(
+            databaseID: 1,
+            mediaID: "1",
+            source: ProviderSource.tmdb.rawValue,
+            mediaType: MediaType.movie.rawValue,
+            title: "Arrival",
+            image: "https://image.tmdb.org/t/p/w342/x2FJsf1ElAgr63Y3PNPtJrcmpoe.jpg",
+            status: MediaSummary.Status.completed.rawValue,
+            progress: 1,
+            score: 9,
+            notes: nil,
+            synopsis: "A linguist works with the military to communicate with alien lifeforms."
+        ),
+        .init(
+            databaseID: 2,
+            mediaID: "2",
+            source: ProviderSource.openlibrary.rawValue,
+            mediaType: MediaType.book.rawValue,
+            title: "Dune",
+            image: "https://covers.openlibrary.org/b/id/14861790-L.jpg",
+            status: MediaSummary.Status.inProgress.rawValue,
+            progress: 182,
+            score: 8.5,
+            notes: nil,
+            synopsis: "A desert planet becomes the center of an interstellar struggle."
+        ),
+        .init(
+            databaseID: 3,
+            mediaID: "3",
+            source: ProviderSource.tmdb.rawValue,
+            mediaType: MediaType.movie.rawValue,
+            title: "The Godfather",
+            image: "https://image.tmdb.org/t/p/w342/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
+            status: MediaSummary.Status.completed.rawValue,
+            progress: 1,
+            score: 10,
+            notes: nil,
+            synopsis: "The aging patriarch of an organized crime dynasty transfers control to his son."
+        ),
+        .init(
+            databaseID: 4,
+            mediaID: "4",
+            source: ProviderSource.openlibrary.rawValue,
+            mediaType: MediaType.book.rawValue,
+            title: "The Lord of the Rings",
+            image: "https://covers.openlibrary.org/b/id/14625765-L.jpg",
+            status: MediaSummary.Status.planning.rawValue,
+            progress: 0,
+            score: nil,
+            notes: nil,
+            synopsis: "A fellowship sets out to destroy a ring of power."
+        ),
+        .init(
+            databaseID: 5,
+            mediaID: "5",
+            source: ProviderSource.tmdb.rawValue,
+            mediaType: MediaType.movie.rawValue,
+            title: "Twin Peaks",
+            image: "https://image.tmdb.org/t/p/w342/6kV0wIs7TOeWdFPaT3V4cehXn7M.jpg",
+            status: MediaSummary.Status.inProgress.rawValue,
+            progress: 12,
+            score: 9.5,
+            notes: nil,
+            synopsis: "An FBI agent investigates the murder of a homecoming queen."
+        ),
+        .init(
+            databaseID: 6,
+            mediaID: "6",
+            source: ProviderSource.tmdb.rawValue,
+            mediaType: MediaType.movie.rawValue,
+            title: "Zodiac",
+            image: "https://image.tmdb.org/t/p/w342/6YmeO4pB7XTh8P8F960O1uA14JO.jpg",
+            status: MediaSummary.Status.planning.rawValue,
+            progress: 0,
+            score: nil,
+            notes: nil,
+            synopsis: "A cartoonist becomes obsessed with tracking the Zodiac killer."
+        )
+    ]
 }
 
 private struct UITestSearchCatalogItem {
@@ -551,12 +634,14 @@ fileprivate struct UITestLibraryFixtureConfiguration {
     let libraryFailureCount: Int
     let libraryAuthExpired: Bool
     let simulatedBookISBN: String?
+    let usesScreenshotLibrary: Bool
 
-    init(arguments: [String]) {
+    init(arguments: [String], environment: [String: String] = [:]) {
         includesTrackedDune = arguments.contains("-ui-testing-tracked-search-result")
         searchErrorMessage = arguments.contains("-ui-testing-search-error") ? "Search service offline" : nil
         libraryFailureCount = arguments.contains("-ui-testing-library-fails-once") ? 1 : 0
         libraryAuthExpired = arguments.contains("-ui-testing-library-auth-expired")
+        usesScreenshotLibrary = arguments.contains("-ui-testing-screenshot-library") || environment["YAMTRACK_SCREENSHOT_LIBRARY"] == "1"
         if let index = arguments.firstIndex(of: "-ui-testing-simulated-book-isbn") {
             let valueIndex = arguments.index(after: index)
             simulatedBookISBN = valueIndex < arguments.endIndex ? arguments[valueIndex] : nil
