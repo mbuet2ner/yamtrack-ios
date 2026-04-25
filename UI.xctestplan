@@ -1,0 +1,29 @@
+{
+  "configurations" : [
+    {
+      "id" : "B68D311E-65FB-446D-AE3D-585B4F19A9F9",
+      "name" : "UI",
+      "options" : {
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:YamtrackiOS.xcodeproj",
+      "identifier" : "FFCD41908F2794A12E29F3E2",
+      "name" : "YamtrackiOS"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:YamtrackiOS.xcodeproj",
+        "identifier" : "F4559747D3E5B810283FF4E8",
+        "name" : "YamtrackiOSUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

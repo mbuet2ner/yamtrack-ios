@@ -1,7 +1,15 @@
 import XCTest
 
+@MainActor
 final class AppScreenshotUITests: XCTestCase {
+    private static let screenshotGenerationEnvironmentKey = "YAMTRACK_GENERATE_SCREENSHOTS"
+
     func test_captureAppScreenshots() throws {
+        try XCTSkipUnless(
+            Self.shouldGenerateScreenshots,
+            "Set \(Self.screenshotGenerationEnvironmentKey)=1 to regenerate docs/screenshots."
+        )
+
         let outputDirectory = screenshotOutputDirectory.path
         let fileManager = FileManager.default
         try fileManager.createDirectory(atPath: outputDirectory, withIntermediateDirectories: true)
@@ -12,6 +20,7 @@ final class AppScreenshotUITests: XCTestCase {
             "-ui-testing-library-fixture",
             "-ui-testing-screenshot-library"
         ]
+        app.launchEnvironment[Self.screenshotGenerationEnvironmentKey] = "1"
         app.launchEnvironment["YAMTRACK_SCREENSHOT_LIBRARY"] = "1"
         app.launch()
 
@@ -65,6 +74,11 @@ final class AppScreenshotUITests: XCTestCase {
 
     private func waitForVisualSettling() {
         RunLoop.current.run(until: Date().addingTimeInterval(0.6))
+    }
+
+    private static var shouldGenerateScreenshots: Bool {
+        let value = ProcessInfo.processInfo.environment[screenshotGenerationEnvironmentKey]
+        return value == "1"
     }
 
     private var screenshotOutputDirectory: URL {

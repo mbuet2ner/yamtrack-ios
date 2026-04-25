@@ -510,6 +510,16 @@ final class AddMediaViewModelTests: XCTestCase {
         XCTAssertEqual(presentation.controlHeight, 56)
         XCTAssertEqual(presentation.searchActionDiameter, 64)
     }
+
+    func test_searchChromeOwnsContentSpacingForCollapsedAndExpandedStates() {
+        let collapsed = AddMediaSearchChromePresentation(selectedType: nil)
+        let expanded = AddMediaSearchChromePresentation(selectedType: .book)
+
+        XCTAssertEqual(collapsed.contentTopSpacing, 16)
+        XCTAssertEqual(expanded.contentTopSpacing, 20)
+        XCTAssertEqual(collapsed.chromeBottomPadding, 12)
+        XCTAssertEqual(expanded.chromeBottomPadding, 16)
+    }
 }
 
 @MainActor

@@ -41,13 +41,13 @@ struct AddMediaView: View {
                     }
                 }
                 .padding(.horizontal, Theme.screenPadding)
-                .padding(.top, scrollTopPadding)
+                .padding(.top, searchChromePresentation.contentTopSpacing)
                 .padding(.bottom, 36)
             }
         }
         .scrollIndicators(.hidden)
         .presentationBackground(Color(uiColor: .systemGroupedBackground))
-        .overlay(alignment: .top) {
+        .safeAreaInset(edge: .top, spacing: 0) {
             floatingHeader
         }
         .toolbarVisibility(.hidden, for: .navigationBar)
@@ -86,55 +86,30 @@ struct AddMediaView: View {
     }
 
     private var floatingHeader: some View {
-        VStack(spacing: 18) {
-            HStack {
-                if showsCloseButton {
-                    Button("Close") {
-                        dismiss()
-                    }
-                    .font(.title3.weight(.medium))
-                    .foregroundStyle(.primary)
-                    .padding(.horizontal, 22)
-                    .padding(.vertical, 12)
-                    .glassEffect(.regular.interactive(), in: .capsule)
-                }
+        AddMediaFloatingHeader(
+            viewModel: viewModel,
+            showsCloseButton: showsCloseButton,
+            presentation: searchChromePresentation,
+            searchProviders: searchProviders,
+            canSearch: canSearch,
+            searchActionTint: searchActionTint,
+            onClose: { dismiss() },
+            onScanBarcode: { isShowingBookBarcodeScanner = true },
+            onSearch: performSearch
+        )
+    }
 
-                Spacer(minLength: 0)
-
-                Text("Add Media")
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-
-                Spacer(minLength: 0)
-
-                if showsCloseButton {
-                    Color.clear
-                        .frame(width: 92, height: 46)
+    private var resultRows: some View {
+        LazyVStack(spacing: 12) {
+            ForEach(viewModel.results) { result in
+                AddMediaResultRow(
+                    result: result,
+                    isCreating: viewModel.isCreating
+                ) {
+                    pendingAddResult = result
+                    viewModel.successMessage = nil
                 }
             }
-            .padding(.horizontal, Theme.screenPadding)
-
-            typePickerRow
-
-            if viewModel.selectedType != nil {
-                searchComposer
-                    .padding(.horizontal, Theme.screenPadding)
-            }
-        }
-        .padding(.top, 10)
-        .padding(.bottom, 14)
-        .background {
-            LinearGradient(
-                colors: [
-                    Color(uiColor: .systemGroupedBackground).opacity(0.96),
-                    Color(uiColor: .systemGroupedBackground).opacity(0.72),
-                    Color(uiColor: .systemGroupedBackground).opacity(0)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea(edges: .top)
         }
     }
 
@@ -148,133 +123,6 @@ struct AddMediaView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
-    }
-
-    private var typePickerRow: some View {
-        GlassEffectContainer(spacing: 10) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(viewModel.availableTypes) { type in
-                        selectionChip(
-                            title: type.singularTitle,
-                            systemImage: type.systemImage,
-                            isSelected: viewModel.selectedType == type,
-                            accessibilityIdentifier: "add-media-type-\(type.rawValue)"
-                        ) {
-                            viewModel.selectType(type)
-                        }
-                    }
-                }
-                .padding(.horizontal, Theme.screenPadding)
-                .padding(.vertical, 4)
-            }
-        }
-    }
-
-    private var searchComposer: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 12) {
-                Image(systemName: "magnifyingglass")
-                    .font(.title3.weight(.medium))
-                    .foregroundStyle(.secondary)
-
-                TextField("Search title", text: $viewModel.query)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .submitLabel(.search)
-                    .font(.title3.weight(.medium))
-                    .accessibilityIdentifier("add-media-search-field")
-                    .onSubmit {
-                        performSearch()
-                    }
-            }
-            .padding(.horizontal, 20)
-            .frame(height: searchChromePresentation.searchFieldHeight)
-            .glassEffect(.regular, in: .rect(cornerRadius: 28))
-
-            GlassEffectContainer(spacing: 12) {
-                HStack(alignment: .center, spacing: 12) {
-                    providerMenu
-
-                    if searchChromePresentation.showsScannerShortcut {
-                        Button {
-                            isShowingBookBarcodeScanner = true
-                        } label: {
-                            Label("Scan", systemImage: "barcode.viewfinder")
-                                .font(.subheadline.weight(.semibold))
-                                .frame(height: searchChromePresentation.controlHeight)
-                                .padding(.horizontal, 18)
-                        }
-                        .buttonStyle(.plain)
-                        .glassEffect(.regular.interactive(), in: .capsule)
-                        .accessibilityIdentifier("add-media-scan-book-barcode-button")
-                    }
-
-                    Spacer(minLength: 0)
-
-                    Button {
-                        performSearch()
-                    } label: {
-                        Group {
-                            if viewModel.isSearching {
-                                ProgressView()
-                                    .controlSize(.small)
-                            } else {
-                                Image(systemName: "magnifyingglass")
-                                    .font(.headline.weight(.semibold))
-                            }
-                        }
-                        .frame(
-                            width: searchChromePresentation.searchActionDiameter,
-                            height: searchChromePresentation.searchActionDiameter
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .glassEffect(.regular.tint(searchActionTint).interactive(), in: .circle)
-                    .accessibilityIdentifier("add-media-search-button")
-                    .accessibilityLabel(viewModel.isSearching ? "Searching" : "Search")
-                    .disabled(!canSearch)
-                }
-            }
-        }
-    }
-
-    private var providerMenu: some View {
-        let selectedSource = viewModel.selectedSource ?? searchProviders.first ?? .manual
-
-        return Menu {
-            ForEach(searchProviders) { source in
-                Button {
-                    viewModel.selectSource(source)
-                } label: {
-                    Label(source.title, systemImage: source.systemImage)
-                }
-                .accessibilityIdentifier("add-media-provider-\(source.rawValue)")
-            }
-
-            Divider()
-
-            Button {
-                viewModel.selectSource(.manual)
-            } label: {
-                Label("Manual Entry", systemImage: ProviderSource.manual.systemImage)
-            }
-            .accessibilityIdentifier("add-media-provider-manual")
-        } label: {
-            HStack(spacing: 8) {
-                Image(systemName: selectedSource.systemImage)
-                    .font(.caption.weight(.semibold))
-                Text(selectedSource.title)
-                    .font(.subheadline.weight(.semibold))
-                Image(systemName: "chevron.down")
-                    .font(.caption.weight(.bold))
-            }
-            .foregroundStyle(.primary)
-            .frame(height: searchChromePresentation.controlHeight)
-            .padding(.horizontal, 18)
-            .glassEffect(.regular.interactive(), in: .capsule)
-        }
-        .accessibilityIdentifier("add-media-provider-menu")
     }
 
     private var resultsSection: some View {
@@ -294,74 +142,9 @@ struct AddMediaView: View {
             if viewModel.results.isEmpty {
                 emptyResultsCard
             } else {
-                LazyVStack(spacing: 12) {
-                    ForEach(viewModel.results) { result in
-                        resultCard(result)
-                    }
-                }
+                resultRows
             }
         }
-    }
-
-    private func resultCard(_ result: AddMediaSearchResult) -> some View {
-        HStack(alignment: .top, spacing: 14) {
-            resultPoster(imageURL: result.image, mediaType: result.mediaType)
-
-            VStack(alignment: .leading, spacing: 10) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(result.title)
-                        .font(.headline.weight(.semibold))
-                        .foregroundStyle(.primary)
-                        .multilineTextAlignment(.leading)
-                        .lineLimit(3)
-
-                    HStack(spacing: 8) {
-                        badge(
-                            title: MediaType(rawValue: result.mediaType)?.singularTitle ?? result.mediaType.capitalized,
-                            systemImage: MediaType(rawValue: result.mediaType)?.systemImage ?? "square.stack.fill"
-                        )
-                        badge(
-                            title: ProviderSource(rawValue: result.source)?.title ?? result.source.uppercased(),
-                            systemImage: ProviderSource(rawValue: result.source)?.systemImage ?? "globe"
-                        )
-                    }
-                }
-
-                if result.tracked {
-                    Text("Tracked")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            Spacer(minLength: 0)
-
-            resultActionButton(for: result)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(resultBackground(isTracked: result.tracked))
-        .accessibilityElement(children: .contain)
-    }
-
-    private func resultActionButton(for result: AddMediaSearchResult) -> some View {
-        Button {
-            pendingAddResult = result
-            viewModel.successMessage = nil
-        } label: {
-            Image(systemName: result.tracked ? "checkmark" : "plus")
-                .font(.headline.weight(.semibold))
-                .foregroundStyle(result.tracked ? Color.secondary : Color.accentColor)
-                .frame(width: 42, height: 42)
-        }
-        .buttonStyle(.plain)
-        .glassEffect(
-            result.tracked ? .regular : .regular.tint(Color.accentColor.opacity(0.18)).interactive(),
-            in: .circle
-        )
-        .disabled(result.tracked || viewModel.isCreating)
-        .accessibilityIdentifier("add-media-result-add-\(result.id)")
-        .accessibilityLabel(result.tracked ? "\(result.title) already tracked" : "Add \(result.title)")
     }
 
     private func successBanner(_ message: String) -> some View {
@@ -454,14 +237,6 @@ struct AddMediaView: View {
         return Color.accentColor.opacity(0.16)
     }
 
-    private var scrollTopPadding: CGFloat {
-        if viewModel.selectedType != nil {
-            return showsCloseButton ? 318 : 282
-        }
-
-        return showsCloseButton ? 144 : 108
-    }
-
     private var resultsSubtitle: String? {
         guard !viewModel.results.isEmpty else { return nil }
         let selectedSource = viewModel.selectedSource ?? searchProviders.first ?? .manual
@@ -498,6 +273,126 @@ struct AddMediaView: View {
         )
     }
 
+    private func performSearch() {
+        guard canSearch else { return }
+        viewModel.successMessage = nil
+        Task {
+            await viewModel.search()
+        }
+    }
+
+    private func confirmAdd(_ result: AddMediaSearchResult) {
+        Task {
+            do {
+                try await viewModel.createMedia(for: result)
+                pendingAddResult = nil
+            } catch {
+            }
+        }
+    }
+
+    private func triggerUITestBarcodeLookupIfNeeded() {
+        guard !didTriggerUITestBarcodeLookup else { return }
+        guard viewModel.selectedType == .book else { return }
+        guard let simulatedISBN = ProcessInfo.processInfo.value(after: "-ui-testing-simulated-book-isbn") else {
+            return
+        }
+
+        didTriggerUITestBarcodeLookup = true
+        Task {
+            await viewModel.lookupBookBarcode(simulatedISBN)
+        }
+    }
+}
+
+private struct AddMediaFloatingHeader: View {
+    @Bindable var viewModel: AddMediaViewModel
+    let showsCloseButton: Bool
+    let presentation: AddMediaSearchChromePresentation
+    let searchProviders: [ProviderSource]
+    let canSearch: Bool
+    let searchActionTint: Color
+    let onClose: () -> Void
+    let onScanBarcode: () -> Void
+    let onSearch: () -> Void
+
+    var body: some View {
+        VStack(spacing: 18) {
+            titleRow
+            typePickerRow
+
+            if viewModel.selectedType != nil {
+                AddMediaSearchComposer(
+                    viewModel: viewModel,
+                    presentation: presentation,
+                    searchProviders: searchProviders,
+                    canSearch: canSearch,
+                    searchActionTint: searchActionTint,
+                    onScanBarcode: onScanBarcode,
+                    onSearch: onSearch
+                )
+                .padding(.horizontal, Theme.screenPadding)
+            }
+        }
+        .padding(.top, 10)
+        .padding(.bottom, presentation.chromeBottomPadding)
+        .background {
+            LinearGradient(
+                colors: [
+                    Color(uiColor: .systemGroupedBackground).opacity(0.96),
+                    Color(uiColor: .systemGroupedBackground).opacity(0.72),
+                    Color(uiColor: .systemGroupedBackground).opacity(0)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea(edges: .top)
+        }
+    }
+
+    private var titleRow: some View {
+        ZStack {
+            Text("Add Media")
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity)
+
+            HStack {
+                if showsCloseButton {
+                    Button("Close", action: onClose)
+                        .font(.title3.weight(.medium))
+                        .foregroundStyle(.primary)
+                        .buttonStyle(.glass)
+                }
+
+                Spacer(minLength: 0)
+            }
+        }
+        .padding(.horizontal, Theme.screenPadding)
+    }
+
+    private var typePickerRow: some View {
+        GlassEffectContainer(spacing: 10) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(viewModel.availableTypes) { type in
+                        selectionChip(
+                            title: type.singularTitle,
+                            systemImage: type.systemImage,
+                            isSelected: viewModel.selectedType == type,
+                            accessibilityIdentifier: "add-media-type-\(type.rawValue)"
+                        ) {
+                            viewModel.selectType(type)
+                        }
+                    }
+                }
+                .padding(.horizontal, Theme.screenPadding)
+                .padding(.vertical, 4)
+            }
+        }
+    }
+
     private func selectionChip(
         title: String,
         systemImage: String,
@@ -522,6 +417,186 @@ struct AddMediaView: View {
             in: .capsule
         )
         .accessibilityIdentifier(accessibilityIdentifier)
+    }
+}
+
+private struct AddMediaSearchComposer: View {
+    @Bindable var viewModel: AddMediaViewModel
+    let presentation: AddMediaSearchChromePresentation
+    let searchProviders: [ProviderSource]
+    let canSearch: Bool
+    let searchActionTint: Color
+    let onScanBarcode: () -> Void
+    let onSearch: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            searchField
+
+            GlassEffectContainer(spacing: 12) {
+                HStack(alignment: .center, spacing: 12) {
+                    providerMenu
+
+                    if presentation.showsScannerShortcut {
+                        Button(action: onScanBarcode) {
+                            Label("Scan", systemImage: "barcode.viewfinder")
+                                .font(.subheadline.weight(.semibold))
+                                .frame(height: presentation.controlHeight)
+                        }
+                        .buttonStyle(.glass)
+                        .accessibilityIdentifier("add-media-scan-book-barcode-button")
+                    }
+
+                    Spacer(minLength: 0)
+
+                    Button(action: onSearch) {
+                        Group {
+                            if viewModel.isSearching {
+                                ProgressView()
+                                    .controlSize(.small)
+                            } else {
+                                Image(systemName: "magnifyingglass")
+                                    .font(.headline.weight(.semibold))
+                            }
+                        }
+                        .frame(
+                            width: presentation.searchActionDiameter,
+                            height: presentation.searchActionDiameter
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .glassEffect(.regular.tint(searchActionTint).interactive(), in: .circle)
+                    .accessibilityIdentifier("add-media-search-button")
+                    .accessibilityLabel(viewModel.isSearching ? "Searching" : "Search")
+                    .disabled(!canSearch)
+                }
+            }
+        }
+    }
+
+    private var searchField: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "magnifyingglass")
+                .font(.title3.weight(.medium))
+                .foregroundStyle(.secondary)
+
+            TextField("Search title", text: $viewModel.query)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .submitLabel(.search)
+                .font(.title3.weight(.medium))
+                .accessibilityIdentifier("add-media-search-field")
+                .onSubmit(performSearch)
+        }
+        .padding(.horizontal, 20)
+        .frame(height: presentation.searchFieldHeight)
+        .glassEffect(.regular, in: .rect(cornerRadius: 28))
+    }
+
+    private var providerMenu: some View {
+        let selectedSource = viewModel.selectedSource ?? searchProviders.first ?? .manual
+
+        return Menu {
+            ForEach(searchProviders) { source in
+                Button {
+                    viewModel.selectSource(source)
+                } label: {
+                    Label(source.title, systemImage: source.systemImage)
+                }
+                .accessibilityIdentifier("add-media-provider-\(source.rawValue)")
+            }
+
+            Divider()
+
+            Button {
+                viewModel.selectSource(.manual)
+            } label: {
+                Label("Manual Entry", systemImage: ProviderSource.manual.systemImage)
+            }
+            .accessibilityIdentifier("add-media-provider-manual")
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: selectedSource.systemImage)
+                    .font(.caption.weight(.semibold))
+                Text(selectedSource.title)
+                    .font(.subheadline.weight(.semibold))
+                Image(systemName: "chevron.down")
+                    .font(.caption.weight(.bold))
+            }
+            .foregroundStyle(.primary)
+            .frame(height: presentation.controlHeight)
+            .padding(.horizontal, 18)
+            .glassEffect(.regular.interactive(), in: .capsule)
+        }
+        .accessibilityIdentifier("add-media-provider-menu")
+    }
+
+    private func performSearch() {
+        onSearch()
+    }
+}
+
+private struct AddMediaResultRow: View {
+    let result: AddMediaSearchResult
+    let isCreating: Bool
+    let onAdd: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 14) {
+            resultPoster(imageURL: result.image, mediaType: result.mediaType)
+
+            VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(result.title)
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(3)
+
+                    HStack(spacing: 8) {
+                        badge(
+                            title: MediaType(rawValue: result.mediaType)?.singularTitle ?? result.mediaType.capitalized,
+                            systemImage: MediaType(rawValue: result.mediaType)?.systemImage ?? "square.stack.fill"
+                        )
+                        badge(
+                            title: ProviderSource(rawValue: result.source)?.title ?? result.source.uppercased(),
+                            systemImage: ProviderSource(rawValue: result.source)?.systemImage ?? "globe"
+                        )
+                    }
+                }
+
+                if result.tracked {
+                    Text("Tracked")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Spacer(minLength: 0)
+
+            resultActionButton
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(resultBackground(isTracked: result.tracked))
+        .accessibilityElement(children: .contain)
+    }
+
+    private var resultActionButton: some View {
+        Button(action: onAdd) {
+            Image(systemName: result.tracked ? "checkmark" : "plus")
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(result.tracked ? Color.secondary : Color.accentColor)
+                .frame(width: 42, height: 42)
+        }
+        .buttonStyle(.plain)
+        .glassEffect(
+            result.tracked ? .regular : .regular.tint(Color.accentColor.opacity(0.18)).interactive(),
+            in: .circle
+        )
+        .disabled(result.tracked || isCreating)
+        .accessibilityIdentifier("add-media-result-add-\(result.id)")
+        .accessibilityLabel(result.tracked ? "\(result.title) already tracked" : "Add \(result.title)")
     }
 
     private func badge(title: String, systemImage: String) -> some View {
@@ -599,37 +674,6 @@ struct AddMediaView: View {
             }
         }
     }
-
-    private func performSearch() {
-        guard canSearch else { return }
-        viewModel.successMessage = nil
-        Task {
-            await viewModel.search()
-        }
-    }
-
-    private func confirmAdd(_ result: AddMediaSearchResult) {
-        Task {
-            do {
-                try await viewModel.createMedia(for: result)
-                pendingAddResult = nil
-            } catch {
-            }
-        }
-    }
-
-    private func triggerUITestBarcodeLookupIfNeeded() {
-        guard !didTriggerUITestBarcodeLookup else { return }
-        guard viewModel.selectedType == .book else { return }
-        guard let simulatedISBN = ProcessInfo.processInfo.value(after: "-ui-testing-simulated-book-isbn") else {
-            return
-        }
-
-        didTriggerUITestBarcodeLookup = true
-        Task {
-            await viewModel.lookupBookBarcode(simulatedISBN)
-        }
-    }
 }
 
 struct AddMediaSearchChromePresentation: Equatable {
@@ -638,6 +682,8 @@ struct AddMediaSearchChromePresentation: Equatable {
     let searchFieldHeight: CGFloat
     let controlHeight: CGFloat
     let searchActionDiameter: CGFloat
+    let contentTopSpacing: CGFloat
+    let chromeBottomPadding: CGFloat
 
     init(selectedType: MediaType?) {
         usesDetachedSearchAction = true
@@ -645,5 +691,7 @@ struct AddMediaSearchChromePresentation: Equatable {
         searchFieldHeight = 64
         controlHeight = 56
         searchActionDiameter = 64
+        contentTopSpacing = selectedType == nil ? 16 : 20
+        chromeBottomPadding = selectedType == nil ? 12 : 16
     }
 }

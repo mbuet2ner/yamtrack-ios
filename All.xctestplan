@@ -1,0 +1,40 @@
+{
+  "configurations" : [
+    {
+      "id" : "3F3F1540-68B1-4E55-A0B4-36C82988B742",
+      "name" : "All",
+      "options" : {
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:YamtrackiOS.xcodeproj",
+      "identifier" : "FFCD41908F2794A12E29F3E2",
+      "name" : "YamtrackiOS"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "skippedTests" : [
+        "ISBNPerformanceTests"
+      ],
+      "target" : {
+        "containerPath" : "container:YamtrackiOS.xcodeproj",
+        "identifier" : "4512148D21425FA6D6BDA7F0",
+        "name" : "YamtrackiOSTests"
+      }
+    },
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:YamtrackiOS.xcodeproj",
+        "identifier" : "F4559747D3E5B810283FF4E8",
+        "name" : "YamtrackiOSUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

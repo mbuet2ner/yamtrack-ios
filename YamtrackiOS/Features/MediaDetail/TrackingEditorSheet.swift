@@ -31,13 +31,15 @@ struct TrackingEditorSheet: View {
                     VStack(alignment: .leading, spacing: 20) {
                         statusControl
 
-                        if usesBinaryProgress {
-                            starScoreControl
+                        if presentation.usesBinaryProgress {
+                            ScoreEditorSection(score: $scoreValue)
                         } else {
-                            HStack(alignment: .top, spacing: 14) {
-                                progressControl
-                            }
-                            starScoreControl
+                            ProgressEditorSection(
+                                value: progressBinding,
+                                maximum: progressMaximum,
+                                valueText: progressDescription
+                            )
+                            ScoreEditorSection(score: $scoreValue)
                         }
 
                         notesControl
@@ -55,7 +57,7 @@ struct TrackingEditorSheet: View {
             .padding(.top, 28)
             .padding(.bottom, 24)
         }
-        .presentationDetents(usesBinaryProgress ? [.height(430), .medium, .large] : [.height(620), .large])
+        .presentationDetents(presentation.usesBinaryProgress ? [.height(430), .medium, .large] : [.height(620), .large])
         .presentationDragIndicator(.visible)
         .presentationBackground(Color(uiColor: .systemGroupedBackground).opacity(0.98))
     }
@@ -119,9 +121,11 @@ struct TrackingEditorSheet: View {
 
         return Button {
             selectedStatus = status
-            if usesBinaryProgress {
-                progressValue = status == .completed ? 1 : 0
-            }
+            progressValue = TrackingEditorPresentation.progressAfterStatusChange(
+                mediaType: mediaType,
+                status: status,
+                currentProgress: progressValue
+            )
         } label: {
             Label(status.title, systemImage: status.systemImage)
                 .font(.subheadline.weight(.semibold))
@@ -138,39 +142,6 @@ struct TrackingEditorSheet: View {
             in: .capsule
         )
         .accessibilityIdentifier("media-detail-status-\(status.rawValue)-button")
-    }
-
-    private var progressControl: some View {
-        LiquidMeter(
-            title: "Progress",
-            valueText: progressDescription,
-            systemImage: "chart.bar.fill",
-            tint: .accentColor,
-            value: progressBinding,
-            range: 0...Double(progressMaximum),
-            step: 1
-        )
-        .accessibilityIdentifier("media-detail-progress-field")
-    }
-
-    private var starScoreControl: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Label("Score", systemImage: "star.fill")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
-
-                Spacer()
-
-                Text(scoreText)
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(.primary)
-            }
-
-            StarRatingControl(score: $scoreValue)
-        }
-        .padding(16)
-        .glassEffect(.regular, in: .rect(cornerRadius: 24))
     }
 
     private var notesControl: some View {
@@ -193,7 +164,11 @@ struct TrackingEditorSheet: View {
             try await viewModel.saveEdits(
                 MediaUpdateRequest(
                     status: selectedStatus,
-                    progress: savedProgressValue,
+                    progress: TrackingEditorPresentation.savedProgress(
+                        mediaType: mediaType,
+                        status: selectedStatus,
+                        progress: progressValue
+                    ),
                     score: scoreValue,
                     notes: notesNilIfBlank
                 )
@@ -212,10 +187,6 @@ struct TrackingEditorSheet: View {
         MediaType(rawValue: viewModel.mediaType)
     }
 
-    private var usesBinaryProgress: Bool {
-        mediaType == .movie
-    }
-
     private var statusRows: [[MediaSummary.Status]] {
         [
             [.planning, .inProgress],
@@ -224,68 +195,170 @@ struct TrackingEditorSheet: View {
         ]
     }
 
-    private var savedProgressValue: Int {
-        usesBinaryProgress ? (selectedStatus == .completed ? 1 : 0) : progressValue
-    }
-
     private var progressDescription: String {
-        switch mediaType {
-        case .movie:
-            return progressValue > 0 ? "Watched" : "Not watched"
-        case .book:
-            return "\(progressValue) read"
-        case .tv, .anime:
-            return "\(progressValue) episodes"
-        case .manga, .comic:
-            return "\(progressValue) chapters"
-        case .game, .boardgame:
-            return "\(progressValue) played"
-        case .all, .none:
-            return "Progress \(progressValue)"
-        }
-    }
-
-    private var scoreText: String {
-        guard let scoreValue else { return "No score" }
-        return "\(scoreValue.formatted(.number.locale(Locale(identifier: "en_US_POSIX")).precision(.fractionLength(scoreValue.truncatingRemainder(dividingBy: 1) == 0 ? 0 : 1)))) / 10"
+        TrackingEditorPresentation.progressDescription(mediaType: mediaType, progress: progressValue)
     }
 
     private var progressBinding: Binding<Double> {
         Binding(
             get: { Double(progressValue) },
-            set: { progressValue = min(max(Int($0.rounded()), 0), progressMaximum) }
+            set: { progressValue = TrackingEditorPresentation.clampedProgress(from: $0, maximum: progressMaximum) }
         )
     }
 
     private var progressMaximum: Int {
-        if let totalCount = viewModel.detail?.totalCount, totalCount > 0 {
-            return max(totalCount, progressValue)
+        TrackingEditorPresentation.progressMaximum(
+            mediaType: mediaType,
+            currentProgress: progressValue,
+            totalCount: viewModel.detail?.totalCount
+        )
+    }
+
+    private var presentation: TrackingEditorPresentation {
+        TrackingEditorPresentation(mediaType: mediaType)
+    }
+}
+
+struct TrackingEditorPresentation {
+    enum ScoreAdjustment {
+        case increment
+        case decrement
+    }
+
+    let mediaType: MediaType?
+
+    var usesBinaryProgress: Bool {
+        mediaType == .movie
+    }
+
+    static func progressMaximum(mediaType: MediaType?, currentProgress: Int, totalCount: Int?) -> Int {
+        if let totalCount, totalCount > 0 {
+            return max(totalCount, currentProgress)
         }
 
         switch mediaType {
         case .movie:
             return 1
         case .book, .manga, .comic:
-            return max(progressValue, 100)
+            return max(currentProgress, 100)
         case .tv, .anime:
-            return max(progressValue, 24)
-        case .game, .boardgame:
-            return max(progressValue, 10)
-        case .all, .none:
-            return max(progressValue, 10)
+            return max(currentProgress, 24)
+        case .game, .boardgame, .all, .none:
+            return max(currentProgress, 10)
         }
     }
 
-    private func scoreStarName(for index: Int) -> String {
-        guard let scoreValue else { return "star" }
+    static func clampedProgress(from value: Double, maximum: Int) -> Int {
+        min(max(Int(value.rounded()), 0), maximum)
+    }
+
+    static func progressDescription(mediaType: MediaType?, progress: Int) -> String {
+        switch mediaType {
+        case .movie:
+            return progress > 0 ? "Watched" : "Not watched"
+        case .book:
+            return "\(progress) read"
+        case .tv, .anime:
+            return "\(progress) episodes"
+        case .manga, .comic:
+            return "\(progress) chapters"
+        case .game, .boardgame:
+            return "\(progress) played"
+        case .all, .none:
+            return "Progress \(progress)"
+        }
+    }
+
+    static func progressAfterStatusChange(
+        mediaType: MediaType?,
+        status: MediaSummary.Status,
+        currentProgress: Int
+    ) -> Int {
+        mediaType == .movie ? (status == .completed ? 1 : 0) : currentProgress
+    }
+
+    static func savedProgress(mediaType: MediaType?, status: MediaSummary.Status, progress: Int) -> Int {
+        mediaType == .movie ? (status == .completed ? 1 : 0) : progress
+    }
+
+    static func scoreText(_ score: Double?) -> String {
+        guard let score else { return "No score" }
+        let hasFraction = score.truncatingRemainder(dividingBy: 1) != 0
+        let formattedScore = score.formatted(
+            .number
+                .locale(Locale(identifier: "en_US_POSIX"))
+                .precision(.fractionLength(hasFraction ? 1 : 0))
+        )
+        return "\(formattedScore) / 10"
+    }
+
+    static func scoreAfterAdjustment(_ score: Double?, direction: ScoreAdjustment) -> Double? {
+        switch direction {
+        case .increment:
+            return min((score ?? 0) + 2, 10)
+        case .decrement:
+            let nextScore = (score ?? 0) - 2
+            return nextScore <= 0 ? nil : nextScore
+        }
+    }
+
+    static func scoreButtonAccessibilityValue(score: Double?, buttonScore: Double) -> String {
+        score == buttonScore ? "Selected" : "Not selected"
+    }
+
+    static func starName(score: Double?, index: Int) -> String {
+        guard let score else { return "star" }
         let starValue = Double(index) * 2
-        if scoreValue >= starValue {
+        if score >= starValue {
             return "star.fill"
         }
-        if scoreValue >= starValue - 1 {
+        if score >= starValue - 1 {
             return "star.leadinghalf.filled"
         }
         return "star"
+    }
+}
+
+private struct ProgressEditorSection: View {
+    @Binding var value: Double
+    let maximum: Int
+    let valueText: String
+
+    var body: some View {
+        LiquidMeter(
+            title: "Progress",
+            valueText: valueText,
+            systemImage: "chart.bar.fill",
+            tint: .accentColor,
+            value: $value,
+            range: 0...Double(maximum),
+            step: 1
+        )
+        .accessibilityIdentifier("media-detail-progress-field")
+    }
+}
+
+private struct ScoreEditorSection: View {
+    @Binding var score: Double?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Label("Score", systemImage: "star.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                Text(TrackingEditorPresentation.scoreText(score))
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(.primary)
+            }
+
+            StarRatingControl(score: $score)
+        }
+        .padding(16)
+        .glassEffect(.regular, in: .rect(cornerRadius: 24))
     }
 }
 
@@ -297,9 +370,9 @@ private struct StarRatingControl: View {
             HStack(spacing: 8) {
                 ForEach(1...5, id: \.self) { index in
                     Button {
-                        score = Double(index * 2)
+                        score = buttonScore(for: index)
                     } label: {
-                        Image(systemName: starName(for: index))
+                        Image(systemName: TrackingEditorPresentation.starName(score: score, index: index))
                             .font(.system(size: 30, weight: .semibold))
                             .foregroundStyle(.yellow)
                             .frame(maxWidth: .infinity)
@@ -308,24 +381,35 @@ private struct StarRatingControl: View {
                     }
                     .buttonStyle(.plain)
                     .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 20))
-                    .accessibilityLabel("\(index * 2) out of 10")
+                    .accessibilityLabel("\(Int(buttonScore(for: index))) out of 10")
+                    .accessibilityValue(
+                        TrackingEditorPresentation.scoreButtonAccessibilityValue(
+                            score: score,
+                            buttonScore: buttonScore(for: index)
+                        )
+                    )
+                    .accessibilityHint("Sets score")
                     .accessibilityIdentifier("media-detail-score-\(index * 2)-button")
-                    .accessibilityAddTraits(score == Double(index * 2) ? .isSelected : [])
+                    .accessibilityAddTraits(score == buttonScore(for: index) ? .isSelected : [])
                 }
+            }
+        }
+        .accessibilityLabel("Score")
+        .accessibilityValue(TrackingEditorPresentation.scoreText(score))
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment:
+                score = TrackingEditorPresentation.scoreAfterAdjustment(score, direction: .increment)
+            case .decrement:
+                score = TrackingEditorPresentation.scoreAfterAdjustment(score, direction: .decrement)
+            @unknown default:
+                break
             }
         }
     }
 
-    private func starName(for index: Int) -> String {
-        guard let score else { return "star" }
-        let starValue = Double(index) * 2
-        if score >= starValue {
-            return "star.fill"
-        }
-        if score >= starValue - 1 {
-            return "star.leadinghalf.filled"
-        }
-        return "star"
+    private func buttonScore(for index: Int) -> Double {
+        Double(index * 2)
     }
 }
 
@@ -397,6 +481,19 @@ private struct LiquidMeter: View {
             .frame(height: 174)
         }
         .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityValue(valueText)
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment:
+                value = clampedSteppedValue(value + step)
+            case .decrement:
+                value = clampedSteppedValue(value - step)
+            @unknown default:
+                break
+            }
+        }
     }
 
     private var normalizedValue: Double {
@@ -408,8 +505,15 @@ private struct LiquidMeter: View {
         guard height > 0 else { return }
         let normalized = min(max(1 - (locationY / height), 0), 1)
         let rawValue = range.lowerBound + (range.upperBound - range.lowerBound) * normalized
+        value = clampedSteppedValue(rawValue)
+    }
+
+    private func clampedSteppedValue(_ rawValue: Double) -> Double {
+        guard step > 0 else {
+            return min(max(rawValue, range.lowerBound), range.upperBound)
+        }
         let stepped = (rawValue / step).rounded() * step
-        value = min(max(stepped, range.lowerBound), range.upperBound)
+        return min(max(stepped, range.lowerBound), range.upperBound)
     }
 }
 

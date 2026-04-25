@@ -5,7 +5,7 @@ targets:
   YamtrackiOS:
     type: application
     platform: iOS
-    deploymentTarget: "18.0"
+    deploymentTarget: "26.0"
     sources:
       - YamtrackiOS
     info:
@@ -21,20 +21,48 @@ targets:
   YamtrackiOSTests:
     type: bundle.unit-test
     platform: iOS
+    deploymentTarget: "26.0"
     sources:
       - YamtrackiOSTests
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: 6.0
     dependencies:
       - target: YamtrackiOS
   YamtrackiOSUITests:
     type: bundle.ui-testing
     platform: iOS
+    deploymentTarget: "26.0"
     sources:
       - YamtrackiOSUITests
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: 6.0
     dependencies:
       - target: YamtrackiOS
+schemes:
+  YamtrackiOS:
+    build:
+      targets:
+        YamtrackiOS: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      testPlans:
+        - path: Unit.xctestplan
+        - path: UI.xctestplan
+        - path: Integration.xctestplan
+        - path: Performance.xctestplan
+        - path: All.xctestplan
+          defaultPlan: true
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+    management:
+      shared: true
