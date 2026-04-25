@@ -30,45 +30,52 @@ struct MediaRowView: View {
     }
 
     var body: some View {
-        ContentSurface {
-            HStack(alignment: .top, spacing: 14) {
-                posterView
+        HStack(alignment: .top, spacing: 14) {
+            posterView
 
-                VStack(alignment: .leading, spacing: 10) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(item.title)
-                            .font(.headline.weight(.semibold))
-                            .foregroundStyle(.primary)
-                            .lineLimit(3)
-                            .multilineTextAlignment(.leading)
-                            .accessibilityIdentifier(titleIdentifier)
+            VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(item.title)
+                        .font(.headline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(3)
+                        .multilineTextAlignment(.leading)
+                        .accessibilityIdentifier(titleIdentifier)
 
-                        Label(mediaTypeTitle, systemImage: mediaTypeIcon)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .labelStyle(.titleAndIcon)
-                    }
+                    Label(mediaTypeTitle, systemImage: mediaTypeIcon)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .labelStyle(.titleAndIcon)
+                }
 
-                    VStack(alignment: .leading, spacing: 6) {
-                        ForEach(MediaMetadataChipPresentation.makeChips(for: item), id: \.self) { chip in
-                            if let onEditTracking {
-                                Button {
-                                    onEditTracking(chip.kind)
-                                } label: {
-                                    metadataChip(chip)
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityIdentifier("library-card-\(chip.kind.accessibilityFragment)-button-\(item.id)")
-                            } else {
+                HStack(spacing: 7) {
+                    ForEach(MediaMetadataChipPresentation.makeChips(for: item), id: \.self) { chip in
+                        if let onEditTracking {
+                            Button {
+                                onEditTracking(chip.kind)
+                            } label: {
                                 metadataChip(chip)
                             }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("library-card-\(chip.kind.accessibilityFragment)-button-\(item.id)")
+                        } else {
+                            metadataChip(chip)
                         }
                     }
                 }
-
-                Spacer(minLength: 0)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Spacer(minLength: 0)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(Color(uiColor: .secondarySystemGroupedBackground).opacity(0.92))
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.045))
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(cardIdentifier)
@@ -97,7 +104,7 @@ struct MediaRowView: View {
                 posterPlaceholder
             }
         }
-        .frame(width: 92, height: 136)
+        .frame(width: 94, height: 138)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(Color(uiColor: .tertiarySystemGroupedBackground))
@@ -139,17 +146,30 @@ struct MediaRowView: View {
     }
 
     private func metadataChip(_ chip: MediaMetadataChipPresentation) -> some View {
-        Label(chip.text, systemImage: chip.systemImage)
-            .font(.caption.weight(.semibold))
+        HStack(spacing: 7) {
+            Image(systemName: chip.systemImage)
+                .font(.caption2.weight(.bold))
+
+            Text(displayText(for: chip))
+                .font(.caption.weight(.semibold))
+        }
             .foregroundStyle(chip.foregroundColor)
-            .labelStyle(.titleAndIcon)
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .background(
                 Capsule(style: .continuous)
                     .fill(chip.backgroundColor)
             )
+            .accessibilityLabel(chip.text)
     }
+
+    private func displayText(for chip: MediaMetadataChipPresentation) -> String {
+        guard chip.kind == .score else { return chip.text }
+        return chip.text
+            .replacingOccurrences(of: " / 10", with: "")
+            .replacingOccurrences(of: "/10", with: "")
+    }
+
 }
 
 struct MediaMetadataChipPresentation: Equatable, Hashable {
@@ -237,7 +257,7 @@ struct MediaMetadataChipPresentation: Equatable, Hashable {
         case .positive:
             return Color.green.opacity(0.14)
         case .rating:
-            return Color.yellow.opacity(0.16)
+            return Color.orange.opacity(0.13)
         case .subdued:
             return Color(.tertiarySystemBackground).opacity(0.94)
         }
