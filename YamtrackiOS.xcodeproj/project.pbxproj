@@ -24,6 +24,7 @@
 		608DBD2AD72D9A68560C0AD6 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55BBCAEADD0050E6C630A5D8 /* RootView.swift */; };
 		612A32D3CF6F5885CCCFD01D /* MediaDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A429D582243CF783FCE4B57 /* MediaDetailView.swift */; };
 		61771D504312DEEE5D2F82C9 /* MediaDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2BCEAFCDB5160807AA08A8C /* MediaDetailViewModel.swift */; };
+		64C4B454FA0F4EE48A2B7E10 /* TrackingEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C8E63DBF8A24FD99D2F5A2B /* TrackingEditorSheet.swift */; };
 		6580153A8C36091ED6F19ADA /* APIClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF09CAFB623A5FDF6BA3CFB7 /* APIClientTests.swift */; };
 		7436EDBADFE89475A4CFBB6F /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4E46C8506D1DA3446F37F4 /* SetupView.swift */; };
 		7D177611A8D3E267C10EE014 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CBE08A3AD2A61BB4E780107 /* Theme.swift */; };
@@ -99,6 +100,7 @@
 		7D3E9947D7854C7512944B9B /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		81AE329EEEAFED8DAEE2D274 /* AppTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTab.swift; sourceTree = "<group>"; };
 		89E9D0241CD53308786225E7 /* SetupFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupFlowUITests.swift; sourceTree = "<group>"; };
+		8C8E63DBF8A24FD99D2F5A2B /* TrackingEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackingEditorSheet.swift; sourceTree = "<group>"; };
 		8F96B93CEDD67DC36396E817 /* AddMediaViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddMediaViewModelTests.swift; sourceTree = "<group>"; };
 		98CE5E019B7FDE1479405C79 /* YamtrackiOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YamtrackiOSApp.swift; sourceTree = "<group>"; };
 		9D3A7CBEFD5500EE504E45BC /* info.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = info.json; sourceTree = "<group>"; };
@@ -212,6 +214,7 @@
 			children = (
 				7A429D582243CF783FCE4B57 /* MediaDetailView.swift */,
 				C2BCEAFCDB5160807AA08A8C /* MediaDetailViewModel.swift */,
+				8C8E63DBF8A24FD99D2F5A2B /* TrackingEditorSheet.swift */,
 			);
 			path = MediaDetail;
 			sourceTree = "<group>";
@@ -520,6 +523,7 @@
 				E9982841CC2C7DE05DFDFE41 /* SessionStoring.swift in Sources */,
 				7436EDBADFE89475A4CFBB6F /* SetupView.swift in Sources */,
 				D776162225A8BA4A89FEB99E /* SetupViewModel.swift in Sources */,
+				64C4B454FA0F4EE48A2B7E10 /* TrackingEditorSheet.swift in Sources */,
 				7D177611A8D3E267C10EE014 /* Theme.swift in Sources */,
 				850C890907C71F3D00BFC5F4 /* URLSessionHTTPClient.swift in Sources */,
 				FA4D3335E83E4159C89FF3AD /* YamtrackiOSApp.swift in Sources */,

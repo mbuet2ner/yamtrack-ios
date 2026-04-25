@@ -6,87 +6,94 @@ struct LibraryView: View {
     let sessionWarningMessage: String?
     let onOpenAdd: () -> Void
     let onOpenConnectionSettings: () -> Void
+    @State private var trackingEditor: LibraryTrackingEditorState?
+    @State private var searchText = ""
+    @State private var selectedIndexLetter = ""
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                titleSection
+        ScrollViewReader { scrollProxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    titleSection
 
-                if let errorMessage = viewModel.errorMessage, !viewModel.items.isEmpty {
-                    inlineErrorBanner(message: errorMessage)
-                }
-
-                if let sessionWarningMessage, !sessionWarningMessage.isEmpty {
-                    sessionWarningBanner(message: sessionWarningMessage)
-                }
-
-                LazyVStack(spacing: 14) {
-                    ForEach(viewModel.items) { item in
-                        if let detailViewModel = viewModel.makeDetailViewModel(for: item) {
-                            NavigationLink {
-                                MediaDetailView(viewModel: detailViewModel)
-                            } label: {
-                                MediaRowView(item: item)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityIdentifier("library-card-\(item.id)")
-                        } else {
-                            MediaRowView(item: item)
-                                .accessibilityIdentifier("library-card-\(item.id)")
-                        }
+                    if let errorMessage = viewModel.errorMessage, !viewModel.items.isEmpty {
+                        inlineErrorBanner(message: errorMessage)
                     }
-                }
-            }
-            .padding(.horizontal, Theme.screenPadding)
-            .padding(.top, 90)
-            .padding(.bottom, 120)
-        }
-        .scrollIndicators(.hidden)
-        .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
-        .overlay(alignment: .top) {
-            stickyChrome
-        }
-        .overlay {
-            if viewModel.isLoading && viewModel.items.isEmpty {
-                ProgressView()
-            } else if viewModel.items.isEmpty, let errorMessage = viewModel.errorMessage {
-                libraryStateCard(
-                    title: viewModel.isAuthenticationError ? "Session Expired" : "Library Error",
-                    systemImage: viewModel.isAuthenticationError ? "person.crop.circle.badge.exclamationmark" : "wifi.exclamationmark",
-                    description: viewModel.isAuthenticationError ? "Your Yamtrack session is no longer valid. Open connection settings to reconnect." : errorMessage
-                ) {
-                    if viewModel.isAuthenticationError {
-                        Button("Open Connection Settings") {
-                            onOpenConnectionSettings()
-                        }
-                        .buttonStyle(.glassProminent)
+
+                    if let sessionWarningMessage, !sessionWarningMessage.isEmpty {
+                        sessionWarningBanner(message: sessionWarningMessage)
+                    }
+
+                    if viewModel.items.isEmpty, !viewModel.isLoading {
+                        emptyLibraryContent
+                    } else if librarySections.isEmpty {
+                        noSearchResultsCard
                     } else {
-                        Button("Try Again") {
-                            Task { await viewModel.load() }
+                        LazyVStack(alignment: .leading, spacing: 16) {
+                            ForEach(librarySections) { section in
+                                librarySection(section)
+                                    .id(section.id)
+                            }
                         }
-                        .buttonStyle(.glassProminent)
                     }
                 }
-            } else if !viewModel.isLoading && viewModel.items.isEmpty {
-                libraryStateCard(
-                    title: "No Media Yet",
-                    systemImage: "square.stack",
-                    description: "Add something to your library and it will show up here."
-                ) {
-                    Button("Add Media") {
-                        onOpenAdd()
+                .padding(.horizontal, Theme.screenPadding)
+                .padding(.top, 90)
+                .padding(.bottom, 32)
+            }
+            .scrollIndicators(.hidden)
+            .background(Color(uiColor: .systemGroupedBackground).ignoresSafeArea())
+            .overlay(alignment: .top) {
+                stickyChrome
+            }
+            .overlay(alignment: .trailing) {
+                if !indexLetters.isEmpty {
+                    AlphabetIndexRail(
+                        letters: alphabetIndexLetters,
+                        enabledLetters: Set(indexLetters),
+                        selectedLetter: selectedIndexLetter
+                    ) { letter in
+                        guard indexLetters.contains(letter) else { return }
+                        selectedIndexLetter = letter
+                        withAnimation(.smooth(duration: 0.22)) {
+                            scrollProxy.scrollTo(letter, anchor: .top)
+                        }
                     }
-                    .buttonStyle(.glassProminent)
                 }
             }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                bottomChrome
+            }
+            .overlay {
+                if viewModel.isLoading && viewModel.items.isEmpty {
+                    ProgressView()
+                }
+            }
+            .sensoryFeedback(.selection, trigger: selectedIndexLetter)
+            .refreshable {
+                await viewModel.load()
+            }
+            .sheet(item: $trackingEditor) { editor in
+                TrackingEditorSheet(
+                    viewModel: editor.viewModel,
+                    status: editor.item.status,
+                    progress: editor.item.progress,
+                    score: editor.item.score,
+                    notes: editor.item.notes
+                )
+            }
+            .toolbarVisibility(.hidden, for: .navigationBar)
         }
-        .task {
-            await viewModel.load()
+    }
+
+    private var bottomChrome: some View {
+        BottomChrome {
+            Spacer(minLength: 0)
+
+            FloatingAddOrb {
+                onOpenAdd()
+            }
         }
-        .refreshable {
-            await viewModel.load()
-        }
-        .toolbarVisibility(.hidden, for: .navigationBar)
     }
 
     private var stickyChrome: some View {
@@ -114,7 +121,7 @@ struct LibraryView: View {
     }
 
     private var titleSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Library")
                     .font(.largeTitle.weight(.bold))
@@ -124,25 +131,254 @@ struct LibraryView: View {
                     .font(.headline)
                     .foregroundStyle(.secondary)
             }
+
+            if !viewModel.items.isEmpty {
+                GlassEffectContainer(spacing: 9) {
+                    HStack(spacing: 9) {
+                        libraryMetricChip(
+                            title: "\(completedCount)",
+                            subtitle: "Done",
+                            systemImage: "checkmark.circle.fill",
+                            tint: .green
+                        )
+                        libraryMetricChip(
+                            title: "\(ratedCount)",
+                            subtitle: "Rated",
+                            systemImage: "star.fill",
+                            tint: .orange
+                        )
+                    }
+                }
+            }
+
+            librarySearchField
+        }
+    }
+
+    private var librarySearchField: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "magnifyingglass")
+                .font(.headline.weight(.medium))
+                .foregroundStyle(.secondary)
+
+            TextField("Search library", text: $searchText)
+                .font(.headline.weight(.medium))
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .submitLabel(.search)
+
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Clear search")
+            }
+        }
+        .padding(.horizontal, 16)
+        .frame(height: 52)
+        .background(
+            Capsule(style: .continuous)
+                .fill(Color(uiColor: .secondarySystemGroupedBackground))
+        )
+    }
+
+    private func librarySection(_ section: LibrarySection) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(section.title)
+                .font(.headline.weight(.bold))
+                .foregroundStyle(.secondary)
+                .padding(.leading, 4)
+
+            LazyVStack(spacing: 14) {
+                ForEach(section.items) { item in
+                    if let detailViewModel = viewModel.makeDetailViewModel(for: item) {
+                        MediaRowView(item: item) { _ in
+                            trackingEditor = LibraryTrackingEditorState(
+                                id: item.id,
+                                item: item,
+                                viewModel: detailViewModel
+                            )
+                        }
+                        .accessibilityIdentifier("library-card-\(item.id)")
+                    } else {
+                        MediaRowView(item: item)
+                            .accessibilityIdentifier("library-card-\(item.id)")
+                    }
+                }
+            }
+        }
+    }
+
+    private var noSearchResultsCard: some View {
+        ContentSurface {
+            VStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .font(.title2.weight(.semibold))
+                    .foregroundStyle(.secondary)
+
+                Text("No Matches")
+                    .font(.headline.weight(.semibold))
+
+                Text("Try a different title or clear the search.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    @ViewBuilder
+    private var emptyLibraryContent: some View {
+        if let errorMessage = viewModel.errorMessage {
+            libraryStateCard(
+                title: viewModel.isAuthenticationError ? "Session Expired" : "Library Error",
+                systemImage: viewModel.isAuthenticationError ? "person.crop.circle.badge.exclamationmark" : "wifi.exclamationmark",
+                description: viewModel.isAuthenticationError ? "Your Yamtrack session is no longer valid. Open connection settings to reconnect." : errorMessage
+            ) {
+                if viewModel.isAuthenticationError {
+                    Button("Open Connection Settings") {
+                        onOpenConnectionSettings()
+                    }
+                    .buttonStyle(.glassProminent)
+                } else {
+                    Button("Try Again") {
+                        Task { await viewModel.load() }
+                    }
+                    .buttonStyle(.glassProminent)
+                }
+            }
+        } else {
+            libraryStateCard(
+                title: emptyLibraryTitle,
+                systemImage: emptyLibrarySystemImage,
+                description: emptyLibraryDescription
+            ) {
+                Button("Add Media") {
+                    onOpenAdd()
+                }
+                .buttonStyle(.glassProminent)
+            }
         }
     }
 
     private func inlineErrorBanner(message: String) -> some View {
-        ContentSurface {
-            Label(message, systemImage: "exclamationmark.triangle.fill")
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(.red)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
+        compactBanner(message: message, systemImage: "exclamationmark.triangle.fill", tint: .red)
     }
 
     private func sessionWarningBanner(message: String) -> some View {
-        ContentSurface {
-            Label(message, systemImage: "exclamationmark.shield.fill")
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(.orange)
-                .frame(maxWidth: .infinity, alignment: .leading)
+        compactBanner(message: message, systemImage: "exclamationmark.shield.fill", tint: .orange)
+    }
+
+    private func compactBanner(message: String, systemImage: String, tint: Color) -> some View {
+        Label(message, systemImage: systemImage)
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(tint)
+            .lineLimit(2)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .glassEffect(.regular.tint(tint.opacity(0.07)), in: .rect(cornerRadius: 22))
+    }
+
+    private func libraryMetricChip(title: String, subtitle: String, systemImage: String, tint: Color) -> some View {
+        HStack(spacing: 7) {
+            Image(systemName: systemImage)
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(tint)
+
+            Text("\(title) \(subtitle)")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.primary)
         }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background(Capsule(style: .continuous).fill(Color(uiColor: .secondarySystemGroupedBackground)))
+    }
+
+    private var completedCount: Int {
+        viewModel.items.filter { $0.status == .completed }.count
+    }
+
+    private var ratedCount: Int {
+        viewModel.items.filter { $0.score != nil }.count
+    }
+
+    private var planningCount: Int {
+        viewModel.items.filter { $0.status == .planning }.count
+    }
+
+    private var emptyLibraryTitle: String {
+        guard viewModel.selectedFilter != .all, !viewModel.allItems.isEmpty else {
+            return "No Media Yet"
+        }
+
+        return "No \(viewModel.selectedFilter.title) Yet"
+    }
+
+    private var emptyLibrarySystemImage: String {
+        guard viewModel.selectedFilter != .all, !viewModel.allItems.isEmpty else {
+            return "square.stack"
+        }
+
+        return viewModel.selectedFilter.systemImage
+    }
+
+    private var emptyLibraryDescription: String {
+        guard viewModel.selectedFilter != .all, !viewModel.allItems.isEmpty else {
+            return "Add something to your library and it will show up here."
+        }
+
+        return "Change the filter or add a matching item to this library."
+    }
+
+    private var visibleItems: [MediaSummary] {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let filteredItems = query.isEmpty ? viewModel.items : viewModel.items.filter {
+            $0.title.localizedCaseInsensitiveContains(query)
+        }
+
+        return filteredItems.sorted {
+            $0.title.localizedStandardCompare($1.title) == .orderedAscending
+        }
+    }
+
+    private var librarySections: [LibrarySection] {
+        let grouped = Dictionary(grouping: visibleItems) { item in
+            sectionTitle(for: item.title)
+        }
+
+        return grouped.keys.sorted(by: sectionSort).map { title in
+            LibrarySection(title: title, items: grouped[title] ?? [])
+        }
+    }
+
+    private var indexLetters: [String] {
+        librarySections.map(\.title)
+    }
+
+    private var alphabetIndexLetters: [String] {
+        (65...90).compactMap { UnicodeScalar($0).map(String.init) } + ["#"]
+    }
+
+    private func sectionTitle(for title: String) -> String {
+        guard let first = title.trimmingCharacters(in: .whitespacesAndNewlines).first else {
+            return "#"
+        }
+
+        let letter = String(first).uppercased()
+        return letter.rangeOfCharacter(from: .letters) == nil ? "#" : letter
+    }
+
+    private func sectionSort(_ lhs: String, _ rhs: String) -> Bool {
+        if lhs == "#" { return false }
+        if rhs == "#" { return true }
+        return lhs < rhs
     }
 
     @ViewBuilder
@@ -176,6 +412,74 @@ struct LibraryView: View {
             .frame(maxWidth: 360)
             .padding(.horizontal, Theme.screenPadding)
         }
+    }
+}
+
+private struct LibraryTrackingEditorState: Identifiable {
+    let id: Int
+    let item: MediaSummary
+    let viewModel: MediaDetailViewModel
+}
+
+private struct LibrarySection: Identifiable {
+    let title: String
+    let items: [MediaSummary]
+
+    var id: String { title }
+}
+
+private struct AlphabetIndexRail: View {
+    let letters: [String]
+    let enabledLetters: Set<String>
+    let selectedLetter: String
+    let onSelect: (String) -> Void
+
+    var body: some View {
+        GeometryReader { proxy in
+            VStack(spacing: 2) {
+                ForEach(letters, id: \.self) { letter in
+                    Button {
+                        onSelect(letter)
+                    } label: {
+                        Text(letter)
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(foregroundStyle(for: letter))
+                            .frame(width: 24, height: 15)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("library-index-\(letter)")
+                    .accessibilityLabel(letter == "#" ? "Number sign" : letter)
+                    .accessibilityHint(enabledLetters.contains(letter) ? "Jump to \(letter)" : "No items for \(letter)")
+                }
+            }
+            .padding(.vertical, 8)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(Color(uiColor: .secondarySystemGroupedBackground).opacity(0.82))
+            )
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        let letterHeight = max(proxy.size.height / CGFloat(max(letters.count, 1)), 1)
+                        let index = min(max(Int(value.location.y / letterHeight), 0), max(letters.count - 1, 0))
+                        guard letters.indices.contains(index) else { return }
+                        onSelect(letters[index])
+                    }
+            )
+        }
+        .frame(width: 32, height: CGFloat(letters.count) * 16 + 16)
+        .padding(.trailing, 4)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Alphabet index")
+    }
+
+    private func foregroundStyle(for letter: String) -> Color {
+        if letter == selectedLetter {
+            return .accentColor
+        }
+
+        return enabledLetters.contains(letter) ? .secondary : Color.secondary.opacity(0.32)
     }
 }
 

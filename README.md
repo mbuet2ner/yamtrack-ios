@@ -52,7 +52,12 @@ An (unofficial) iOS client for [Yamtrack](https://github.com/FuzzyGrim/Yamtrack)
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/library.png" alt="Library screen" width="240" />
-  <img src="docs/screenshots/add-media.png" alt="Add media screen" width="240" />
-  <img src="docs/screenshots/settings.png" alt="Settings screen" width="240" />
+  <img src="docs/screenshots/library.png" alt="Library screen" width="220" />
+  <img src="docs/screenshots/library-t.png" alt="Library screen scrolled to T" width="220" />
+  <img src="docs/screenshots/add-media.png" alt="Add media screen" width="220" />
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/tracking.png" alt="Tracking editor" width="220" />
+  <img src="docs/screenshots/settings.png" alt="Connection screen" width="220" />
 </p>
