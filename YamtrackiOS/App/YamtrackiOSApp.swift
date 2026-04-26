@@ -71,7 +71,7 @@ final class UITestLibraryFixtureHTTPClient: HTTPClient {
         state = UITestLibraryFixtureState(configuration: .init(arguments: []))
     }
 
-    fileprivate init(configuration: UITestLibraryFixtureConfiguration) {
+    init(configuration: UITestLibraryFixtureConfiguration) {
         state = UITestLibraryFixtureState(configuration: configuration)
     }
 
@@ -108,6 +108,9 @@ private actor UITestLibraryFixtureState {
         var initialItems = configuration.usesScreenshotLibrary ? UITestTrackedMediaState.screenshotLibrary : [UITestTrackedMediaState.manualMovie]
         if configuration.includesTrackedDune {
             initialItems.insert(.trackedDune, at: 0)
+        }
+        if configuration.includesTrackedOpenLibrary {
+            initialItems.insert(.trackedOpenLibraryBook, at: 0)
         }
 
         items = initialItems
@@ -173,10 +176,6 @@ private actor UITestLibraryFixtureState {
     }
 
     private func mediaDetailResponse(for route: UITestDetailRoute, url: URL) throws -> (Data, URLResponse) {
-        guard route.mediaID.allSatisfy(\.isNumber) else {
-            return notFoundResponse(url: url)
-        }
-
         guard let item = items.first(where: { $0.matches(route) }) else {
             return notFoundResponse(url: url)
         }
@@ -278,10 +277,6 @@ private actor UITestLibraryFixtureState {
     }
 
     private func updateMedia(_ request: URLRequest, route: UITestDetailRoute, url: URL) throws -> (Data, URLResponse) {
-        guard route.mediaID.allSatisfy(\.isNumber) else {
-            return notFoundResponse(url: url)
-        }
-
         guard let index = items.firstIndex(where: { $0.matches(route) }) else {
             return notFoundResponse(url: url)
         }
@@ -519,6 +514,20 @@ private struct UITestTrackedMediaState {
         synopsis: "Tracked fixture-backed provider result for UI testing."
     )
 
+    static let trackedOpenLibraryBook = UITestTrackedMediaState(
+        databaseID: 3,
+        mediaID: "OL27448W",
+        source: ProviderSource.openlibrary.rawValue,
+        mediaType: MediaType.book.rawValue,
+        title: "Das Glasperlenspiel",
+        image: nil,
+        status: MediaSummary.Status.planning.rawValue,
+        progress: 0,
+        score: nil,
+        notes: nil,
+        synopsis: "Tracked fixture-backed Open Library result for UI testing."
+    )
+
     static let screenshotLibrary: [UITestTrackedMediaState] = [
         .init(
             databaseID: 1,
@@ -628,8 +637,9 @@ private struct UITestSearchCatalogItem {
     )
 }
 
-fileprivate struct UITestLibraryFixtureConfiguration {
+struct UITestLibraryFixtureConfiguration {
     let includesTrackedDune: Bool
+    let includesTrackedOpenLibrary: Bool
     let searchErrorMessage: String?
     let libraryFailureCount: Int
     let libraryAuthExpired: Bool
@@ -638,6 +648,7 @@ fileprivate struct UITestLibraryFixtureConfiguration {
 
     init(arguments: [String], environment: [String: String] = [:]) {
         includesTrackedDune = arguments.contains("-ui-testing-tracked-search-result")
+        includesTrackedOpenLibrary = arguments.contains("-ui-testing-tracked-openlibrary-result")
         searchErrorMessage = arguments.contains("-ui-testing-search-error") ? "Search service offline" : nil
         libraryFailureCount = arguments.contains("-ui-testing-library-fails-once") ? 1 : 0
         libraryAuthExpired = arguments.contains("-ui-testing-library-auth-expired")

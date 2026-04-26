@@ -6,8 +6,9 @@ An (unofficial) iOS client for [Yamtrack](https://github.com/FuzzyGrim/Yamtrack)
 
 ## 🔌 API Note
 
-- This app currently relies on the new Yamtrack API from draft PR [FuzzyGrim/Yamtrack#924](https://github.com/FuzzyGrim/Yamtrack/pull/924).
-- To connect the app to a local or self-hosted Yamtrack instance, you also need a valid Yamtrack API token.
+- This app targets the Yamtrack API on the upstream [`feat/add-api`](https://github.com/FuzzyGrim/Yamtrack/commits/feat/add-api) branch.
+- API request routing is generated from the checked-in schema snapshot in `YamtrackOpenAPI`, whose source of truth is Yamtrack's `/api/schema/` endpoint.
+- To connect the app to a local or self-hosted Yamtrack instance, you need a valid Yamtrack API token.
 
 ## 🛠️ Local Setup
 
@@ -19,12 +20,11 @@ An (unofficial) iOS client for [Yamtrack](https://github.com/FuzzyGrim/Yamtrack)
    open YamtrackiOS.xcodeproj
    ```
 
-2. Clone the Yamtrack backend in a separate directory, then check out the API PR branch used by the iOS app:
+2. Clone the Yamtrack backend in a separate directory, then check out the API branch used by the iOS app:
 
    ```bash
    git clone https://github.com/FuzzyGrim/Yamtrack.git
    cd Yamtrack
-   git fetch origin pull/924/head:feat/add-api
    git checkout feat/add-api
    ```
 
@@ -42,12 +42,8 @@ An (unofficial) iOS client for [Yamtrack](https://github.com/FuzzyGrim/Yamtrack)
 
 ## 🧭 Future Work
 
-- [ ] Autogenerate API client
-  - [x] Validate whether [apple/swift-openapi-generator](https://github.com/apple/swift-openapi-generator) can generate a usable client for Yamtrack in a spike branch (`codex/openapi-generator-spike`)
-  - [ ] Possible, but not a good fit right now because the API and OpenAPI document are still evolving
-  - [ ] The spike found a few quirks that the current handwritten client already smooths over manually
-    - mixed `media_id` typing between provider creates and detail-style routes
-    - incomplete response modeling for some routes, especially update flows
+- [x] Generate API request routing from Yamtrack's OpenAPI schema with [apple/swift-openapi-generator](https://github.com/apple/swift-openapi-generator).
+- [ ] Continue narrowing app-side DTO mapping as the upstream schema models response bodies more precisely, especially update flows.
 
 ## 📸 Screenshots
 
