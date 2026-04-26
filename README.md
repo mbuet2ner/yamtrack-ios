@@ -4,6 +4,8 @@
 
 An (unofficial) iOS client for [Yamtrack](https://github.com/FuzzyGrim/Yamtrack) with a library-first interface for browsing, adding, and updating media.
 
+> ⚠️ This is vibe-coded. I have no Swift/SwiftUI experience but still wanted to see how far I can get. Also, I really wanted a nice yamtrack client on the go.
+
 ## 🔌 API Note
 
 - This app targets the Yamtrack API on the upstream [`feat/add-api`](https://github.com/FuzzyGrim/Yamtrack/commits/feat/add-api) branch.
