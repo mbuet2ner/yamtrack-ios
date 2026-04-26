@@ -1,6 +1,9 @@
 name: YamtrackiOS
 options:
   bundleIdPrefix: org.yamtrack
+packages:
+  YamtrackOpenAPI:
+    path: YamtrackOpenAPI
 targets:
   YamtrackiOS:
     type: application
@@ -17,7 +20,9 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: org.yamtrack.ios
         SWIFT_VERSION: 6.0
         TARGETED_DEVICE_FAMILY: "1"
-    dependencies: []
+    dependencies:
+      - package: YamtrackOpenAPI
+        product: YamtrackOpenAPI
   YamtrackiOSTests:
     type: bundle.unit-test
     platform: iOS

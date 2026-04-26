@@ -28,7 +28,7 @@ final class APIClientTests: XCTestCase {
         }
     }
 
-    func test_send_maps403InvalidTokenPayloadToUnauthorized() async throws {
+    func test_fetchMediaList_maps403InvalidTokenPayloadToUnauthorized() async throws {
         let spy = HTTPClientSpy(
             result: .success((
                 Data(#"{"detail":"Invalid token"}"#.utf8),
@@ -38,7 +38,7 @@ final class APIClientTests: XCTestCase {
         let sut = makeSUT(httpClient: spy)
 
         do {
-            let _: PaginatedResponse<MediaSummary> = try await sut.send(Endpoint.mediaList(), credentials: makeCredentials())
+            _ = try await sut.fetchMediaList(credentials: makeCredentials())
             XCTFail("Expected unauthorized error")
         } catch let error as APIError {
             XCTAssertEqual(error, .unauthorized)
@@ -117,10 +117,7 @@ final class APIClientTests: XCTestCase {
     func test_fixtureHTTPClient_decodesSeededMediaList() async throws {
         let sut = makeSUT(httpClient: UITestLibraryFixtureHTTPClient())
 
-        let response: PaginatedResponse<MediaSummary> = try await sut.send(
-            Endpoint.mediaList(),
-            credentials: makeCredentials()
-        )
+        let response = try await sut.fetchMediaList(credentials: makeCredentials())
 
         XCTAssertEqual(response.pagination.total, 1)
         XCTAssertEqual(response.results.count, 1)
@@ -186,6 +183,20 @@ final class APIClientTests: XCTestCase {
         XCTAssertEqual(results.first?.source, "tmdb")
     }
 
+    func test_fixtureHTTPClient_returnsDetailForTrackedNonNumericProviderItem() async throws {
+        let sut = makeSUT(httpClient: UITestLibraryFixtureHTTPClient(configuration: .init(arguments: ["-ui-testing-tracked-openlibrary-result"])))
+
+        let detail = try await sut.fetchMediaDetail(
+            mediaType: "book",
+            source: "openlibrary",
+            mediaID: "OL27448W",
+            credentials: makeCredentials()
+        )
+
+        XCTAssertEqual(detail.mediaID, "OL27448W")
+        XCTAssertEqual(detail.title, "Das Glasperlenspiel")
+    }
+
     func test_createMedia_buildsManualCreateRequest() async throws {
         let spy = HTTPClientSpy(result: .success((
             Data(#"{"id":1,"consumption_id":null,"item":{"media_id":1,"source":"manual","media_type":"movie","title":"Manual Movie","image":null,"season_number":null,"episode_number":null},"item_id":"movie/manual/1","parent_id":null,"tracked":true,"created_at":"2026-04-11T08:00:00Z","score":null,"status":0,"progress":0,"progressed_at":null,"start_date":null,"end_date":null,"notes":null,"lists":[]}"#.utf8),
@@ -232,6 +243,48 @@ final class APIClientTests: XCTestCase {
         XCTAssertEqual(spy.lastRequest?.url?.absoluteString, "https://demo.local/api/v1/media/movie/manual/1/")
         XCTAssertEqual(spy.lastRequest?.httpMethod, "PATCH")
         XCTAssertEqual(try bodyDictionary(from: spy), ["status": 3, "progress": 1])
+    }
+
+    func test_fetchMediaDetail_buildsRequestForNonNumericProviderMediaID() async throws {
+        let spy = HTTPClientSpy(result: .success((
+            Data(#"{"id":12,"media_id":"OL27448W","source":"openlibrary","media_type":"book","title":"Das Glasperlenspiel","synopsis":null,"tracked":true,"details":{"status":"Planning"},"related":null,"item_id":"book/openlibrary/OL27448W","parent_id":null,"consumptions_number":1,"consumptions":[{"consumption_id":120,"created":"2026-04-11T08:00:00Z","score":null,"progress":0,"progressed_at":null,"status":0,"start_date":null,"end_date":null,"notes":null}],"lists":[]}"#.utf8),
+            makeResponse(statusCode: 200, url: URL(string: "https://demo.local/api/v1/media/book/openlibrary/OL27448W/")!)
+        )))
+        let sut = makeSUT(httpClient: spy)
+
+        let detail = try await sut.fetchMediaDetail(
+            mediaType: "book",
+            source: "openlibrary",
+            mediaID: "OL27448W",
+            credentials: makeCredentials()
+        )
+
+        XCTAssertEqual(detail.mediaID, "OL27448W")
+        XCTAssertEqual(detail.title, "Das Glasperlenspiel")
+        XCTAssertEqual(spy.lastRequest?.url?.absoluteString, "https://demo.local/api/v1/media/book/openlibrary/OL27448W/")
+        XCTAssertEqual(spy.lastRequest?.httpMethod, "GET")
+    }
+
+    func test_updateMedia_buildsPatchRequestForNonNumericProviderMediaID() async throws {
+        let spy = HTTPClientSpy(result: .success((
+            Data(#"{"id":12,"media_id":"OL27448W","source":"openlibrary","media_type":"book","title":"Das Glasperlenspiel","synopsis":null,"tracked":true,"details":{"status":"In progress"},"related":null,"item_id":"book/openlibrary/OL27448W","parent_id":null,"consumptions_number":1,"consumptions":[{"consumption_id":120,"created":"2026-04-11T08:00:00Z","score":null,"progress":42,"progressed_at":null,"status":1,"start_date":null,"end_date":null,"notes":null}],"lists":[]}"#.utf8),
+            makeResponse(statusCode: 200, url: URL(string: "https://demo.local/api/v1/media/book/openlibrary/OL27448W/")!)
+        )))
+        let sut = makeSUT(httpClient: spy)
+
+        let updated = try await sut.updateMedia(
+            mediaType: "book",
+            source: "openlibrary",
+            mediaID: "OL27448W",
+            update: MediaUpdateRequest(status: .inProgress, progress: 42, score: nil, notes: nil),
+            credentials: makeCredentials()
+        )
+
+        XCTAssertEqual(updated.mediaID, "OL27448W")
+        XCTAssertEqual(updated.progress, 42)
+        XCTAssertEqual(spy.lastRequest?.url?.absoluteString, "https://demo.local/api/v1/media/book/openlibrary/OL27448W/")
+        XCTAssertEqual(spy.lastRequest?.httpMethod, "PATCH")
+        XCTAssertEqual(try bodyDictionary(from: spy), ["status": 1, "progress": 42])
     }
 
     func test_createMedia_buildsProviderCreateRequestWithStringMediaID() async throws {

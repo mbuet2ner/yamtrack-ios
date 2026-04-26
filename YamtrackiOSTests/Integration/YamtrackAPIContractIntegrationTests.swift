@@ -13,10 +13,7 @@ final class YamtrackAPIContractIntegrationTests: XCTestCase {
     func test_mediaList_decodesLivePaginatedContract() async throws {
         let harness = try Self.makeHarness()
 
-        let response: PaginatedResponse<MediaSummary> = try await harness.apiClient.send(
-            Endpoint.mediaList(),
-            credentials: harness.credentials
-        )
+        let response = try await harness.apiClient.fetchMediaList(credentials: harness.credentials)
 
         XCTAssertGreaterThanOrEqual(response.pagination.total, 0)
         XCTAssertGreaterThanOrEqual(response.pagination.limit, 0)
@@ -30,25 +27,21 @@ final class YamtrackAPIContractIntegrationTests: XCTestCase {
         }
     }
 
-    func test_nonNumericProviderDetailRoute_documentsCurrentBackend404Limitation() async throws {
+    func test_nonNumericProviderDetailRouteDecodesTrackedItem() async throws {
         let harness = try Self.makeHarness()
         let route = try Self.makeNonNumericDetailRoute()
-        let url = try Self.makeNonNumericDetailURL(route: route, baseURL: harness.credentials.baseURL)
 
-        var request = URLRequest(url: url)
-        request.setValue("Bearer \(harness.credentials.token)", forHTTPHeaderField: "Authorization")
-
-        let (_, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse else {
-            XCTFail("Expected an HTTP response for the non-numeric provider detail route.")
-            return
-        }
-
-        XCTAssertEqual(
-            httpResponse.statusCode,
-            404,
-            "Expected Yamtrack to reject non-numeric provider detail routes until the backend route regex is widened."
+        let detail = try await harness.apiClient.fetchMediaDetail(
+            mediaType: route.mediaType,
+            source: route.source,
+            mediaID: route.mediaID,
+            credentials: harness.credentials
         )
+
+        XCTAssertEqual(detail.mediaID, route.mediaID)
+        XCTAssertEqual(detail.source, route.source)
+        XCTAssertEqual(detail.mediaType, route.mediaType)
+        XCTAssertFalse(detail.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
     }
 }
 
@@ -97,8 +90,8 @@ private extension YamtrackAPIContractIntegrationTests {
         else {
             throw XCTSkip("""
             Set YAMTRACK_TEST_NON_NUMERIC_MEDIA_TYPE, YAMTRACK_TEST_NON_NUMERIC_SOURCE, and \
-            YAMTRACK_TEST_NON_NUMERIC_MEDIA_ID for a tracked provider item to exercise the documented \
-            non-numeric detail route limitation without creating or updating media.
+            YAMTRACK_TEST_NON_NUMERIC_MEDIA_ID for a tracked provider item to verify the widened \
+            non-numeric detail route without creating or updating media.
             """)
         }
 
@@ -110,24 +103,8 @@ private extension YamtrackAPIContractIntegrationTests {
         return NonNumericDetailRoute(mediaType: mediaType, source: source, mediaID: mediaID)
     }
 
-    static func makeNonNumericDetailURL(route: NonNumericDetailRoute, baseURL: URL) throws -> URL {
-        guard var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false) else {
-            XCTFail("YAMTRACK_TEST_BASE_URL must be a valid URL.")
-            throw IntegrationConfigurationError.invalidBaseURL
-        }
-
-        components.path = baseURL.path + "/api/v1/media/\(route.mediaType)/\(route.source)/\(route.mediaID)/"
-        guard let url = components.url else {
-            XCTFail("YAMTRACK_TEST_NON_NUMERIC_* values must build a valid detail URL.")
-            throw IntegrationConfigurationError.invalidDetailURL
-        }
-
-        return url
-    }
-
     enum IntegrationConfigurationError: Error {
         case invalidBaseURL
-        case invalidDetailURL
         case numericProviderMediaID
     }
 }

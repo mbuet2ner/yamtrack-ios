@@ -2,12 +2,12 @@
 
 ## Upstream API Dependency
 
-- This iOS client relies on the new Yamtrack API introduced in draft PR [FuzzyGrim/Yamtrack#924](https://github.com/FuzzyGrim/Yamtrack/pull/924).
-- If API behavior looks incomplete or missing compared to the app, check that PR first before assuming the iOS client is wrong.
-- Local testing against that API also requires a valid Yamtrack API token; the app cannot complete setup against the server without one.
+- This iOS client targets the stable Yamtrack API on the upstream [`feat/add-api`](https://github.com/FuzzyGrim/Yamtrack/commits/feat/add-api) branch.
+- Treat Yamtrack's `/api/schema/` endpoint as the source of truth. The checked-in `YamtrackOpenAPI` package contains a schema snapshot used by `swift-openapi-generator`.
+- If API behavior looks incomplete or missing compared to the app, compare the checked-in schema snapshot with a current `feat/add-api` server before assuming the iOS client is wrong.
+- Local testing against that API requires a valid Yamtrack API token; the app cannot complete setup against the server without one.
 
-## Yamtrack Backend Limitation
+## Provider Media IDs
 
-- The Yamtrack API currently accepts string provider `media_id` values on create, but its detail-style routes still only match numeric IDs.
-- Example: `POST /api/v1/media/book/` works with `{"source":"openlibrary","media_id":"OL27448W","progress":0}`, but `GET /api/v1/media/book/openlibrary/OL27448W/` returns `404`.
-- App-side workaround: the iOS client should avoid routing non-numeric provider items into detail/update screens until the backend route regexes are widened beyond `\\d+`.
+- Detail and update routes on `feat/add-api` accept string `media_id` path values, including provider IDs such as Open Library's `OL27448W`.
+- Do not reintroduce app-side numeric-only guards for provider media IDs.

@@ -184,7 +184,7 @@ final class LibraryViewModelTests: XCTestCase {
         XCTAssertNotNil(sut.makeDetailViewModel(for: summary))
     }
 
-    func test_makeDetailViewModel_returnsNilForNonNumericProviderMediaID() {
+    func test_makeDetailViewModel_returnsViewModelForNonNumericProviderMediaID() {
         let client = APIClient(httpClient: HTTPClientSpy(result: .failure(URLError(.notConnectedToInternet))))
         let credentials = SessionCredentials(baseURL: URL(string: "https://demo.local")!, token: "secret")
         let sut = LibraryViewModel(apiClient: client, credentials: credentials)
@@ -214,7 +214,7 @@ final class LibraryViewModelTests: XCTestCase {
             lists: []
         )
 
-        XCTAssertNil(sut.makeDetailViewModel(for: summary))
+        XCTAssertNotNil(sut.makeDetailViewModel(for: summary))
     }
 }
 

@@ -25,8 +25,7 @@ final class LibraryViewModel {
         guard
             let nestedItem = item.item,
             !nestedItem.source.isEmpty,
-            !nestedItem.mediaType.isEmpty,
-            Self.supportsDetailRoute(mediaID: nestedItem.mediaID)
+            !nestedItem.mediaType.isEmpty
         else {
             return nil
         }
@@ -100,34 +99,16 @@ final class LibraryViewModel {
 
     private func loadAllPages() async throws -> [MediaSummary] {
         var items: [MediaSummary] = []
-        var request = Endpoint.mediaList()
+        var response = try await apiClient.fetchMediaList(credentials: credentials)
 
         while true {
-            let response: PaginatedResponse<MediaSummary> = try await apiClient.send(request, credentials: credentials)
             items.append(contentsOf: response.results)
 
             guard let next = response.pagination.next else {
                 return items
             }
 
-            request = try Self.request(from: next)
+            response = try await apiClient.fetchMediaList(nextPageURL: next, credentials: credentials)
         }
-    }
-
-    private static func request(from nextURLString: String) throws -> APIRequest<PaginatedResponse<MediaSummary>> {
-        guard let components = URLComponents(string: nextURLString), !components.path.isEmpty else {
-            throw APIError.decoding
-        }
-
-        var request = APIRequest<PaginatedResponse<MediaSummary>>(
-            path: components.path,
-            method: "GET"
-        )
-        request.queryItems = components.queryItems ?? []
-        return request
-    }
-
-    private static func supportsDetailRoute(mediaID: String) -> Bool {
-        mediaID.allSatisfy(\.isNumber)
     }
 }
